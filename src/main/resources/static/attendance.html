@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>출석체크 - 일본 여행 LMS</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="main-page">
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="header-container">
+            <a href="main.html" class="header-logo">🇯🇵 日本 Travel LMS</a>
+            <nav class="header-nav">
+                <a href="online-learning.html">온라인학습</a>
+                <a href="attendance.html" style="color: var(--primary-red);">출석체크</a>
+                <a href="my-classroom.html">나의 강의실</a>
+                <a href="guide.html">이용안내</a>
+            </nav>
+            <div class="user-info">
+                <span class="user-name" id="userName">사용자</span>
+                <button class="btn-logout" onclick="logout()">로그아웃</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 컨텐츠 -->
+    <section class="content-section">
+        <h2 class="section-title">출석 체크</h2>
+        <p class="section-subtitle">매일 출석하고 학습 습관을 만들어보세요</p>
+        
+        <!-- 출석 현황 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalDays">24</div>
+                <div class="stat-label">총 출석일</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="consecutiveDays">5</div>
+                <div class="stat-label">연속 출석일</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="thisMonth">18</div>
+                <div class="stat-label">이번 달 출석</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">75%</div>
+                <div class="stat-label">출석률</div>
+            </div>
+        </div>
+        
+        <!-- 출석 체크 버튼 -->
+        <div style="text-align: center; margin: 50px 0;">
+            <button id="checkInBtn" class="btn btn-primary" style="padding: 20px 60px; font-size: 20px;" onclick="checkAttendance()">
+                오늘 출석하기
+            </button>
+            <p id="checkInMessage" style="margin-top: 20px; font-size: 16px; color: #666;"></p>
+        </div>
+        
+        <!-- 이번 달 출석 캘린더 -->
+        <div class="table-container">
+            <h3 style="margin-bottom: 20px; color: var(--dark-gray);">이번 달 출석 현황</h3>
+            <div id="calendar" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
+                <!-- 캘린더가 JavaScript로 동적 생성됩니다 -->
+            </div>
+            <div style="margin-top: 20px; display: flex; gap: 20px; justify-content: center; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 20px; background: var(--primary-red); border-radius: 4px;"></div>
+                    <span>출석</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 20px; background: var(--light-gray); border: 2px solid var(--border-gray); border-radius: 4px;"></div>
+                    <span>미출석</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 20px; background: var(--border-gray); border-radius: 4px;"></div>
+                    <span>지난 날</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 출석 히스토리 -->
+        <div class="table-container" style="margin-top: 40px;">
+            <h3 style="margin-bottom: 20px; color: var(--dark-gray);">최근 출석 기록</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>날짜</th>
+                        <th>출석 시간</th>
+                        <th>연속 출석</th>
+                        <th>상태</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceHistory">
+                    <!-- 출석 기록이 JavaScript로 동적 생성됩니다 -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
+    <script src="js/attendance.js"></script>
+</body>
+</html>

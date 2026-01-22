@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>온라인학습 - 일본 여행 LMS</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="main-page">
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="header-container">
+            <a href="main.html" class="header-logo">🇯🇵 日本 Travel LMS</a>
+            <nav class="header-nav">
+                <a href="online-learning.html" style="color: var(--primary-red);">온라인학습</a>
+                <a href="attendance.html">출석체크</a>
+                <a href="my-classroom.html">나의 강의실</a>
+                <a href="guide.html">이용안내</a>
+            </nav>
+            <div class="user-info">
+                <span class="user-name" id="userName">사용자</span>
+                <button class="btn-logout" onclick="logout()">로그아웃</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 컨텐츠 -->
+    <section class="content-section">
+        <h2 class="section-title">온라인 학습</h2>
+        <p class="section-subtitle">일본 여행을 위한 다양한 강좌를 수강하세요</p>
+        
+        <!-- 카테고리 필터 -->
+        <div style="margin-bottom: 30px;">
+            <button class="btn btn-primary" onclick="filterCourses('all')" id="btn-all">전체</button>
+            <button class="btn btn-secondary" onclick="filterCourses('language')" id="btn-language">일본어</button>
+            <button class="btn btn-secondary" onclick="filterCourses('culture')" id="btn-culture">문화</button>
+            <button class="btn btn-secondary" onclick="filterCourses('travel')" id="btn-travel">여행</button>
+        </div>
+        
+        <!-- 강좌 목록 -->
+        <div class="card-grid" id="courseGrid">
+            <div class="card course-card" data-category="language">
+                <img src="https://images.unsplash.com/photo-1528164344705-47542687000d?w=800" alt="일본어 기초" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title">일본어 기초 회화</h3>
+                    <p class="card-description">여행에 필요한 기본 일본어 회화를 배워보세요. 인사, 주문, 길 찾기 등 실용적인 표현을 학습합니다.</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 45%;"></div>
+                    </div>
+                    <p style="margin-top: 10px; color: #666; font-size: 14px;">진도율: 45%</p>
+                    <button class="btn btn-primary" style="margin-top: 15px; width: 100%;" onclick="startCourse('일본어 기초 회화')">학습 시작</button>
+                </div>
+            </div>
+            
+            <div class="card course-card" data-category="language">
+                <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800" alt="일본어 중급" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title">일본어 중급</h3>
+                    <p class="card-description">일본어 기초를 넘어 더 깊이있는 대화를 할 수 있도록 중급 문법과 표현을 학습합니다.</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 20%;"></div>
+                    </div>
+                    <p style="margin-top: 10px; color: #666; font-size: 14px;">진도율: 20%</p>
+                    <button class="btn btn-primary" style="margin-top: 15px; width: 100%;" onclick="startCourse('일본어 중급')">학습 시작</button>
+                </div>
+            </div>
+            
+            <div class="card course-card" data-category="culture">
+                <img src="https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=800" alt="일본 문화" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title">일본 문화 이해</h3>
+                    <p class="card-description">일본의 전통 문화, 예절, 관습 등을 배워 더 깊이있는 여행을 준비하세요.</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 80%;"></div>
+                    </div>
+                    <p style="margin-top: 10px; color: #666; font-size: 14px;">진도율: 80%</p>
+                    <button class="btn btn-primary" style="margin-top: 15px; width: 100%;" onclick="startCourse('일본 문화 이해')">학습 시작</button>
+                </div>
+            </div>
+            
+            <div class="card course-card" data-category="travel">
+                <img src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800" alt="도쿄 여행" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title">도쿄 여행 가이드</h3>
+                    <p class="card-description">도쿄의 주요 명소, 교통수단, 맛집 등 도쿄 여행에 필요한 모든 정보를 학습합니다.</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 65%;"></div>
+                    </div>
+                    <p style="margin-top: 10px; color: #666; font-size: 14px;">진도율: 65%</p>
+                    <button class="btn btn-primary" style="margin-top: 15px; width: 100%;" onclick="startCourse('도쿄 여행 가이드')">학습 시작</button>
+                </div>
+            </div>
+            
+            <div class="card course-card" data-category="travel">
+                <img src="https://images.unsplash.com/photo-1590559899731-a382839e5549?w=800" alt="교통수단" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title">일본 교통수단 이용법</h3>
+                    <p class="card-description">일본의 전철, 버스, 택시 등 다양한 교통수단의 이용 방법을 배워보세요.</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 90%;"></div>
+                    </div>
+                    <p style="margin-top: 10px; color: #666; font-size: 14px;">진도율: 90%</p>
+                    <button class="btn btn-primary" style="margin-top: 15px; width: 100%;" onclick="startCourse('일본 교통수단 이용법')">학습 시작</button>
+                </div>
+            </div>
+            
+            <div class="card course-card" data-category="culture">
+                <img src="https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=800" alt="일본 음식" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title">일본 음식 문화</h3>
+                    <p class="card-description">일본의 대표 음식, 식사 예절, 맛집 찾는 법 등을 학습하여 일본 음식을 더 즐겨보세요.</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 35%;"></div>
+                    </div>
+                    <p style="margin-top: 10px; color: #666; font-size: 14px;">진도율: 35%</p>
+                    <button class="btn btn-primary" style="margin-top: 15px; width: 100%;" onclick="startCourse('일본 음식 문화')">학습 시작</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
+    <script src="js/online-learning.js"></script>
+</body>
+</html>

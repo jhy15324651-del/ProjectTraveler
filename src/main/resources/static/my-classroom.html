@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 강의실 - 일본 여행 LMS</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="main-page">
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="header-container">
+            <a href="main.html" class="header-logo">🇯🇵 日本 Travel LMS</a>
+            <nav class="header-nav">
+                <a href="online-learning.html">온라인학습</a>
+                <a href="attendance.html">출석체크</a>
+                <a href="my-classroom.html" style="color: var(--primary-red);">나의 강의실</a>
+                <a href="guide.html">이용안내</a>
+            </nav>
+            <div class="user-info">
+                <span class="user-name" id="userName">사용자</span>
+                <button class="btn-logout" onclick="logout()">로그아웃</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 컨텐츠 -->
+    <section class="content-section">
+        <h2 class="section-title">나의 강의실</h2>
+        <p class="section-subtitle">수강 중인 강좌와 학습 진도를 확인하세요</p>
+        
+        <!-- 학습 통계 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">6</div>
+                <div class="stat-label">수강 중인 강좌</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">2</div>
+                <div class="stat-label">완료한 강좌</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">58%</div>
+                <div class="stat-label">평균 진도율</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">45h</div>
+                <div class="stat-label">총 학습 시간</div>
+            </div>
+        </div>
+        
+        <!-- 수강 중인 강좌 -->
+        <div class="table-container">
+            <h3 style="margin-bottom: 20px; color: var(--dark-gray);">수강 중인 강좌</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>강좌명</th>
+                        <th>카테고리</th>
+                        <th>진도율</th>
+                        <th>마지막 학습일</th>
+                        <th>상태</th>
+                        <th>액션</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>일본어 기초 회화</strong></td>
+                        <td>일본어</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 45%;"></div>
+                            </div>
+                            <span style="font-size: 12px; color: #666;">45%</span>
+                        </td>
+                        <td>2026-01-21</td>
+                        <td><span class="badge badge-progress">진행 중</span></td>
+                        <td><button class="btn btn-primary" style="padding: 5px 15px;" onclick="continueCourse('일본어 기초 회화')">이어하기</button></td>
+                    </tr>
+                    <tr>
+                        <td><strong>일본어 중급</strong></td>
+                        <td>일본어</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 20%;"></div>
+                            </div>
+                            <span style="font-size: 12px; color: #666;">20%</span>
+                        </td>
+                        <td>2026-01-19</td>
+                        <td><span class="badge badge-progress">진행 중</span></td>
+                        <td><button class="btn btn-primary" style="padding: 5px 15px;" onclick="continueCourse('일본어 중급')">이어하기</button></td>
+                    </tr>
+                    <tr>
+                        <td><strong>일본 문화 이해</strong></td>
+                        <td>문화</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 80%;"></div>
+                            </div>
+                            <span style="font-size: 12px; color: #666;">80%</span>
+                        </td>
+                        <td>2026-01-22</td>
+                        <td><span class="badge badge-progress">진행 중</span></td>
+                        <td><button class="btn btn-primary" style="padding: 5px 15px;" onclick="continueCourse('일본 문화 이해')">이어하기</button></td>
+                    </tr>
+                    <tr>
+                        <td><strong>도쿄 여행 가이드</strong></td>
+                        <td>여행</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 65%;"></div>
+                            </div>
+                            <span style="font-size: 12px; color: #666;">65%</span>
+                        </td>
+                        <td>2026-01-20</td>
+                        <td><span class="badge badge-progress">진행 중</span></td>
+                        <td><button class="btn btn-primary" style="padding: 5px 15px;" onclick="continueCourse('도쿄 여행 가이드')">이어하기</button></td>
+                    </tr>
+                    <tr>
+                        <td><strong>일본 교통수단 이용법</strong></td>
+                        <td>여행</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 90%;"></div>
+                            </div>
+                            <span style="font-size: 12px; color: #666;">90%</span>
+                        </td>
+                        <td>2026-01-22</td>
+                        <td><span class="badge badge-progress">진행 중</span></td>
+                        <td><button class="btn btn-primary" style="padding: 5px 15px;" onclick="continueCourse('일본 교통수단 이용법')">이어하기</button></td>
+                    </tr>
+                    <tr>
+                        <td><strong>일본 음식 문화</strong></td>
+                        <td>문화</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 35%;"></div>
+                            </div>
+                            <span style="font-size: 12px; color: #666;">35%</span>
+                        </td>
+                        <td>2026-01-18</td>
+                        <td><span class="badge badge-progress">진행 중</span></td>
+                        <td><button class="btn btn-primary" style="padding: 5px 15px;" onclick="continueCourse('일본 음식 문화')">이어하기</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 완료한 강좌 -->
+        <div class="table-container" style="margin-top: 40px;">
+            <h3 style="margin-bottom: 20px; color: var(--dark-gray);">완료한 강좌</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>강좌명</th>
+                        <th>카테고리</th>
+                        <th>완료일</th>
+                        <th>학습 시간</th>
+                        <th>상태</th>
+                        <th>액션</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>일본 여행 준비하기</strong></td>
+                        <td>여행</td>
+                        <td>2026-01-15</td>
+                        <td>8시간</td>
+                        <td><span class="badge badge-complete">완료</span></td>
+                        <td><button class="btn btn-secondary" style="padding: 5px 15px;" onclick="reviewCourse('일본 여행 준비하기')">복습하기</button></td>
+                    </tr>
+                    <tr>
+                        <td><strong>일본 기본 매너</strong></td>
+                        <td>문화</td>
+                        <td>2026-01-10</td>
+                        <td>5시간</td>
+                        <td><span class="badge badge-complete">완료</span></td>
+                        <td><button class="btn btn-secondary" style="padding: 5px 15px;" onclick="reviewCourse('일본 기본 매너')">복습하기</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 최근 학습 활동 -->
+        <div class="table-container" style="margin-top: 40px;">
+            <h3 style="margin-bottom: 20px; color: var(--dark-gray);">최근 학습 활동</h3>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div style="padding: 15px; background: var(--light-gray); border-radius: 8px; border-left: 4px solid var(--primary-red);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>일본 문화 이해</strong> - 5강 완료
+                        </div>
+                        <span style="color: #666; font-size: 14px;">2026-01-22 14:30</span>
+                    </div>
+                </div>
+                <div style="padding: 15px; background: var(--light-gray); border-radius: 8px; border-left: 4px solid var(--primary-red);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>일본 교통수단 이용법</strong> - 8강 완료
+                        </div>
+                        <span style="color: #666; font-size: 14px;">2026-01-22 10:15</span>
+                    </div>
+                </div>
+                <div style="padding: 15px; background: var(--light-gray); border-radius: 8px; border-left: 4px solid var(--primary-red);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>일본어 기초 회화</strong> - 3강 완료
+                        </div>
+                        <span style="color: #666; font-size: 14px;">2026-01-21 16:45</span>
+                    </div>
+                </div>
+                <div style="padding: 15px; background: var(--light-gray); border-radius: 8px; border-left: 4px solid var(--primary-red);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>도쿄 여행 가이드</strong> - 4강 완료
+                        </div>
+                        <span style="color: #666; font-size: 14px;">2026-01-20 11:20</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
+    <script src="js/my-classroom.js"></script>
+</body>
+</html>
