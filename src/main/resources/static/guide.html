@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이용안내 - 일본 여행 LMS</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="main-page">
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="header-container">
+            <a href="main.html" class="header-logo">🇯🇵 日本 Travel LMS</a>
+            <nav class="header-nav">
+                <a href="online-learning.html">온라인학습</a>
+                <a href="attendance.html">출석체크</a>
+                <a href="my-classroom.html">나의 강의실</a>
+                <a href="guide.html" style="color: var(--primary-red);">이용안내</a>
+            </nav>
+            <div class="user-info">
+                <span class="user-name" id="userName">사용자</span>
+                <button class="btn-logout" onclick="logout()">로그아웃</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 컨텐츠 -->
+    <section class="content-section">
+        <h2 class="section-title">이용안내</h2>
+        <p class="section-subtitle">일본 여행 LMS 사용 방법을 안내해드립니다</p>
+        
+        <!-- 시작하기 -->
+        <div class="table-container">
+            <h3 style="margin-bottom: 20px; color: var(--dark-gray);">🚀 시작하기</h3>
+            <div style="padding: 20px;">
+                <h4 style="color: var(--primary-red); margin-bottom: 15px;">1. 회원가입 및 로그인</h4>
+                <p style="line-height: 1.8; margin-bottom: 20px;">
+                    일본 여행 LMS를 이용하기 위해서는 먼저 회원가입이 필요합니다. 
+                    로그인 페이지에서 아이디와 비밀번호를 입력하여 로그인하세요.
+                </p>
+                
+                <h4 style="color: var(--primary-red); margin-bottom: 15px;">2. 학습하기 / 체험하기 선택</h4>
+                <p style="line-height: 1.8; margin-bottom: 20px;">
+                    로그인 후 선택 화면에서 <strong>학습하기</strong> 또는 <strong>체험하기</strong>를 선택할 수 있습니다.
+                    <br>• <strong>학습하기</strong>: 일본 여행 관련 온라인 강좌를 수강합니다.
+                    <br>• <strong>체험하기</strong>: Unity WebGL 기반의 가상 체험을 즐길 수 있습니다.
+                </p>
+                
+                <h4 style="color: var(--primary-red); margin-bottom: 15px;">3. 강좌 선택 및 학습</h4>
+                <p style="line-height: 1.8;">
+                    온라인학습 메뉴에서 다양한 강좌를 탐색하고, 원하는 강좌를 선택하여 학습을 시작하세요.
+                    각 강좌는 동영상 강의, 퀴즈, 실습 등으로 구성되어 있습니다.
+                </p>
+            </div>
+        </div>
+        
+        <!-- 주요 기능 -->
+        <div class="table-container" style="margin-top: 40px;">
+            <h3 style="margin-bottom: 20px; color: var(--dark-gray);">📚 주요 기능</h3>
+            <div class="card-grid">
+                <div style="padding: 25px; background: var(--light-gray); border-radius: 10px;">
+                    <h4 style="color: var(--primary-red); margin-bottom: 10px;">온라인학습</h4>
+                    <p style="line-height: 1.6; color: #666;">
+                        일본어, 문화, 여행 등 다양한 카테고리의 강좌를 수강할 수 있습니다. 
+                        각 강좌는 체계적으로 구성되어 있으며, 진도율을 실시간으로 확인할 수 있습니다.
+                    </p>
+                </div>
+                
+                <div style="padding: 25px; background: var(--light-gray); border-radius: 10px;">
+                    <h4 style="color: var(--primary-red); margin-bottom: 10px;">출석체크</h4>
+                    <p style="line-height: 1.6; color: #666;">
+                        매일 출석 체크를 하여 학습 습관을 만들어보세요. 
+                        연속 출석일이 늘어날수록 더 많은 혜택을 받을 수 있습니다.
+                    </p>
+                </div>
+                
+                <div style="padding: 25px; background: var(--light-gray); border-radius: 10px;">
+                    <h4 style="color: var(--primary-red); margin-bottom: 10px;">나의 강의실</h4>
+                    <p style="line-height: 1.6; color: #666;">
+                        수강 중인 강좌와 완료한 강좌를 한눈에 확인할 수 있습니다. 
+                        학습 진도, 학습 시간 등의 통계도 제공됩니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 학습 팁 -->
+        <div class="table-container" style="margin-top: 40px;">
+            <h3 style="margin-bottom: 20px; color: var(--dark-gray);">💡 학습 팁</h3>
+            <div style="padding: 20px;">
+                <div style="margin-bottom: 20px; padding: 15px; border-left: 4px solid var(--primary-red); background: var(--light-gray);">
+                    <h4 style="margin-bottom: 10px;">규칙적인 학습 습관</h4>
+                    <p style="color: #666; line-height: 1.6;">
+                        매일 일정한 시간에 학습하는 습관을 들이세요. 
+                        하루 30분이라도 꾸준히 학습하는 것이 중요합니다.
+                    </p>
+                </div>
+                
+                <div style="margin-bottom: 20px; padding: 15px; border-left: 4px solid var(--primary-red); background: var(--light-gray);">
+                    <h4 style="margin-bottom: 10px;">복습의 중요성</h4>
+                    <p style="color: #666; line-height: 1.6;">
+                        한 번 학습한 내용도 시간이 지나면 잊어버리기 쉽습니다. 
+                        주기적으로 복습하여 학습 내용을 완전히 내 것으로 만드세요.
+                    </p>
+                </div>
+                
+                <div style="margin-bottom: 20px; padding: 15px; border-left: 4px solid var(--primary-red); background: var(--light-gray);">
+                    <h4 style="margin-bottom: 10px;">실전 연습</h4>
+                    <p style="color: #666; line-height: 1.6;">
+                        학습한 일본어 표현을 실제로 사용해보세요. 
+                        Unity WebGL 체험 기능을 통해 가상으로 일본 여행을 체험할 수 있습니다.
+                    </p>
+                </div>
+                
+                <div style="padding: 15px; border-left: 4px solid var(--primary-red); background: var(--light-gray);">
+                    <h4 style="margin-bottom: 10px;">목표 설정</h4>
+                    <p style="color: #666; line-height: 1.6;">
+                        구체적인 학습 목표를 설정하고, 단계별로 달성해나가세요. 
+                        작은 성취감이 모여 큰 목표를 이룰 수 있습니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FAQ -->
+        <div class="table-container" style="margin-top: 40px;">
+            <h3 style="margin-bottom: 20px; color: var(--dark-gray);">❓ 자주 묻는 질문 (FAQ)</h3>
+            <div style="padding: 20px;">
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: var(--primary-red); margin-bottom: 10px;">Q. 강좌는 무료인가요?</h4>
+                    <p style="color: #666; line-height: 1.6; padding-left: 20px;">
+                        A. 네, 모든 강좌는 무료로 제공됩니다. 
+                        회원가입만 하면 누구나 자유롭게 학습할 수 있습니다.
+                    </p>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: var(--primary-red); margin-bottom: 10px;">Q. 강좌를 수강하는 기간에 제한이 있나요?</h4>
+                    <p style="color: #666; line-height: 1.6; padding-left: 20px;">
+                        A. 아니요, 수강 기간 제한이 없습니다. 
+                        본인의 속도에 맞춰 자유롭게 학습하실 수 있습니다.
+                    </p>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: var(--primary-red); margin-bottom: 10px;">Q. 모바일에서도 이용할 수 있나요?</h4>
+                    <p style="color: #666; line-height: 1.6; padding-left: 20px;">
+                        A. 네, 반응형 웹 디자인으로 제작되어 PC, 태블릿, 모바일 등 
+                        어떤 기기에서도 편리하게 이용하실 수 있습니다.
+                    </p>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <h4 style="color: var(--primary-red); margin-bottom: 10px;">Q. Unity WebGL 체험은 어떻게 이용하나요?</h4>
+                    <p style="color: #666; line-height: 1.6; padding-left: 20px;">
+                        A. 로그인 후 선택 화면에서 "체험하기"를 클릭하면 
+                        Unity WebGL 기반의 가상 일본 여행 체험을 즐길 수 있습니다.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 style="color: var(--primary-red); margin-bottom: 10px;">Q. 학습 진도는 자동으로 저장되나요?</h4>
+                    <p style="color: #666; line-height: 1.6; padding-left: 20px;">
+                        A. 네, 학습 진도는 자동으로 저장됩니다. 
+                        언제든지 이전에 학습했던 곳부터 이어서 학습할 수 있습니다.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 문의하기 -->
+        <div class="table-container" style="margin-top: 40px;">
+            <h3 style="margin-bottom: 20px; color: var(--dark-gray);">📧 문의하기</h3>
+            <div style="padding: 20px; text-align: center;">
+                <p style="line-height: 1.8; margin-bottom: 20px;">
+                    기타 문의사항이 있으시면 언제든지 연락주세요.
+                </p>
+                <div style="margin-bottom: 15px;">
+                    <strong>이메일:</strong> support@japan-travel-lms.com
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>운영시간:</strong> 평일 09:00 - 18:00 (주말 및 공휴일 제외)
+                </div>
+                <button class="btn btn-primary" style="margin-top: 20px; padding: 12px 40px;" onclick="contactSupport()">
+                    문의하기
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
+    <script src="js/guide.js"></script>
+</body>
+</html>

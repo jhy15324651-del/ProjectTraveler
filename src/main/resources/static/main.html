@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일본 여행 LMS - 메인</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="main-page">
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="header-container">
+            <a href="main.html" class="header-logo">🇯🇵 日本 Travel LMS</a>
+            <nav class="header-nav">
+                <a href="online-learning.html">온라인학습</a>
+                <a href="attendance.html">출석체크</a>
+                <a href="my-classroom.html">나의 강의실</a>
+                <a href="guide.html">이용안내</a>
+            </nav>
+            <div class="user-info">
+                <span class="user-name" id="userName">사용자</span>
+                <button class="btn-logout" onclick="logout()">로그아웃</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 히어로 섹션 -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1>Discover Japan</h1>
+            <p>Travel, Learn, Explore</p>
+            <a href="online-learning.html" class="btn-hero">Start Journey</a>
+        </div>
+    </section>
+
+    <!-- Featured Destinations -->
+    <section class="content-section">
+        <h2 class="section-title">Featured Destinations</h2>
+        <p class="section-subtitle">Explore the most beautiful cities in Japan</p>
+        
+        <div class="card-grid">
+            <a href="online-learning.html" class="card">
+                <img src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800" alt="Tokyo" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title">The best of Tokyo</h3>
+                    <p class="card-description">일본의 수도 도쿄의 현대와 전통이 공존하는 매력을 배워보세요.</p>
+                </div>
+            </a>
+            
+            <a href="online-learning.html" class="card">
+                <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800" alt="Kyoto" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title">The best of Kyoto</h3>
+                    <p class="card-description">천년 고도 교토의 전통 문화와 아름다운 사찰을 학습하세요.</p>
+                </div>
+            </a>
+            
+            <a href="online-learning.html" class="card">
+                <img src="https://images.unsplash.com/photo-1590559899731-a382839e5549?w=800" alt="Osaka" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title">The best of Osaka</h3>
+                    <p class="card-description">일본의 부엌 오사카의 먹거리와 문화를 탐험해보세요.</p>
+                </div>
+            </a>
+            
+            <a href="online-learning.html" class="card">
+                <img src="https://images.unsplash.com/photo-1528164344705-47542687000d?w=800" alt="Nara" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title">The best of Nara</h3>
+                    <p class="card-description">사슴과 함께하는 나라의 평화로운 풍경을 만나보세요.</p>
+                </div>
+            </a>
+            
+            <a href="online-learning.html" class="card">
+                <img src="https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=800" alt="Kobe" class="card-image">
+                <div class="card-content">
+                    <h3 class="card-title">The best of Kobe</h3>
+                    <p class="card-description">항구 도시 고베의 이국적인 분위기를 학습하세요.</p>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <!-- 학습 통계 -->
+    <section class="content-section">
+        <h2 class="section-title">나의 학습 현황</h2>
+        <p class="section-subtitle">현재까지의 학습 진행 상황을 확인하세요</p>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">12</div>
+                <div class="stat-label">수강 중인 강좌</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">85%</div>
+                <div class="stat-label">평균 진도율</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">24</div>
+                <div class="stat-label">연속 출석일</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">156</div>
+                <div class="stat-label">학습 시간(시간)</div>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
