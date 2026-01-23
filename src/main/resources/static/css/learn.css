@@ -1,0 +1,1030 @@
+/* ====================================
+   학습하기 전용 스타일 (learn.css)
+   Prefix: .learn-*, .course-*, .player-*
+   다른 페이지에 사이드이펙트 없음
+   ==================================== */
+
+/* -------------------------------------
+   공통 변수 (기존 style.css 변수 활용)
+   ------------------------------------- */
+
+/* -------------------------------------
+   네비게이션 활성화 상태
+   ------------------------------------- */
+.learn-nav-active {
+    color: var(--primary-red) !important;
+}
+
+.learn-nav-active::after {
+    width: 100% !important;
+}
+
+/* =====================================
+   학습하기 목록 페이지 (learning.html)
+   ===================================== */
+
+/* 학습하기 히어로 섹션 */
+.learn-hero {
+    background: linear-gradient(135deg, var(--primary-red) 0%, #8B0000 100%);
+    padding: 60px 40px 80px;
+    position: relative;
+}
+
+.learn-hero-content {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.learn-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 20px;
+    transition: color 0.2s;
+}
+
+.learn-back-link:hover {
+    color: var(--white);
+}
+
+.learn-hero-title {
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 12px;
+}
+
+.learn-hero-subtitle {
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.85);
+    max-width: 600px;
+    line-height: 1.6;
+}
+
+/* 학습하기 섹션 공통 */
+.learn-section {
+    max-width: 1400px;
+    margin: -40px auto 60px;
+    padding: 0 40px;
+    position: relative;
+    z-index: 1;
+}
+
+.learn-section-header {
+    margin-bottom: 30px;
+}
+
+.learn-section-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--dark-gray);
+    margin-bottom: 8px;
+}
+
+.learn-section-subtitle {
+    font-size: 15px;
+    color: #666;
+}
+
+.learn-section-categories {
+    margin-top: 60px;
+}
+
+/* 강의 카드 그리드 */
+.learn-course-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+}
+
+/* 강의 카드 */
+.learn-course-card {
+    background: var(--white);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+}
+
+.learn-course-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* 강의 카드 썸네일 */
+.learn-course-thumbnail {
+    position: relative;
+    height: 180px;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+}
+
+.learn-course-thumbnail::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.3) 100%);
+}
+
+/* 강의 배지 */
+.learn-course-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 1;
+}
+
+.learn-badge-hot {
+    background: var(--primary-red);
+    color: var(--white);
+}
+
+.learn-badge-new {
+    background: #28A745;
+    color: var(--white);
+}
+
+.learn-badge-updated {
+    background: #007BFF;
+    color: var(--white);
+}
+
+/* 진도 표시 (원형) */
+.learn-course-progress-indicator {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    z-index: 1;
+}
+
+.learn-progress-ring {
+    width: 48px;
+    height: 48px;
+    position: relative;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.learn-progress-ring svg {
+    width: 36px;
+    height: 36px;
+    transform: rotate(-90deg);
+    position: absolute;
+}
+
+.learn-progress-bg {
+    fill: none;
+    stroke: #E0E0E0;
+    stroke-width: 3;
+}
+
+.learn-progress-fill {
+    fill: none;
+    stroke: var(--primary-red);
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.3s;
+}
+
+.learn-progress-almost .learn-progress-fill {
+    stroke: #28A745;
+}
+
+.learn-progress-text {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--dark-gray);
+    position: relative;
+    z-index: 1;
+}
+
+/* 강의 카드 본문 */
+.learn-course-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.learn-course-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--dark-gray);
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.learn-course-desc {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 강의 메타 정보 */
+.learn-course-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.learn-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: #888;
+}
+
+.learn-meta-item svg {
+    color: #999;
+}
+
+/* 레벨 표시 */
+.learn-level-beginner {
+    background: #E8F5E9;
+    color: #2E7D32;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.learn-level-intermediate {
+    background: #FFF3E0;
+    color: #E65100;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.learn-level-advanced {
+    background: #FCE4EC;
+    color: #C2185B;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+/* 강의 카드 링크 */
+.learn-course-link {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary-red);
+    transition: transform 0.2s;
+    display: inline-block;
+}
+
+.learn-course-card:hover .learn-course-link {
+    transform: translateX(4px);
+}
+
+/* 카테고리 그리드 */
+.learn-category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.learn-category-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.learn-category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.learn-category-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    color: var(--white);
+}
+
+.learn-category-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--dark-gray);
+    margin-bottom: 4px;
+}
+
+.learn-category-count {
+    font-size: 14px;
+    color: #888;
+}
+
+/* =====================================
+   강좌 상세 페이지 (course-detail.html)
+   ===================================== */
+
+/* 강좌 히어로 섹션 */
+.course-hero {
+    background: linear-gradient(135deg, var(--primary-red) 0%, #8B0000 100%);
+    padding: 40px 40px 60px;
+}
+
+.course-hero-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.course-hero-content {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 60px;
+    align-items: start;
+}
+
+.course-hero-info {
+    color: var(--white);
+}
+
+.course-category-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--white);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.course-title {
+    font-size: 36px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    line-height: 1.3;
+}
+
+.course-description {
+    font-size: 16px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 24px;
+}
+
+/* 강좌 요약 정보 */
+.course-meta-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+.course-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.course-meta-item svg {
+    opacity: 0.8;
+}
+
+/* 학습 시작 버튼 */
+.course-action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+}
+
+.btn-course-start {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--white);
+    color: var(--primary-red);
+    padding: 14px 28px;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-course-start:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.btn-course-secondary {
+    background: transparent;
+    color: var(--white);
+    padding: 14px 24px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 30px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-course-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+/* 진도율 표시 (강좌 상세) */
+.course-progress-section {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px 20px;
+    max-width: 400px;
+}
+
+.course-progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.course-progress-percent {
+    font-weight: 700;
+    color: var(--white);
+}
+
+.course-progress-bar {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.course-progress-fill {
+    height: 100%;
+    background: var(--white);
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+.course-progress-text {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 6px;
+}
+
+/* 썸네일 */
+.course-hero-thumbnail {
+    position: relative;
+}
+
+.course-thumbnail-image {
+    width: 100%;
+    height: 260px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* =====================================
+   탭 네비게이션
+   ===================================== */
+.course-tabs-section {
+    background: var(--white);
+    border-bottom: 1px solid var(--border-gray);
+    position: sticky;
+    top: 78px;
+    z-index: 100;
+}
+
+.course-tabs-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px;
+}
+
+.course-tabs {
+    display: flex;
+    gap: 8px;
+}
+
+.course-tab {
+    padding: 16px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 15px;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.course-tab:hover {
+    color: var(--dark-gray);
+}
+
+.course-tab.is-active {
+    color: var(--primary-red);
+    border-bottom-color: var(--primary-red);
+}
+
+/* =====================================
+   탭 컨텐츠 영역
+   ===================================== */
+.course-content-section {
+    background: var(--light-gray);
+    min-height: 500px;
+}
+
+.course-content-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px;
+}
+
+.course-tab-content {
+    display: none;
+}
+
+.course-tab-content.is-active {
+    display: block;
+}
+
+/* =====================================
+   커리큘럼 리스트
+   ===================================== */
+.course-curriculum {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Unit 컨테이너 */
+.course-unit {
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.course-unit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.course-unit-header:hover {
+    background: var(--light-gray);
+}
+
+.course-unit-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.course-unit-number {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary-red);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.course-unit-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--dark-gray);
+}
+
+.course-unit-meta {
+    font-size: 13px;
+    color: #888;
+}
+
+.course-unit-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.course-unit-progress {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: #E8F5E9;
+    color: #2E7D32;
+}
+
+.course-unit-progress.is-locked {
+    background: #F5F5F5;
+    color: #999;
+}
+
+.course-unit-toggle {
+    color: #999;
+    transition: transform 0.2s;
+}
+
+.course-unit-lessons.is-open ~ .course-unit-header .course-unit-toggle,
+.course-unit-header:has(+ .course-unit-lessons.is-open) .course-unit-toggle {
+    transform: rotate(180deg);
+}
+
+/* Lesson 리스트 */
+.course-unit-lessons {
+    border-top: 1px solid var(--border-gray);
+    display: none;
+}
+
+.course-unit-lessons.is-open {
+    display: block;
+}
+
+/* Lesson 아이템 */
+.course-lesson-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px 16px 32px;
+    border-bottom: 1px solid var(--border-gray);
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.2s;
+}
+
+.course-lesson-item:last-child {
+    border-bottom: none;
+}
+
+.course-lesson-item:hover {
+    background: var(--light-gray);
+}
+
+/* 레슨 상태 아이콘 */
+.course-lesson-status {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.course-lesson-status svg {
+    color: #CCC;
+}
+
+/* 완료된 레슨 */
+.course-lesson-item.is-done .course-lesson-status svg {
+    color: #28A745;
+}
+
+/* 현재 학습중인 레슨 */
+.course-lesson-item.is-current {
+    background: #FFF5F5;
+}
+
+.course-lesson-item.is-current .course-lesson-status svg {
+    color: var(--primary-red);
+}
+
+/* 잠긴 레슨 */
+.course-lesson-item.is-locked {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* 레슨 번호 원형 (미완료) */
+.course-lesson-number-circle {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #DDD;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #999;
+}
+
+/* 레슨 정보 */
+.course-lesson-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.course-lesson-number {
+    font-size: 13px;
+    color: #888;
+    min-width: 32px;
+}
+
+.course-lesson-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--dark-gray);
+}
+
+.course-lesson-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--primary-red);
+    color: var(--white);
+}
+
+.course-lesson-duration {
+    font-size: 13px;
+    color: #888;
+    flex-shrink: 0;
+}
+
+/* =====================================
+   소개/자료실/Q&A 탭 컨텐츠
+   ===================================== */
+.course-intro-content,
+.course-resources-content,
+.course-qna-content {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.course-intro-content h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--dark-gray);
+    margin-bottom: 12px;
+    margin-top: 28px;
+}
+
+.course-intro-content h3:first-child {
+    margin-top: 0;
+}
+
+.course-intro-content p {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #555;
+    margin-bottom: 16px;
+}
+
+.course-intro-content ul {
+    padding-left: 24px;
+    margin-bottom: 16px;
+}
+
+.course-intro-content li {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+/* 빈 상태 메시지 */
+.course-empty-message {
+    text-align: center;
+    color: #999;
+    padding: 60px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.course-empty-message svg {
+    color: #DDD;
+}
+
+/* =====================================
+   플레이어 페이지 준비 (향후 확장)
+   player-* prefix로 구분
+   ===================================== */
+
+/* 플레이어 레이아웃 (향후 사용) */
+.player-container {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    min-height: calc(100vh - 78px);
+}
+
+.player-main {
+    background: #000;
+}
+
+.player-sidebar {
+    background: var(--white);
+    border-left: 1px solid var(--border-gray);
+    overflow-y: auto;
+}
+
+.player-video-wrapper {
+    position: relative;
+    padding-top: 56.25%; /* 16:9 비율 */
+    background: #000;
+}
+
+.player-controls {
+    padding: 20px;
+    background: var(--white);
+    border-top: 1px solid var(--border-gray);
+}
+
+/* =====================================
+   반응형 디자인
+   ===================================== */
+@media (max-width: 1200px) {
+    .course-hero-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .course-hero-thumbnail {
+        order: -1;
+        max-width: 500px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .learn-course-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    /* 학습하기 목록 */
+    .learn-hero {
+        padding: 40px 20px 60px;
+    }
+
+    .learn-hero-title {
+        font-size: 32px;
+    }
+
+    .learn-hero-subtitle {
+        font-size: 15px;
+    }
+
+    .learn-section {
+        padding: 0 20px;
+        margin: -30px auto 40px;
+    }
+
+    .learn-course-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .learn-category-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .learn-category-card {
+        display: flex;
+        align-items: center;
+        text-align: left;
+        padding: 20px;
+        gap: 16px;
+    }
+
+    .learn-category-icon {
+        margin: 0;
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+    }
+
+    /* 강좌 상세 */
+    .course-hero {
+        padding: 30px 20px 40px;
+    }
+
+    .course-title {
+        font-size: 28px;
+    }
+
+    .course-meta-summary {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .course-action-buttons {
+        flex-direction: column;
+    }
+
+    .btn-course-start,
+    .btn-course-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .course-progress-section {
+        max-width: none;
+    }
+
+    .course-thumbnail-image {
+        height: 200px;
+    }
+
+    .course-tabs-container {
+        padding: 0 20px;
+    }
+
+    .course-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .course-tab {
+        padding: 14px 18px;
+        white-space: nowrap;
+    }
+
+    .course-content-container {
+        padding: 20px;
+    }
+
+    .course-unit-header {
+        padding: 16px 20px;
+    }
+
+    .course-unit-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .course-lesson-item {
+        padding: 14px 20px;
+    }
+
+    .course-lesson-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .course-intro-content,
+    .course-resources-content,
+    .course-qna-content {
+        padding: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .learn-hero-title {
+        font-size: 26px;
+    }
+
+    .course-title {
+        font-size: 24px;
+    }
+
+    .learn-course-thumbnail {
+        height: 160px;
+    }
+}

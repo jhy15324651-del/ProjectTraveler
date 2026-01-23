@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일본어 기초 회화 - 일본 여행 LMS</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/learn.css">
+</head>
+<body class="main-page">
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="header-container">
+            <a href="main.html" class="header-logo">🇯🇵 日本 Travel LMS</a>
+            <nav class="header-nav">
+                <a href="learning.html" class="learn-nav-active">학습하기</a>
+                <a href="online-learning.html">온라인학습</a>
+                <a href="attendance.html">출석체크</a>
+                <a href="my-classroom.html">나의 강의실</a>
+                <a href="guide.html">이용안내</a>
+            </nav>
+            <div class="user-info">
+                <span class="user-name" id="userName">사용자</span>
+                <button class="btn-logout" onclick="logout()">로그아웃</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 강좌 상세 헤더 -->
+    <section class="course-hero">
+        <div class="course-hero-inner">
+            <a href="learning.html" class="learn-back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                강의 목록으로
+            </a>
+            <div class="course-hero-content">
+                <div class="course-hero-info">
+                    <span class="course-category-badge">일본어</span>
+                    <!-- th:text="${course.title}" -->
+                    <h1 class="course-title">일본어 기초 회화</h1>
+                    <!-- th:text="${course.description}" -->
+                    <p class="course-description">
+                        여행에 필요한 기본 일본어 회화를 배워보세요. 인사, 주문, 길 찾기 등 실용적인 표현을 학습합니다.
+                        실제 일본 여행에서 바로 사용할 수 있는 핵심 회화를 중심으로 구성되어 있습니다.
+                    </p>
+
+                    <!-- 강좌 요약 정보 -->
+                    <div class="course-meta-summary">
+                        <div class="course-meta-item">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                                <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                            </svg>
+                            <span>입문 레벨</span>
+                        </div>
+                        <div class="course-meta-item">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            <span>4개 유닛 / 12개 레슨</span>
+                        </div>
+                        <div class="course-meta-item">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            <span>총 3시간</span>
+                        </div>
+                    </div>
+
+                    <!-- 학습 시작/이어하기 버튼 -->
+                    <div class="course-action-buttons">
+                        <!-- 진도가 있을 경우: 이어서 학습하기 -->
+                        <!-- href는 향후 /learning/{courseId}/lessons/{lessonId} 형태로 연결 -->
+                        <a href="#" class="btn-course-start" data-action="continue" data-lesson-id="5">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                            이어서 학습하기
+                        </a>
+                        <button class="btn-course-secondary" data-action="restart">
+                            처음부터 시작
+                        </button>
+                    </div>
+
+                    <!-- 진도율 표시 -->
+                    <div class="course-progress-section">
+                        <div class="course-progress-header">
+                            <span>진도율</span>
+                            <span class="course-progress-percent">45%</span>
+                        </div>
+                        <div class="course-progress-bar">
+                            <div class="course-progress-fill" style="width: 45%;"></div>
+                        </div>
+                        <p class="course-progress-text">12개 레슨 중 5개 완료</p>
+                    </div>
+                </div>
+
+                <!-- 썸네일 -->
+                <div class="course-hero-thumbnail">
+                    <!-- th:style="'background-image: url(' + ${course.thumbnailUrl} + ')'" -->
+                    <div class="course-thumbnail-image" style="background-image: url('https://images.unsplash.com/photo-1528164344705-47542687000d?w=800');"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 탭 네비게이션 -->
+    <section class="course-tabs-section">
+        <div class="course-tabs-container">
+            <div class="course-tabs">
+                <button class="course-tab is-active" data-tab="curriculum">커리큘럼</button>
+                <button class="course-tab" data-tab="intro">소개</button>
+                <button class="course-tab" data-tab="resources">자료실</button>
+                <button class="course-tab" data-tab="qna">Q&A</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 탭 컨텐츠 -->
+    <section class="course-content-section">
+        <div class="course-content-container">
+
+            <!-- 커리큘럼 탭 -->
+            <div class="course-tab-content is-active" data-tab-content="curriculum">
+                <!-- 커리큘럼 리스트 -->
+                <!-- th:each="unit : ${course.units}" -->
+                <div class="course-curriculum">
+
+                    <!-- Unit 1 -->
+                    <div class="course-unit" data-unit-id="1">
+                        <div class="course-unit-header">
+                            <div class="course-unit-info">
+                                <span class="course-unit-number">Unit 1</span>
+                                <h3 class="course-unit-title">기본 인사말</h3>
+                                <span class="course-unit-meta">3개 레슨 · 약 45분</span>
+                            </div>
+                            <div class="course-unit-status">
+                                <span class="course-unit-progress">완료</span>
+                                <svg class="course-unit-toggle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6 9 12 15 18 9"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Lesson 리스트 -->
+                        <!-- th:each="lesson : ${unit.lessons}" -->
+                        <div class="course-unit-lessons is-open">
+                            <!-- 완료된 레슨 -->
+                            <a href="#" class="course-lesson-item is-done" data-lesson-id="1">
+                                <div class="course-lesson-status">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                        <polyline points="22 4 12 14.01 9 11.01"/>
+                                    </svg>
+                                </div>
+                                <div class="course-lesson-info">
+                                    <span class="course-lesson-number">1강</span>
+                                    <span class="course-lesson-title">こんにちは - 인사하기</span>
+                                </div>
+                                <span class="course-lesson-duration">15분</span>
+                            </a>
+
+                            <!-- 완료된 레슨 -->
+                            <a href="#" class="course-lesson-item is-done" data-lesson-id="2">
+                                <div class="course-lesson-status">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                        <polyline points="22 4 12 14.01 9 11.01"/>
+                                    </svg>
+                                </div>
+                                <div class="course-lesson-info">
+                                    <span class="course-lesson-number">2강</span>
+                                    <span class="course-lesson-title">はじめまして - 자기소개</span>
+                                </div>
+                                <span class="course-lesson-duration">15분</span>
+                            </a>
+
+                            <!-- 완료된 레슨 -->
+                            <a href="#" class="course-lesson-item is-done" data-lesson-id="3">
+                                <div class="course-lesson-status">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                        <polyline points="22 4 12 14.01 9 11.01"/>
+                                    </svg>
+                                </div>
+                                <div class="course-lesson-info">
+                                    <span class="course-lesson-number">3강</span>
+                                    <span class="course-lesson-title">さようなら - 작별 인사</span>
+                                </div>
+                                <span class="course-lesson-duration">15분</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Unit 2 -->
+                    <div class="course-unit" data-unit-id="2">
+                        <div class="course-unit-header">
+                            <div class="course-unit-info">
+                                <span class="course-unit-number">Unit 2</span>
+                                <h3 class="course-unit-title">숫자와 가격</h3>
+                                <span class="course-unit-meta">3개 레슨 · 약 45분</span>
+                            </div>
+                            <div class="course-unit-status">
+                                <span class="course-unit-progress">진행중</span>
+                                <svg class="course-unit-toggle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6 9 12 15 18 9"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="course-unit-lessons is-open">
+                            <!-- 완료된 레슨 -->
+                            <a href="#" class="course-lesson-item is-done" data-lesson-id="4">
+                                <div class="course-lesson-status">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                        <polyline points="22 4 12 14.01 9 11.01"/>
+                                    </svg>
+                                </div>
+                                <div class="course-lesson-info">
+                                    <span class="course-lesson-number">4강</span>
+                                    <span class="course-lesson-title">일본어 숫자 1~10</span>
+                                </div>
+                                <span class="course-lesson-duration">15분</span>
+                            </a>
+
+                            <!-- 현재 학습중인 레슨 -->
+                            <a href="#" class="course-lesson-item is-current" data-lesson-id="5">
+                                <div class="course-lesson-status">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="5 3 19 12 5 21 5 3"/>
+                                    </svg>
+                                </div>
+                                <div class="course-lesson-info">
+                                    <span class="course-lesson-number">5강</span>
+                                    <span class="course-lesson-title">가격 묻기와 답하기</span>
+                                    <span class="course-lesson-badge">학습중</span>
+                                </div>
+                                <span class="course-lesson-duration">15분</span>
+                            </a>
+
+                            <!-- 미완료 레슨 -->
+                            <a href="#" class="course-lesson-item" data-lesson-id="6">
+                                <div class="course-lesson-status">
+                                    <span class="course-lesson-number-circle">6</span>
+                                </div>
+                                <div class="course-lesson-info">
+                                    <span class="course-lesson-number">6강</span>
+                                    <span class="course-lesson-title">쇼핑 실전 회화</span>
+                                </div>
+                                <span class="course-lesson-duration">15분</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Unit 3 -->
+                    <div class="course-unit" data-unit-id="3">
+                        <div class="course-unit-header">
+                            <div class="course-unit-info">
+                                <span class="course-unit-number">Unit 3</span>
+                                <h3 class="course-unit-title">길 찾기와 교통</h3>
+                                <span class="course-unit-meta">3개 레슨 · 약 45분</span>
+                            </div>
+                            <div class="course-unit-status">
+                                <span class="course-unit-progress is-locked">미시작</span>
+                                <svg class="course-unit-toggle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6 9 12 15 18 9"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="course-unit-lessons">
+                            <a href="#" class="course-lesson-item" data-lesson-id="7">
+                                <div class="course-lesson-status">
+                                    <span class="course-lesson-number-circle">7</span>
+                                </div>
+                                <div class="course-lesson-info">
+                                    <span class="course-lesson-number">7강</span>
+                                    <span class="course-lesson-title">길 묻기 기본 표현</span>
+                                </div>
+                                <span class="course-lesson-duration">15분</span>
+                            </a>
+
+                            <a href="#" class="course-lesson-item" data-lesson-id="8">
+                                <div class="course-lesson-status">
+                                    <span class="course-lesson-number-circle">8</span>
+                                </div>
+                                <div class="course-lesson-info">
+                                    <span class="course-lesson-number">8강</span>
+                                    <span class="course-lesson-title">전철/버스 이용하기</span>
+                                </div>
+                                <span class="course-lesson-duration">15분</span>
+                            </a>
+
+                            <a href="#" class="course-lesson-item" data-lesson-id="9">
+                                <div class="course-lesson-status">
+                                    <span class="course-lesson-number-circle">9</span>
+                                </div>
+                                <div class="course-lesson-info">
+                                    <span class="course-lesson-number">9강</span>
+                                    <span class="course-lesson-title">택시 이용 회화</span>
+                                </div>
+                                <span class="course-lesson-duration">15분</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Unit 4 -->
+                    <div class="course-unit" data-unit-id="4">
+                        <div class="course-unit-header">
+                            <div class="course-unit-info">
+                                <span class="course-unit-number">Unit 4</span>
+                                <h3 class="course-unit-title">음식점에서</h3>
+                                <span class="course-unit-meta">3개 레슨 · 약 45분</span>
+                            </div>
+                            <div class="course-unit-status">
+                                <span class="course-unit-progress is-locked">미시작</span>
+                                <svg class="course-unit-toggle" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="6 9 12 15 18 9"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="course-unit-lessons">
+                            <a href="#" class="course-lesson-item" data-lesson-id="10">
+                                <div class="course-lesson-status">
+                                    <span class="course-lesson-number-circle">10</span>
+                                </div>
+                                <div class="course-lesson-info">
+                                    <span class="course-lesson-number">10강</span>
+                                    <span class="course-lesson-title">메뉴 주문하기</span>
+                                </div>
+                                <span class="course-lesson-duration">15분</span>
+                            </a>
+
+                            <a href="#" class="course-lesson-item" data-lesson-id="11">
+                                <div class="course-lesson-status">
+                                    <span class="course-lesson-number-circle">11</span>
+                                </div>
+                                <div class="course-lesson-info">
+                                    <span class="course-lesson-number">11강</span>
+                                    <span class="course-lesson-title">음식 관련 표현</span>
+                                </div>
+                                <span class="course-lesson-duration">15분</span>
+                            </a>
+
+                            <a href="#" class="course-lesson-item" data-lesson-id="12">
+                                <div class="course-lesson-status">
+                                    <span class="course-lesson-number-circle">12</span>
+                                </div>
+                                <div class="course-lesson-info">
+                                    <span class="course-lesson-number">12강</span>
+                                    <span class="course-lesson-title">계산하기</span>
+                                </div>
+                                <span class="course-lesson-duration">15분</span>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 소개 탭 -->
+            <div class="course-tab-content" data-tab-content="intro">
+                <div class="course-intro-content">
+                    <h3>강좌 소개</h3>
+                    <p>
+                        이 강좌는 일본 여행을 준비하는 분들을 위한 기초 일본어 회화 과정입니다.
+                        실제 여행 상황에서 바로 사용할 수 있는 실용적인 표현들을 중심으로 구성되어 있습니다.
+                    </p>
+
+                    <h3>학습 목표</h3>
+                    <ul>
+                        <li>기본적인 인사말과 자기소개를 할 수 있습니다.</li>
+                        <li>쇼핑 시 가격을 묻고 물건을 구매할 수 있습니다.</li>
+                        <li>길을 묻고 대중교통을 이용할 수 있습니다.</li>
+                        <li>음식점에서 주문하고 계산할 수 있습니다.</li>
+                    </ul>
+
+                    <h3>이런 분께 추천합니다</h3>
+                    <ul>
+                        <li>처음으로 일본 여행을 계획하시는 분</li>
+                        <li>일본어를 전혀 모르지만 기본 회화를 배우고 싶은 분</li>
+                        <li>실용적인 여행 일본어를 빠르게 익히고 싶은 분</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 자료실 탭 -->
+            <div class="course-tab-content" data-tab-content="resources">
+                <div class="course-resources-content">
+                    <p class="course-empty-message">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="12" y1="18" x2="12" y2="12"/>
+                            <line x1="9" y1="15" x2="15" y2="15"/>
+                        </svg>
+                        자료실 기능은 준비 중입니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Q&A 탭 -->
+            <div class="course-tab-content" data-tab-content="qna">
+                <div class="course-qna-content">
+                    <p class="course-empty-message">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        Q&A 기능은 준비 중입니다.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <script src="js/main.js"></script>
+    <script src="js/course-detail.js"></script>
+</body>
+</html>
