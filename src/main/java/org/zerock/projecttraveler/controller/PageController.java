@@ -55,4 +55,18 @@ public class PageController {
         model.addAttribute("username", "사용자");
         return "select";
     }
+
+    @GetMapping("/learning")
+    public String learning(Model model) {
+        model.addAttribute("activePage", "learning");
+        model.addAttribute("username", "사용자");
+        return "learning";
+    }
+
+    @GetMapping("/course-detail")
+    public String courseDetail(Model model) {
+        model.addAttribute("activePage", "course-detail");
+        model.addAttribute("username", "사용자");
+        return "course-detail";
+    }
 }
