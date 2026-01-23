@@ -1,35 +1,21 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>학습하기 - 일본 여행 LMS</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/learn.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <link rel="stylesheet" th:href="@{/css/learn.css}" href="/css/learn.css">
 </head>
 <body class="main-page">
-    <!-- 헤더 -->
-    <header class="header">
-        <div class="header-container">
-            <a href="main.html" class="header-logo">🇯🇵 日本 Travel LMS</a>
-            <nav class="header-nav">
-                <a href="learning.html" class="learn-nav-active">학습하기</a>
-                <a href="online-learning.html">온라인학습</a>
-                <a href="attendance.html">출석체크</a>
-                <a href="my-classroom.html">나의 강의실</a>
-                <a href="guide.html">이용안내</a>
-            </nav>
-            <div class="user-info">
-                <span class="user-name" id="userName">사용자</span>
-                <button class="btn-logout" onclick="logout()">로그아웃</button>
-            </div>
-        </div>
-    </header>
+
+<!-- ✅ fetch 없이 Thymeleaf로 헤더 삽입 -->
+<div th:replace="fragments/main-header :: mainHeader"></div>
 
     <!-- 학습하기 헤더 섹션 -->
     <section class="learn-hero">
         <div class="learn-hero-content">
-            <a href="main.html" class="learn-back-link">
+            <a href="/main" class="learn-back-link">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M19 12H5M12 19l-7-7 7-7"/>
                 </svg>
@@ -327,7 +313,7 @@
         </div>
     </section>
 
-    <script src="js/main.js"></script>
-    <script src="js/learning.js"></script>
+    <script th:src="@{/js/main.js}" src="/js/main.js"></script>
+    <script th:src="@{/js/learning.js}" src="/js/learning.js"></script>
 </body>
 </html>
