@@ -372,7 +372,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(193, 39, 45, 0.7) 0%, rgba(231, 76, 60, 0.7) 100%);
+    background: transparent;
 }
 
 .hero-content {
@@ -610,6 +610,123 @@ tr:hover {
     height: 100%;
     background: linear-gradient(90deg, var(--primary-red), var(--secondary-red));
     transition: width 0.3s;
+}
+
+/* Feature Cards 섹션 */
+.feature-section {
+    max-width: 1400px;
+    margin: 60px auto;
+    padding: 0 40px;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+}
+
+.feature-card {
+    background: var(--white);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+}
+
+.feature-image {
+    position: relative;
+    height: 240px;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+}
+
+.feature-icon-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-red);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.feature-card:hover .feature-icon-btn {
+    transform: scale(1.1);
+    background: var(--white);
+}
+
+.feature-body {
+    padding: 28px;
+    background: var(--white);
+}
+
+.feature-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--dark-gray);
+    margin-bottom: 12px;
+}
+
+.feature-desc {
+    font-size: 15px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.feature-link {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--primary-red);
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.feature-card:hover .feature-link {
+    transform: translateX(4px);
+}
+
+/* Feature Cards 반응형 */
+@media (max-width: 1024px) {
+    .feature-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .feature-section {
+        padding: 0 20px;
+        margin: 40px auto;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .feature-image {
+        height: 200px;
+    }
+
+    .feature-body {
+        padding: 24px;
+    }
 }
 
 /* 반응형 디자인 */
