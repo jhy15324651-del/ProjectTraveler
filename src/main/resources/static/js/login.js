@@ -16,7 +16,8 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
         sessionStorage.setItem('username', username);
         
         // 선택 페이지로 이동
-        window.location.href = 'select.html';
+        window.location.href = '/select';
+
     } else {
         alert('아이디와 비밀번호를 입력해주세요.');
     }

@@ -1,41 +1,15 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>온라인학습 - 일본 여행 LMS</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
 </head>
 <body class="main-page">
 
 <!-- 공통 헤더 로드 -->
-<div id="main-header"></div>
-
-<script>
-    fetch("/fragments/main-header.html")
-        .then(res => res.text())
-        .then(html => {
-            document.getElementById("main-header").innerHTML = html;
-
-            // ✅ 헤더가 들어온 "이 다음"부터 헤더 관련 JS 실행
-            const header = document.getElementById("mainHeader");
-            const path = location.pathname;
-
-            const learnPages = [
-                { key: "online-learning", file: "online-learning.html" },
-                { key: "attendance", file: "attendance.html" },
-                { key: "my-classroom", file: "my-classroom.html" }
-            ];
-
-            const found = learnPages.find(p => path.includes(p.file));
-            if (found) {
-                header?.classList.add("learn-mode"); // subnav 보이게
-                document.querySelector(`.subnav-item[data-subnav="${found.key}"]`)
-                    ?.classList.add("active");
-            }
-        });
-</script>
-
+<div th:replace="fragments/main-header :: mainHeader"></div>
 
     <!-- 컨텐츠 -->
     <section class="content-section">
@@ -132,8 +106,8 @@
         </div>
     </section>
 
-    <script src="js/main.js"></script>
-    <script src="js/online-learning.js"></script>
+<script th:src="@{/js/main.js}" src="/js/main.js"></script>
+<script th:src="@{/js/online-learning.js}" src="/js/online-learning.js"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
