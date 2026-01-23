@@ -15,6 +15,6 @@ function goToExperience() {
 // 키보드 ESC로 이전 페이지 이동
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-        window.location.href = 'index.html';
+        window.location.href = '/index';
     }
 });
