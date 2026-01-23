@@ -1,0 +1,205 @@
+<!-- 공통 헤더 -->
+<header class="header" id="mainHeader">
+    <div class="header-container">
+        <a href="main.html" class="header-logo">🇯🇵 日本 Travel LMS</a>
+
+        <nav class="header-nav">
+            <a href="online-learning.html" class="nav-parent">학습하기</a>
+            <a href="guide.html">이용안내</a>
+        </nav>
+
+        <div class="user-info">
+            <span class="user-name" id="userName">사용자</span>
+            <button class="btn-logout" onclick="logout()">로그아웃</button>
+        </div>
+    </div>
+
+    <!-- 2차 탭바 -->
+    <div class="subnav">
+        <div class="subnav-inner">
+            <a href="online-learning.html" class="subnav-item" data-subnav="online-learning">온라인학습</a>
+            <a href="attendance.html" class="subnav-item" data-subnav="attendance">출석체크</a>
+            <a href="my-classroom.html" class="subnav-item" data-subnav="my-classroom">나의 강의실</a>
+        </div>
+    </div>
+</header>
+
+<style>
+    /* ==========================
+       Header (Main + Sub Tabs)
+    ========================== */
+
+    /* 헤더 전체 */
+    .header {
+        background: var(--white);
+        box-shadow: 0 2px 10px var(--shadow);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+
+    /* 헤더 1줄(로고/1차메뉴/유저정보) */
+    .header-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 40px;
+    }
+
+    .header-logo {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--primary-red);
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    /* 1차 메뉴 */
+    .header-nav {
+        display: flex;
+        gap: 40px;
+        align-items: center;
+    }
+
+    .header-nav a {
+        color: var(--dark-gray);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 16px;
+        transition: color 0.3s;
+        position: relative;
+        padding-bottom: 2px;
+    }
+
+    /* 밑줄 애니메이션 */
+    .header-nav a::after {
+        content: '';
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--primary-red);
+        transition: width 0.3s;
+    }
+
+    .header-nav a:hover {
+        color: var(--primary-red);
+    }
+
+    .header-nav a:hover::after {
+        width: 100%;
+    }
+
+    /* 1차 메뉴 active (현재 페이지 강조) */
+    .header-nav a.active {
+        color: var(--primary-red);
+        font-weight: 600;
+    }
+
+    /* 유저 영역 */
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        white-space: nowrap;
+    }
+
+    .user-name {
+        font-weight: 600;
+        color: var(--dark-gray);
+    }
+
+    .btn-logout {
+        padding: 8px 20px;
+        background: var(--white);
+        border: 2px solid var(--primary-red);
+        color: var(--primary-red);
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-logout:hover {
+        background: var(--primary-red);
+        color: var(--white);
+    }
+
+    /* ==========================
+       Sub Nav (학습하기 하위 탭)
+       - 접이식 X
+       - 학습 페이지에서만 표시: header.learn-mode 클래스 기반
+    ========================== */
+
+    /* 기본은 숨김 */
+    .subnav {
+        display: none;
+        background: var(--white);
+        border-top: 1px solid var(--border-gray);
+    }
+
+    /* 학습 관련 페이지에서는 상시 표시 */
+    .header.learn-mode .subnav {
+        display: block;
+    }
+
+    .subnav-inner {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 10px 40px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .subnav-item {
+        text-decoration: none;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: var(--light-gray);
+        color: var(--dark-gray);
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+
+    .subnav-item:hover {
+        background: #EFEFEF;
+    }
+
+    .subnav-item.active {
+        background: var(--primary-red);
+        color: var(--white);
+    }
+
+    /* ==========================
+       Responsive
+    ========================== */
+    @media (max-width: 768px) {
+        .header-container {
+            flex-direction: column;
+            gap: 16px;
+            padding: 16px 20px;
+        }
+
+        .header-nav {
+            flex-wrap: wrap;
+            gap: 18px;
+            justify-content: center;
+        }
+
+        .subnav-inner {
+            padding: 10px 20px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .subnav-item {
+            flex: 0 0 auto;
+        }
+    }
+</style>

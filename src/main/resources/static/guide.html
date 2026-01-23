@@ -7,22 +7,35 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="main-page">
-    <!-- 헤더 -->
-    <header class="header">
-        <div class="header-container">
-            <a href="main.html" class="header-logo">🇯🇵 日本 Travel LMS</a>
-            <nav class="header-nav">
-                <a href="online-learning.html">온라인학습</a>
-                <a href="attendance.html">출석체크</a>
-                <a href="my-classroom.html">나의 강의실</a>
-                <a href="guide.html" style="color: var(--primary-red);">이용안내</a>
-            </nav>
-            <div class="user-info">
-                <span class="user-name" id="userName">사용자</span>
-                <button class="btn-logout" onclick="logout()">로그아웃</button>
-            </div>
-        </div>
-    </header>
+
+<!-- 공통 헤더 로드 -->
+<div id="main-header"></div>
+
+<script>
+    fetch("/fragments/main-header.html")
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById("main-header").innerHTML = html;
+
+            // ✅ 헤더가 들어온 "이 다음"부터 헤더 관련 JS 실행
+            const header = document.getElementById("mainHeader");
+            const path = location.pathname;
+
+            const learnPages = [
+                { key: "online-learning", file: "online-learning.html" },
+                { key: "attendance", file: "attendance.html" },
+                { key: "my-classroom", file: "my-classroom.html" }
+            ];
+
+            const found = learnPages.find(p => path.includes(p.file));
+            if (found) {
+                header?.classList.add("learn-mode"); // subnav 보이게
+                document.querySelector(`.subnav-item[data-subnav="${found.key}"]`)
+                    ?.classList.add("active");
+            }
+        });
+</script>
+
 
     <!-- 컨텐츠 -->
     <section class="content-section">
@@ -190,5 +203,15 @@
 
     <script src="js/main.js"></script>
     <script src="js/guide.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const path = location.pathname;
+
+        if (path.includes("attendance")) {
+            document.querySelector(".nav-attendance")?.classList.add("active");
+        }
+    });
+</script>
 </body>
 </html>
