@@ -69,4 +69,11 @@ public class PageController {
         model.addAttribute("username", "사용자");
         return "course-detail";
     }
+
+    @GetMapping("/reviews")
+    public String reviews(Model model) {
+        model.addAttribute("activePage", "reviews");
+        model.addAttribute("username", "사용자");
+        return "reviews";
+    }
 }
