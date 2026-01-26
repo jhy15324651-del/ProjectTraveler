@@ -202,6 +202,21 @@ public class MainPageController {
         return "guide";
     }
 
+
+    /**
+     * 리뷰 페이지
+     */
+    @GetMapping("/reviews")
+    public String reviews(Model model) {
+        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
+
+        model.addAttribute("activePage", "reviews");
+        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
+        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
+
+        return "reviews";
+    }
+
     /**
      * 강좌 + 진도 정보를 담는 내부 클래스
      */

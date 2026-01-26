@@ -19,9 +19,17 @@ public class AuthController {
     private final UserService userService;
 
     /**
+     * 루트 → 로그인 페이지로 리다이렉트
+     */
+    @GetMapping({"/", "/index"})
+    public String redirectToLogin() {
+        return "redirect:/login";
+    }
+
+    /**
      * 로그인 페이지
      */
-    @GetMapping({"/", "/login"})
+    @GetMapping("/login")
     public String loginPage(@RequestParam(value = "error", required = false) String error,
                            @RequestParam(value = "logout", required = false) String logout,
                            @RequestParam(value = "expired", required = false) String expired,
