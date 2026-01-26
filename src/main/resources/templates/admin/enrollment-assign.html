@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>강좌 배정 - 관리자</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <style>
+        .admin-container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        .admin-title { font-size: 24px; font-weight: 700; margin-bottom: 30px; }
+        .form-section { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .form-group select { height: 200px; }
+        .btn-assign { width: 100%; padding: 14px; background: var(--primary-red); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .btn-assign:hover { background: #b71c1c; }
+        .admin-nav { margin-bottom: 30px; display: flex; gap: 15px; }
+        .admin-nav a { padding: 10px 20px; background: #f5f5f5; border-radius: 8px; text-decoration: none; color: #333; }
+        .admin-nav a.active { background: var(--primary-red); color: white; }
+        .help-text { font-size: 13px; color: #666; margin-top: 5px; }
+    </style>
+</head>
+<body class="main-page">
+<div th:replace="fragments/main-header :: mainHeader"></div>
+
+<div class="admin-container">
+    <h1 class="admin-title">강좌 배정</h1>
+
+    <div class="admin-nav">
+        <a th:href="@{/admin/courses}" href="/admin/courses">강좌 관리</a>
+        <a th:href="@{/admin/enrollments/requests}" href="/admin/enrollments/requests">수강 승인</a>
+        <a th:href="@{/admin/enrollments/assign}" href="/admin/enrollments/assign" class="active">강좌 배정</a>
+    </div>
+
+    <div class="form-section">
+        <form id="assignForm">
+            <div class="form-group">
+                <label for="courseId">배정할 강좌</label>
+                <select id="courseId" name="courseId" required style="height: auto;">
+                    <option value="">강좌를 선택하세요</option>
+                    <option th:each="c : ${courses}" th:value="${c.id}" th:text="${c.title}">강좌명</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="userIds">대상 사용자 (Ctrl+클릭으로 다중 선택)</label>
+                <select id="userIds" name="userIds" multiple required>
+                    <option th:each="u : ${users}" th:value="${u.id}"
+                            th:text="${u.fullName + ' (' + u.username + ')'}">사용자</option>
+                </select>
+                <p class="help-text">Ctrl 키를 누른 상태로 클릭하면 여러 명을 선택할 수 있습니다.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="note">메모 (선택)</label>
+                <textarea id="note" name="note" rows="3" placeholder="배정 사유나 안내 사항을 입력하세요"></textarea>
+            </div>
+
+            <button type="submit" class="btn-assign">강좌 배정</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('assignForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const courseId = document.getElementById('courseId').value;
+        const userSelect = document.getElementById('userIds');
+        const userIds = Array.from(userSelect.selectedOptions).map(o => parseInt(o.value));
+        const note = document.getElementById('note').value;
+
+        if (!courseId || userIds.length === 0) {
+            alert('강좌와 사용자를 선택해주세요.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/enrollments/api/assign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ courseId: parseInt(courseId), userIds: userIds, note: note })
+            });
+            const result = await response.json();
+            alert(result.message);
+            if (result.success) {
+                document.getElementById('assignForm').reset();
+            }
+        } catch (e) {
+            alert('오류가 발생했습니다.');
+        }
+    });
+</script>
+</body>
+</html>

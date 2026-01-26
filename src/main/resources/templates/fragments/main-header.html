@@ -1,27 +1,36 @@
 <header th:fragment="mainHeader" class="header" id="mainHeader"
-        xmlns:th="http://www.thymeleaf.org">
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
     <div class="header-container">
-        <a th:href="@{/main}" href="/main" class="header-logo">🇯🇵 日本 Travel LMS</a>
+        <a th:href="@{/main}" href="/main" class="header-logo">日本 Travel LMS</a>
 
         <nav class="header-nav">
-            <a th:href="@{/online-learning}" href="/online-learning" class="nav-parent">학습하기</a>
+            <a th:href="@{/learning}" href="/learning" class="nav-parent">학습하기</a>
             <a th:href="@{/guide}" href="/guide">이용안내</a>
+            <!-- 관리자 메뉴 -->
+            <a th:if="${isAdmin}" th:href="@{/admin/courses}" href="/admin/courses"
+               style="color: #c62828; font-weight: 600;">관리자</a>
         </nav>
 
         <div class="user-info">
             <span class="user-name" id="userName"
                   th:text="${username != null ? username : '사용자'}">사용자</span>
 
-            <!-- 일단 링크로(나중에 Security 붙이면 조정) -->
-            <a class="btn-logout" th:href="@{/logout}" href="/logout">로그아웃</a>
+            <!-- 로그아웃 (POST 방식) -->
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn-logout"
+                        style="background: none; border: none; cursor: pointer; color: inherit; font: inherit;">
+                    로그아웃
+                </button>
+            </form>
         </div>
     </div>
 
     <!-- 2차 탭바 -->
     <div class="subnav">
         <div class="subnav-inner">
-            <a th:href="@{/online-learning}" href="/online-learning"
-               class="subnav-item" data-subnav="online-learning">온라인학습</a>
+            <a th:href="@{/learning}" href="/learning"
+               class="subnav-item" data-subnav="learning">강의 목록</a>
 
             <a th:href="@{/attendance}" href="/attendance"
                class="subnav-item" data-subnav="attendance">출석체크</a>
@@ -31,4 +40,3 @@
         </div>
     </div>
 </header>
-

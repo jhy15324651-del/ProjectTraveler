@@ -127,27 +127,27 @@
         </div>
     </section>
 
-    <!-- 학습 통계 -->
+    <!-- 학습 통계 (DB 연동) -->
     <section class="content-section">
         <h2 class="section-title">나의 학습 현황</h2>
         <p class="section-subtitle">현재까지의 학습 진행 상황을 확인하세요</p>
-        
+
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-number">12</div>
+                <div class="stat-number" th:text="${summary != null ? summary.inProgressCourseCount : 0}">0</div>
                 <div class="stat-label">수강 중인 강좌</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">85%</div>
+                <div class="stat-number" th:text="${summary != null ? summary.averageProgressPercent + '%' : '0%'}">0%</div>
                 <div class="stat-label">평균 진도율</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">24</div>
+                <div class="stat-number" th:text="${summary != null ? summary.consecutiveAttendanceDays : 0}">0</div>
                 <div class="stat-label">연속 출석일</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">156</div>
-                <div class="stat-label">학습 시간(시간)</div>
+                <div class="stat-number" th:text="${summary != null ? summary.totalLearningTimeFormatted : '0분'}">0분</div>
+                <div class="stat-label">총 학습 시간</div>
             </div>
         </div>
     </section>
