@@ -1,0 +1,51 @@
+# ================================================
+# LMS Travel - 공통 설정 (Common Configuration)
+# ================================================
+# 환경별 설정은 application-{profile}.yml 에서 관리
+# 실행: -Dspring.profiles.active=local 또는 prod
+
+spring:
+  application:
+    name: ProjectTraveler
+
+  # 기본 프로필 설정 (로컬 개발용)
+  profiles:
+    active: local
+
+  # ===== JPA / Hibernate 공통 설정 =====
+  jpa:
+    # DDL 정책: validate(검증만) 권장, 개발 초기에만 update 사용
+    # 주의: create, create-drop 절대 금지 (데이터 손실 위험)
+    hibernate:
+      ddl-auto: update  # 추후 validate로 변경 권장
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MariaDBDialect
+
+  # ===== Thymeleaf 설정 =====
+  thymeleaf:
+    cache: false  # 개발 중에는 false, 운영에서는 true 권장
+
+  # ===== 파일 업로드 설정 =====
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 500MB
+      max-request-size: 500MB
+
+# ===== 서버 설정 =====
+server:
+  port: 8080
+
+# ===== 애플리케이션 커스텀 설정 =====
+app:
+  security:
+    remember-me-validity: 604800  # 7일 (초 단위)
+
+# ===== 로깅 설정 =====
+logging:
+  level:
+    org.zerock.projecttraveler: DEBUG
+    org.springframework.security: INFO  # 운영에서는 INFO로 변경
