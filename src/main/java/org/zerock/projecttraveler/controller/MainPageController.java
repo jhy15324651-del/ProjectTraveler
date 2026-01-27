@@ -13,6 +13,7 @@ import org.zerock.projecttraveler.entity.CourseEnrollment;
 import org.zerock.projecttraveler.security.CustomUserDetails;
 import org.zerock.projecttraveler.security.SecurityUtils;
 import org.zerock.projecttraveler.service.*;
+import org.zerock.projecttraveler.service.reviews.ReviewPostService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,6 +27,8 @@ public class MainPageController {
     private final EnrollmentService enrollmentService;
     private final LearningService learningService;
     private final AttendanceService attendanceService;
+    private final ReviewPostService reviewPostService;
+
 
     /**
      * 메인 페이지
@@ -204,7 +207,7 @@ public class MainPageController {
 
 
     /**
-     * 리뷰 페이지
+     * 후기 페이지
      */
     @GetMapping("/reviews")
     public String reviews(Model model) {
@@ -213,9 +216,27 @@ public class MainPageController {
         model.addAttribute("activePage", "reviews");
         model.addAttribute("username", user != null ? user.getFullName() : "사용자");
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
+        model.addAttribute("posts", reviewPostService.listLatest());
 
         return "reviews";
     }
+
+
+    /**
+     * 후기 작성 페이지
+     */
+    @GetMapping("/reviews-post")
+    public String reviewsPost(Model model) {
+        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
+
+        model.addAttribute("activePage", "reviews-post");
+        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
+        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
+
+        return "reviews-post";
+    }
+
+
 
     /**
      * 강좌 + 진도 정보를 담는 내부 클래스

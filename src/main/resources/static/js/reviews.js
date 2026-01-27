@@ -69,6 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         const themeMap = {
+            freedom : "자유여행",
             healing: "힐링",
             food: "맛집",
             activity: "액티비티",
