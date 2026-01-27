@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>여행 후기 작성</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <!-- Quill -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+
+    <style>
+        /* =========================
+           REVIEWS POST PAGE
+        ========================= */
+        .reviews-post {
+            width: min(1100px, 92%);
+            margin: 0 auto;
+            padding: 24px 0;
+        }
+
+        .reviews-post .page-title {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+
+        /* ✅ 제목 + 오른쪽 버튼 한 줄 */
+        .reviews-post .reviews-post-title-row{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 20px; /* 기존 page-title margin 역할 */
+        }
+
+        /* 기존 page-title margin 제거(줄 겹침 방지) */
+        .reviews-post .reviews-post-title-row .page-title{
+            margin: 0;
+        }
+
+        /* ✅ 검색 버튼(q-btn)과 동일 톤의 pill 버튼 */
+        .reviews-post .back-btn{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            height: 38px;
+            padding: 0 14px;
+            border-radius: 999px;
+
+            font-size: 0.86rem;
+            font-weight: 800;
+            line-height: 1;
+            text-decoration: none;
+            white-space: nowrap;
+
+            border: 1px solid #d9a26a;
+            background: #eea95b; /* 검색 버튼 톤 */
+            color: #fff;
+
+            box-shadow: 0 2px 0 rgba(0,0,0,0.10);
+            transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+        }
+
+        .reviews-post .back-btn:hover{
+            transform: translateY(-1px);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+            filter: brightness(0.98);
+        }
+
+        .reviews-post .back-btn:active{
+            transform: translateY(0);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.10);
+        }
+
+
+        .write-section {
+            margin-bottom: 30px;
+        }
+
+        .write-label {
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        /* 조회 페이지와 동일한 hint 스타일 */
+        .filter-hint {
+            font-size: 11px;
+            font-weight: 600;
+            color: #9ca3af;
+            margin-bottom: 8px;
+        }
+
+        .filter-hint.single::before {
+            content: "* ";
+        }
+
+        .filter-hint.multi::before {
+            content: "* ";
+        }
+
+        .write-input {
+            width: 100%;
+            height: 44px;
+            padding: 0 14px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            font-size: 0.95rem;
+        }
+
+        /* =========================
+           태그 UI (reviews.css 동일 크기)
+        ========================= */
+        .filter-row {
+            display: grid;
+            grid-template-columns: 90px 1fr;
+            gap: 14px;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .filter-label {
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* 🔥 조회 페이지와 동일한 chip 사이즈 */
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 7px 12px;
+            border-radius: 999px;
+
+            font-size: 0.86rem;
+            font-weight: 700;
+            line-height: 1;
+
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            color: #374151;
+
+            cursor: pointer;
+            transition: 0.12s ease;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.07);
+        }
+
+        .chip:hover {
+            transform: translateY(-1px);
+        }
+
+        .chip.active {
+            background: #f6c792;
+            border-color: #d9a26a;
+            color: #3b2f22;
+        }
+
+        /* =========================
+           예산 4항목 입력
+        ========================= */
+        .budget-grid{
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .budget-item{
+            display: grid;
+            grid-template-columns: 48px 1fr 42px; /* 라벨 / 입력 / 단위 */
+            align-items: center;
+            gap: 8px;
+
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .budget-item .b-label{
+            font-weight: 800;
+            color: #111827;
+        }
+
+        .budget-item .b-input{
+            height: 40px;
+            padding: 0 10px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            font-weight: 800;
+        }
+
+        .budget-item .unit{
+            font-weight: 800;
+            white-space: nowrap;
+            color: #374151;
+        }
+
+        @media (max-width: 700px){
+            .budget-grid{ grid-template-columns: 1fr; }
+        }
+
+
+        .budget-write textarea {
+            flex: 1;
+            height: 44px;          /* 🔥 고정 높이 */
+            min-height: 44px;      /* 🔥 줄임 */
+            max-height: 44px;      /* 🔥 늘어나지 않게 */
+            max-width: 300px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            resize: none;          /* 🔥 크기 조절 비활성 */
+            line-height: 1.2;
+            font-size: 0.95rem;
+        }
+
+        .budget-write .unit {
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        /* =========================
+           Quill
+        ========================= */
+        #editor {
+            height: 320px;
+            background: #fff;
+        }
+
+        /* =========================
+           제출 버튼
+        ========================= */
+        .submit-btn {
+            width: 100%;
+            height: 52px;
+            border-radius: 14px;
+            border: none;
+            background: #3b82f6;
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        /* ✅ 선택 요약 바 */
+        .reviews-post .tag-summary-mini{
+            margin-top: 6px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .reviews-post .tag-summary-mini .empty{
+            color: #94a3b8;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        /* ✅ 요약칩(필터칩과 톤 맞춤) */
+        .reviews-post .tag-summary-mini .chip{
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 6px 10px;
+            border-radius: 999px;
+
+            font-size: 0.82rem;
+            font-weight: 750;
+            line-height: 1;
+
+            background: #ffe1bf;
+            border: 1px solid #e6b17a;
+            color: #3b2f22;
+
+            box-shadow: 0 2px 0 rgba(0,0,0,0.06);
+        }
+
+        /* ✅ 예산은 항상 아랫줄(예시 이미지처럼) */
+        .reviews-post .tag-summary-mini .chip.budget{
+            flex-basis: 100%;
+            border-radius: 12px;
+            justify-content: flex-start;
+            white-space: normal;
+
+            padding: 8px 10px;
+            background: #fff7ed;
+            border-color: #f0c38d;
+            color: #4b3a2a;
+        }
+
+        .ql-editor img {
+            max-width: 100%;
+            height: auto;
+        }
+
+
+    </style>
+</head>
+
+<body class="main-page">
+<div th:replace="fragments/main-header :: mainHeader"></div>
+
+<main class="container reviews-post">
+    <div class="reviews-post-title-row">
+        <h1 class="page-title">여행 후기 작성</h1>
+
+        <a class="back-btn" th:href="@{/reviews}" href="/reviews">
+            ← 돌아가기
+        </a>
+    </div>
+
+    <form method="post" th:action="@{/reviews}" id="postForm">
+
+        <!-- 제목 -->
+        <section class="write-section">
+            <label class="write-label">제목</label>
+            <input type="text" name="title" class="write-input"
+                   placeholder="여행 후기를 한 줄로 요약해 주세요">
+        </section>
+
+        <!-- 예산 -->
+        <section class="write-section">
+            <label class="write-label">사용 경비</label>
+
+            <div class="budget-grid" id="budgetGrid">
+                <div class="budget-item">
+                    <span class="b-label">항공</span>
+                    <input type="text" name="budgetFlight" class="b-input" inputmode="numeric" placeholder="0">
+                    <span class="unit">만 원</span>
+                </div>
+
+                <div class="budget-item">
+                    <span class="b-label">숙박</span>
+                    <input type="text" name="budgetStay" class="b-input" inputmode="numeric" placeholder="0">
+                    <span class="unit">만 원</span>
+                </div>
+
+                <div class="budget-item">
+                    <span class="b-label">식비</span>
+                    <input type="text" name="budgetFood" class="b-input" inputmode="numeric" placeholder="0">
+                    <span class="unit">만 원</span>
+                </div>
+
+                <div class="budget-item">
+                    <span class="b-label">기타</span>
+                    <input type="text" name="budgetEtc" class="b-input" inputmode="numeric" placeholder="0">
+                    <span class="unit">만 원</span>
+                </div>
+            </div>
+
+            <!-- 서버로 총액도 같이 보낼 거면 사용 -->
+            <input type="hidden" name="budgetTotal" id="budgetTotal" value="0">
+        </section>
+
+
+        <!-- 태그 선택 -->
+        <section class="write-section">
+
+            <!-- 여행 유형 -->
+            <div class="filter-row">
+                <div>
+                    <div class="filter-label">여행 유형</div>
+                    <div class="filter-hint single">한 개만 선택</div>
+                </div>
+                <div class="filter-chips" data-key="travelType">
+                    <button type="button" class="chip" data-value="solo">혼자</button>
+                    <button type="button" class="chip" data-value="couple">커플</button>
+                    <button type="button" class="chip" data-value="family">가족</button>
+                    <button type="button" class="chip" data-value="friends">친구</button>
+                </div>
+                <input type="hidden" name="travelType">
+            </div>
+
+            <!-- 테마 -->
+            <div class="filter-row">
+                <div>
+                    <div class="filter-label">테마</div>
+                    <div class="filter-hint single">한 개만 선택</div>
+                </div>
+                <div class="filter-chips" data-key="theme">
+                    <button type="button" class="chip" data-value="freedom">자유</button>
+                    <button type="button" class="chip" data-value="healing">힐링</button>
+                    <button type="button" class="chip" data-value="food">맛집</button>
+                    <button type="button" class="chip" data-value="activity">액티비티</button>
+                    <button type="button" class="chip" data-value="nature">자연</button>
+                </div>
+                <input type="hidden" name="theme">
+            </div>
+
+            <!-- 기간 -->
+            <div class="filter-row">
+                <div>
+                    <div class="filter-label">기간</div>
+                    <div class="filter-hint single">한 개만 선택</div>
+                </div>
+                <div class="filter-chips" data-key="period">
+                    <button type="button" class="chip" data-value="당일치기">당일</button>
+                    <button type="button" class="chip" data-value="1박2일">1박2일</button>
+                    <button type="button" class="chip" data-value="2박3일">2박3일</button>
+                    <button type="button" class="chip" data-value="3박4일">3박4일</button>
+                </div>
+                <input type="hidden" name="period">
+            </div>
+
+            <!-- 난이도 -->
+            <div class="filter-row">
+                <div>
+                    <div class="filter-label">난이도</div>
+                    <div class="filter-hint single">한 개만 선택</div>
+                </div>
+                <div class="filter-chips" data-key="level">
+                    <button type="button" class="chip" data-value="초급">초급</button>
+                    <button type="button" class="chip" data-value="중급">중급</button>
+                    <button type="button" class="chip" data-value="상급">상급</button>
+                </div>
+                <input type="hidden" name="level">
+            </div>
+
+            <!-- 지역 -->
+            <div class="filter-row">
+                <div>
+                    <div class="filter-label">지역</div>
+                    <div class="filter-hint single">중복 선택 가능</div>
+                </div>
+                <div class="filter-chips" data-key="region" data-mode="multi">
+                    <button type="button" class="chip" data-value="도쿄">도쿄</button>
+                    <button type="button" class="chip" data-value="오사카">오사카</button>
+                    <button type="button" class="chip" data-value="교토">교토</button>
+                    <button type="button" class="chip" data-value="후쿠오카">후쿠오카</button>
+                    <button type="button" class="chip" data-value="삿포로">삿포로</button>
+                </div>
+
+                <!-- 🔥 다중 선택 hidden input들이 들어갈 자리 -->
+                <div class="region-inputs"></div>
+            </div>
+
+            <!-- ✅ 선택 조건 요약 UI (미리보기) -->
+            <div class="tag-summary-mini" id="miniSummary">
+                <span class="empty">선택된 조건 없음</span>
+            </div>
+
+        </section>
+
+        <!-- 내용 -->
+        <section class="write-section">
+            <label class="write-label">여행 후기 내용</label>
+            <div id="editor"></div>
+            <input type="hidden" name="content" id="content">
+        </section>
+
+        <!-- 제출 -->
+        <section class="write-section">
+            <button type="submit" class="submit-btn">여행 후기 등록</button>
+        </section>
+
+    </form>
+</main>
+
+<!-- Quill -->
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+<script>
+    // =========================
+    // Quill + Image Upload
+    // =========================
+    const toolbarOptions = [
+        [{ header: [1, 2, 3, false] }],
+        ["bold", "italic", "underline", "strike"],
+        [{ color: [] }, { background: [] }],
+        [{ list: "ordered" }, { list: "bullet" }],
+        [{ align: [] }],
+        ["blockquote", "code-block"],
+        ["link", "image"],
+        ["clean"]
+    ];
+
+    const quill = new Quill("#editor", {
+        theme: "snow",
+        placeholder: "여행 중 느낀 점, 팁, 추천 코스를 자유롭게 작성해 주세요",
+        modules: {
+            toolbar: {
+                container: toolbarOptions,
+                handlers: {
+                    image: imageHandler
+                }
+            }
+        }
+    });
+
+    // ✅ 이미지 버튼 클릭 시 실행될 핸들러
+    function imageHandler() {
+        const input = document.createElement("input");
+        input.setAttribute("type", "file");
+        input.setAttribute("accept", "image/*");
+        input.click();
+
+        input.onchange = async () => {
+            const file = input.files && input.files[0];
+            if (!file) return;
+
+            // (선택) 클라에서 1차 용량 제한
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (file.size > maxSize) {
+                alert("이미지는 최대 5MB까지 업로드할 수 있어요.");
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append("image", file);
+
+                const res = await fetch("/reviews/upload-image", {
+                    method: "POST",
+                    body: formData
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alert(err.error || "이미지 업로드에 실패했습니다.");
+                    return;
+                }
+
+                const data = await res.json();
+                const imageUrl = data.url;
+                if (!imageUrl) {
+                    alert("서버 응답에 url이 없습니다.");
+                    return;
+                }
+
+                // ✅ 현재 커서 위치에 이미지 삽입
+                const range = quill.getSelection(true);
+                const index = range ? range.index : quill.getLength();
+
+                quill.insertEmbed(index, "image", imageUrl, "user");
+                quill.insertText(index + 1, "\n", "user");
+                quill.setSelection(index + 2, 0);
+
+            } catch (e) {
+                console.error(e);
+                alert("업로드 중 오류가 발생했습니다.");
+            }
+        };
+    }
+
+    // ✅ submit 시 HTML 저장
+    document.getElementById("postForm").addEventListener("submit", () => {
+        document.getElementById("content").value = quill.root.innerHTML;
+    });
+</script>
+
+
+<script th:src="@{/js/main.js}" src="/js/main.js"></script>
+<script th:src="@{/js/reviews-post.js}" src="/js/reviews-post.js"></script>
+
+</body>
+</html>

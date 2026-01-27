@@ -35,9 +35,15 @@
             </div>
 
             <!-- 에러/성공 메시지 -->
-            <div th:if="${errorMessage}" class="message error-message" th:text="${errorMessage}"></div>
-            <div th:if="${logoutMessage}" class="message success-message" th:text="${logoutMessage}"></div>
-            <div th:if="${expiredMessage}" class="message info-message" th:text="${expiredMessage}"></div>
+            <div th:if="${param.error}" class="message error-message">
+                아이디 또는 비밀번호가 올바르지 않습니다.
+            </div>
+            <div th:if="${param.logout}" class="message success-message">
+                로그아웃 되었습니다.
+            </div>
+            <div th:if="${param.expired}" class="message info-message">
+                세션이 만료되어 다시 로그인해주세요.
+            </div>
 
             <!-- Spring Security 로그인 폼 -->
             <form th:action="@{/login}" method="post" class="login-form">
@@ -74,5 +80,7 @@
             </form>
         </div>
     </div>
+
+
 </body>
 </html>

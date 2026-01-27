@@ -13,7 +13,13 @@
 
 <main class="container reviews">
 
-    <h1 class="page-title">여행 후기</h1>
+    <div class="reviews-title-row">
+        <h1 class="page-title">여행 후기</h1>
+
+        <a class="write-btn" th:href="@{/reviews-post}" href="/reviews-post">
+            후기 작성하기
+        </a>
+    </div>
 
     <!-- =========================
          필터 패널 (이미지 스타일 모방)
@@ -45,7 +51,7 @@
                 </div>
                 <div class="filter-chips" data-key="theme" data-mode="single">
                     <button type="button" class="chip active" data-value="">전체</button>
-                    <button type="button" class="chip" data-value="자유여행">자유</button>
+                    <button type="button" class="chip" data-value="freedom">자유</button>
                     <button type="button" class="chip" data-value="healing">힐링</button>
                     <button type="button" class="chip" data-value="food">맛집</button>
                     <button type="button" class="chip" data-value="activity">액티비티</button>
@@ -194,18 +200,31 @@
     ========================== -->
     <section class="post-list">
 
-        <!-- 데이터 있을 때 -->
         <article class="post-card" th:each="post : ${posts}">
             <a class="post-link" th:href="@{/reviews/{id}(id=${post.id})}">
+
                 <h3 class="post-title" th:text="${post.title}">제목</h3>
 
                 <div class="post-meta">
-                    <span class="badge" th:text="${post.travelType}">유형</span>
-                    <span class="badge" th:text="${post.theme}">테마</span>
-                    <span class="badge" th:text="${post.periodTag}">기간</span>
+                <span class="badge"
+                      th:if="${post.travelType != null}"
+                      th:text="${post.travelType}">유형</span>
+
+                    <span class="badge"
+                          th:if="${post.theme != null}"
+                          th:text="${post.theme}">테마</span>
+
+                    <span class="badge"
+                          th:if="${post.period != null}"
+                          th:text="${post.period}">기간</span>
                 </div>
 
-                <p class="post-desc" th:text="${post.summary}">요약</p>
+                <!-- 임시 요약: 본문 앞부분 -->
+                <p class="post-desc"
+                   th:text="${#strings.abbreviate(#strings.replace(post.content, '<[^>]*>', ''), 80)}">
+                    요약
+                </p>
+
             </a>
         </article>
 
@@ -215,6 +234,7 @@
         </div>
 
     </section>
+
 </main>
 
 <!-- JS 분리 로딩 -->
@@ -238,6 +258,56 @@
         font-weight: 800;
         margin: 10px 0 18px;
     }
+
+    /* ✅ 제목 + 오른쪽 버튼 한 줄 */
+    .reviews .reviews-title-row{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 10px 0 18px; /* 기존 page-title margin 역할 */
+    }
+
+    /* 기존 page-title margin 제거(줄 겹침 방지) */
+    .reviews .reviews-title-row .page-title{
+        margin: 0;
+    }
+
+    /* ✅ 검색 버튼(q-btn)과 같은 느낌의 '후기 작성하기' */
+    .reviews .write-btn{
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        height: 38px;
+        padding: 0 14px;
+        border-radius: 999px;
+
+        font-size: 0.86rem;
+        font-weight: 800;
+        line-height: 1;
+        text-decoration: none;
+        white-space: nowrap;
+
+        border: 1px solid var(--chip-border);
+        background: var(--chip-bg-active);
+        color: #fff;
+
+        box-shadow: 0 2px 0 rgba(0,0,0,0.10);
+        transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    }
+
+    .reviews .write-btn:hover{
+        transform: translateY(-1px);
+        box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+        filter: brightness(0.98);
+    }
+
+    .reviews .write-btn:active{
+        transform: translateY(0);
+        box-shadow: 0 1px 0 rgba(0,0,0,0.10);
+    }
+
 
     /* 필터 패널 */
     .reviews .filter-panel {
@@ -556,7 +626,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-top: 18px;
+        margin-top: 0px;
     }
 
     /* (2) 사용자 태그 요약 */
