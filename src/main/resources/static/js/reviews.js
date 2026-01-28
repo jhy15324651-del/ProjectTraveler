@@ -1,7 +1,6 @@
 // reviews.js
 document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("filterForm");
-    if (!form) return;
+    const filterForm = document.getElementById("filterForm"); // (리스트 페이지)
 
     // ==============================
     // multi tag hidden input 생성 영역 매핑
@@ -78,11 +77,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 3) 칩 생성 유틸
         const addChip = (label, className = "") => {
+            const text = (label ?? "").toString().trim();
+            if (!text) return; // ✅ 빈칩 생성 방지
+
             const span = document.createElement("span");
             span.className = `chip ${className}`.trim();
-            span.textContent = label;
+            span.textContent = text;
             box.appendChild(span);
         };
+
 
         // 4) 선택값 모으기
         const chips = [];
@@ -303,4 +306,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // ✅ 최초 1회 렌더 (칩/예산 포함)
     // ==============================
     renderMiniSummary();
+
+    if (!document.getElementById("filterForm")) return; // 리스트 페이지 아니면 실행 안 함
 });

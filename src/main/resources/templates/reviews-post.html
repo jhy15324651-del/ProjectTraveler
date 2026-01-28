@@ -323,7 +323,7 @@
         </a>
     </div>
 
-    <form method="post" th:action="@{/reviews}" id="postForm">
+    <form id="postForm" method="post" th:action="@{/reviews}">
 
         <!-- 제목 -->
         <section class="write-section">
@@ -345,7 +345,7 @@
 
                 <div class="budget-item">
                     <span class="b-label">숙박</span>
-                    <input type="text" name="budgetStay" class="b-input" inputmode="numeric" placeholder="0">
+                    <input type="text" name="budgetLodging" class="b-input" inputmode="numeric" placeholder="0">
                     <span class="unit">만 원</span>
                 </div>
 
@@ -357,7 +357,7 @@
 
                 <div class="budget-item">
                     <span class="b-label">기타</span>
-                    <input type="text" name="budgetEtc" class="b-input" inputmode="numeric" placeholder="0">
+                    <input type="text" name="budgetExtra" class="b-input" inputmode="numeric" placeholder="0">
                     <span class="unit">만 원</span>
                 </div>
             </div>
@@ -464,7 +464,9 @@
 
         <!-- 제출 -->
         <section class="write-section">
-            <button type="submit" class="submit-btn">여행 후기 등록</button>
+            <button type="submit" class="submit-btn">
+                여행 후기 등록
+            </button>
         </section>
 
     </form>
