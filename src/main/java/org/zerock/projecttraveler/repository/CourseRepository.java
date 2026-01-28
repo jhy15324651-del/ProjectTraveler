@@ -14,7 +14,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     List<Course> findByCategoryAndActiveTrueOrderByCreatedAtDesc(Course.Category category);
 
-    @Query("SELECT c FROM Course c LEFT JOIN FETCH c.units u LEFT JOIN FETCH u.lessons WHERE c.id = :id")
+    @Query("SELECT DISTINCT c FROM Course c LEFT JOIN FETCH c.units LEFT JOIN FETCH c.lessons WHERE c.id = :id")
     Optional<Course> findByIdWithUnitsAndLessons(@Param("id") Long id);
 
     @Query("SELECT c FROM Course c LEFT JOIN FETCH c.lessons WHERE c.id = :id")
@@ -27,4 +27,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     List<Course> findAllActiveWithUnits();
 
     long countByActiveTrue();
+
+    // 삭제된 강좌 조회
+    List<Course> findByActiveFalseOrderByUpdatedAtDesc();
 }

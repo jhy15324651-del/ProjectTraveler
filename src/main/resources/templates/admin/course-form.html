@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${course != null ? '강좌 수정' : '새 강좌 등록'} + ' - 관리자'">강좌 등록 - 관리자</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <style>
+        .admin-container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        .admin-title { font-size: 24px; font-weight: 700; margin-bottom: 30px; }
+        .form-section { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        .form-group label .required { color: #c62828; margin-left: 4px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;
+            box-sizing: border-box;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: var(--primary-red); box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.1);
+        }
+        .form-group textarea { resize: vertical; min-height: 100px; }
+        .form-group .help-text { font-size: 13px; color: #666; margin-top: 5px; }
+        .form-group .error-text { font-size: 13px; color: #c62828; margin-top: 5px; display: none; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .btn-submit { width: 100%; padding: 14px; background: var(--primary-red); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .btn-submit:hover { background: #b71c1c; }
+        .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-cancel { display: inline-block; width: 100%; padding: 14px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; margin-top: 10px; }
+        .btn-cancel:hover { background: #e0e0e0; }
+        .admin-nav { margin-bottom: 30px; display: flex; gap: 15px; }
+        .admin-nav a { padding: 10px 20px; background: #f5f5f5; border-radius: 8px; text-decoration: none; color: #333; }
+        .admin-nav a.active { background: var(--primary-red); color: white; }
+        .thumbnail-preview { margin-top: 10px; max-width: 200px; max-height: 120px; border-radius: 8px; display: none; }
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; }
+        .alert-error { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+        .alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+    </style>
+</head>
+<body class="main-page">
+<div th:replace="fragments/main-header :: mainHeader"></div>
+
+<div class="admin-container">
+    <h1 class="admin-title" th:text="${course != null ? '강좌 수정' : '새 강좌 등록'}">새 강좌 등록</h1>
+
+    <div class="admin-nav">
+        <a th:href="@{/admin/courses}" href="/admin/courses" class="active">강좌 관리</a>
+        <a th:href="@{/admin/enrollments/requests}" href="/admin/enrollments/requests">수강 승인</a>
+        <a th:href="@{/admin/enrollments/assign}" href="/admin/enrollments/assign">강좌 배정</a>
+    </div>
+
+    <!-- 알림 메시지 -->
+    <div id="alertBox" class="alert" style="display: none;"></div>
+
+    <div class="form-section">
+        <form id="courseForm">
+            <!-- 수정 시 ID 저장 -->
+            <input type="hidden" id="courseId" th:value="${course != null ? course.id : ''}">
+
+            <div class="form-group">
+                <label for="title">강좌명 <span class="required">*</span></label>
+                <input type="text" id="title" name="title" required maxlength="200"
+                       th:value="${course != null ? course.title : ''}"
+                       placeholder="예: 일본어 기초 회화">
+                <p class="error-text" id="titleError">강좌명을 입력해주세요.</p>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="category">카테고리 <span class="required">*</span></label>
+                    <select id="category" name="category" required>
+                        <option value="">선택하세요</option>
+                        <option th:each="cat : ${categories}"
+                                th:value="${cat.name()}"
+                                th:text="${cat.name() == 'LANGUAGE' ? '일본어' : (cat.name() == 'CULTURE' ? '문화' : '여행')}"
+                                th:selected="${course != null and course.category == cat}">
+                            카테고리
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="level">레벨 <span class="required">*</span></label>
+                    <select id="level" name="level" required>
+                        <option value="">선택하세요</option>
+                        <option th:each="lv : ${levels}"
+                                th:value="${lv.name()}"
+                                th:text="${lv.name() == 'BEGINNER' ? '입문' : (lv.name() == 'INTERMEDIATE' ? '중급' : '고급')}"
+                                th:selected="${course != null and course.level == lv}">
+                            레벨
+                        </option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="enrollPolicy">수강 정책 <span class="required">*</span></label>
+                <select id="enrollPolicy" name="enrollPolicy" required>
+                    <option value="">선택하세요</option>
+                    <option th:each="policy : ${policies}"
+                            th:value="${policy.name()}"
+                            th:text="${policy.name() == 'SELF' ? '바로 수강 (즉시 승인)' : (policy.name() == 'APPROVAL' ? '승인 필요 (관리자 승인 후 수강)' : '배정만 (관리자 배정만 가능)')}"
+                            th:selected="${course != null and course.enrollPolicy == policy}">
+                        정책
+                    </option>
+                </select>
+                <p class="help-text">바로 수강: 사용자가 신청하면 즉시 수강 가능 / 승인 필요: 관리자가 승인해야 수강 가능</p>
+            </div>
+
+            <div class="form-group">
+                <label for="thumbnailUrl">썸네일 이미지 URL</label>
+                <input type="url" id="thumbnailUrl" name="thumbnailUrl"
+                       th:value="${course != null ? course.thumbnailUrl : ''}"
+                       placeholder="https://example.com/image.jpg">
+                <p class="help-text">외부 이미지 URL을 입력하세요. 비워두면 기본 이미지가 사용됩니다.</p>
+                <img id="thumbnailPreview" class="thumbnail-preview" alt="썸네일 미리보기"
+                     th:src="${course != null and course.thumbnailUrl != null ? course.thumbnailUrl : ''}"
+                     th:style="${course != null and course.thumbnailUrl != null ? 'display:block' : 'display:none'}">
+            </div>
+
+            <div class="form-group">
+                <label for="shortDesc">짧은 설명</label>
+                <textarea id="shortDesc" name="shortDesc" rows="2" maxlength="500"
+                          placeholder="강좌를 간략히 소개하는 문장 (목록에 표시됨)"
+                          th:text="${course != null ? course.shortDesc : ''}"></textarea>
+                <p class="help-text">강좌 목록에 표시되는 짧은 소개 문구입니다.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="fullDesc">상세 설명</label>
+                <textarea id="fullDesc" name="fullDesc" rows="5"
+                          placeholder="강좌에 대한 자세한 설명을 입력하세요 (상세 페이지에 표시됨)"
+                          th:text="${course != null ? course.fullDesc : ''}"></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <span th:text="${course != null ? '강좌 수정' : '강좌 등록'}">강좌 등록</span>
+            </button>
+            <a th:href="@{/admin/courses}" class="btn-cancel">취소</a>
+        </form>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const courseId = /*[[${course != null ? course.id : null}]]*/ null;
+    const isEditMode = courseId !== null;
+
+    // 썸네일 미리보기
+    document.getElementById('thumbnailUrl').addEventListener('input', function() {
+        const preview = document.getElementById('thumbnailPreview');
+        const url = this.value.trim();
+        if (url) {
+            preview.src = url;
+            preview.style.display = 'block';
+            preview.onerror = function() {
+                preview.style.display = 'none';
+            };
+        } else {
+            preview.style.display = 'none';
+        }
+    });
+
+    // 알림 메시지 표시
+    function showAlert(message, isError = false) {
+        const alertBox = document.getElementById('alertBox');
+        alertBox.textContent = message;
+        alertBox.className = 'alert ' + (isError ? 'alert-error' : 'alert-success');
+        alertBox.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 폼 검증
+    function validateForm() {
+        const title = document.getElementById('title').value.trim();
+        const category = document.getElementById('category').value;
+        const level = document.getElementById('level').value;
+        const enrollPolicy = document.getElementById('enrollPolicy').value;
+
+        let isValid = true;
+
+        // 강좌명 검증
+        if (!title) {
+            document.getElementById('titleError').style.display = 'block';
+            isValid = false;
+        } else {
+            document.getElementById('titleError').style.display = 'none';
+        }
+
+        if (!category || !level || !enrollPolicy) {
+            showAlert('필수 항목을 모두 선택해주세요.', true);
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    // 폼 제출
+    document.getElementById('courseForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (!validateForm()) return;
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '처리 중...';
+
+        const formData = {
+            title: document.getElementById('title').value.trim(),
+            category: document.getElementById('category').value,
+            level: document.getElementById('level').value,
+            enrollPolicy: document.getElementById('enrollPolicy').value,
+            thumbnailUrl: document.getElementById('thumbnailUrl').value.trim() || null,
+            shortDesc: document.getElementById('shortDesc').value.trim() || null,
+            fullDesc: document.getElementById('fullDesc').value.trim() || null
+        };
+
+        try {
+            const url = isEditMode ? `/admin/courses/api/${courseId}` : '/admin/courses/api';
+            const method = isEditMode ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // 성공 시 목록 페이지로 이동
+                window.location.href = '/admin/courses';
+            } else {
+                showAlert(result.message || '저장에 실패했습니다.', true);
+                submitBtn.disabled = false;
+                submitBtn.textContent = isEditMode ? '강좌 수정' : '강좌 등록';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('서버 오류가 발생했습니다.', true);
+            submitBtn.disabled = false;
+            submitBtn.textContent = isEditMode ? '강좌 수정' : '강좌 등록';
+        }
+    });
+</script>
+</body>
+</html>

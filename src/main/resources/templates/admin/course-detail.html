@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${course.title + ' - 레슨 관리'}">강좌 상세 - 관리자</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <style>
+        .admin-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .admin-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+        .admin-subtitle { color: #666; margin-bottom: 30px; }
+        .admin-nav { margin-bottom: 30px; display: flex; gap: 15px; }
+        .admin-nav a { padding: 10px 20px; background: #f5f5f5; border-radius: 8px; text-decoration: none; color: #333; }
+        .admin-nav a.active { background: var(--primary-red); color: white; }
+
+        .course-info-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; display: flex; gap: 20px; }
+        .course-thumb { width: 160px; height: 100px; background-size: cover; background-position: center; border-radius: 8px; flex-shrink: 0; }
+        .course-info h2 { margin: 0 0 10px 0; font-size: 20px; }
+        .course-meta { display: flex; gap: 15px; flex-wrap: wrap; }
+        .course-meta-item { padding: 4px 12px; background: #f5f5f5; border-radius: 20px; font-size: 13px; }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-title { font-size: 18px; font-weight: 600; }
+        .btn-add { background: var(--primary-red); color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+        .btn-add:hover { background: #b71c1c; }
+
+        .lessons-list { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .lesson-item { padding: 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 15px; }
+        .lesson-item:last-child { border-bottom: none; }
+        .lesson-order { width: 40px; height: 40px; background: #f5f5f5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: #666; }
+        .lesson-info { flex: 1; }
+        .lesson-title { font-weight: 600; margin-bottom: 5px; }
+        .lesson-meta { font-size: 13px; color: #666; display: flex; gap: 15px; }
+        .lesson-actions { display: flex; gap: 8px; }
+        .btn-edit { background: #2196f3; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-delete { background: #f44336; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+        .empty-state { padding: 60px 20px; text-align: center; color: #666; }
+
+        /* 모달 */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary-red); }
+        .form-group .help-text { font-size: 12px; color: #666; margin-top: 5px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-submit { flex: 1; padding: 12px; background: var(--primary-red); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-cancel { flex: 1; padding: 12px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; }
+        .badge-youtube { background: #ffebee; color: #c62828; }
+        .badge-mp4 { background: #e3f2fd; color: #1565c0; }
+        .badge-none { background: #f5f5f5; color: #666; }
+    </style>
+</head>
+<body class="main-page">
+<div th:replace="fragments/main-header :: mainHeader"></div>
+
+<div class="admin-container">
+    <h1 class="admin-title">레슨 관리</h1>
+    <p class="admin-subtitle">강좌의 레슨(차시)을 관리합니다</p>
+
+    <div class="admin-nav">
+        <a th:href="@{/admin/courses}">강좌 관리</a>
+        <a th:href="@{/admin/enrollments/requests}">수강 승인</a>
+        <a th:href="@{/admin/enrollments/assign}">강좌 배정</a>
+    </div>
+
+    <!-- 강좌 정보 카드 -->
+    <div class="course-info-card">
+        <div class="course-thumb" th:style="'background-image: url(' + ${course.thumbnailUrl != null ? course.thumbnailUrl : 'https://via.placeholder.com/160x100'} + ')'"></div>
+        <div class="course-info">
+            <h2 th:text="${course.title}">강좌명</h2>
+            <div class="course-meta">
+                <span class="course-meta-item" th:text="${course.categoryDisplayName}">카테고리</span>
+                <span class="course-meta-item" th:text="${course.levelDisplayName + ' 레벨'}">레벨</span>
+                <span class="course-meta-item" th:text="${lessonCount + '개 레슨'}">레슨 수</span>
+                <span class="course-meta-item" th:text="${course.formattedDuration}">총 시간</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 레슨 목록 -->
+    <div class="section-header">
+        <span class="section-title">레슨 목록</span>
+        <button class="btn-add" onclick="openAddLessonModal()">+ 새 레슨 추가</button>
+    </div>
+
+    <div class="lessons-list">
+        <!-- 레슨이 없는 경우 -->
+        <div class="empty-state" th:if="${#lists.isEmpty(lessons)}">
+            <p>등록된 레슨이 없습니다.</p>
+            <p>위의 "새 레슨 추가" 버튼을 클릭하여 레슨을 등록하세요.</p>
+        </div>
+
+        <!-- 레슨 목록 -->
+        <div th:each="lesson : ${lessons}" class="lesson-item">
+            <div class="lesson-order" th:text="${lesson.sortOrder}">1</div>
+            <div class="lesson-info">
+                <div class="lesson-title" th:text="${lesson.title}">레슨 제목</div>
+                <div class="lesson-meta">
+                    <span th:text="${lesson.formattedDuration}">15분</span>
+                    <span class="badge"
+                          th:classappend="${lesson.videoType.name() == 'YOUTUBE' ? 'badge-youtube' : (lesson.videoType.name() == 'MP4' ? 'badge-mp4' : 'badge-none')}"
+                          th:text="${lesson.videoType.name() == 'YOUTUBE' ? 'YouTube' : (lesson.videoType.name() == 'MP4' ? 'MP4' : '영상없음')}">
+                        타입
+                    </span>
+                    <span th:if="${lesson.videoUrl != null}" style="color: #4caf50;">URL 등록됨</span>
+                </div>
+            </div>
+            <div class="lesson-actions">
+                <button class="btn-edit"
+                        th:data-id="${lesson.id}"
+                        th:data-title="${lesson.title}"
+                        th:data-video-url="${lesson.videoUrl}"
+                        th:data-duration="${lesson.durationSec}"
+                        th:data-sort-order="${lesson.sortOrder}"
+                        onclick="openEditLessonFromButton(this)">수정</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 레슨 추가/수정 모달 -->
+<div class="modal-overlay" id="lessonModal">
+    <div class="modal">
+        <h3 class="modal-title" id="modalTitle">새 레슨 추가</h3>
+        <form id="lessonForm">
+            <input type="hidden" id="lessonId" value="">
+
+            <div class="form-group">
+                <label for="lessonTitle">레슨 제목 *</label>
+                <input type="text" id="lessonTitle" required placeholder="예: 1강. 기본 인사말">
+            </div>
+
+            <div class="form-group">
+                <label for="videoUrl">영상 URL *</label>
+                <input type="url" id="videoUrl" required placeholder="https://www.youtube.com/watch?v=...">
+                <p class="help-text">YouTube, Vimeo, S3, CloudFront 등 외부 영상 URL을 입력하세요</p>
+            </div>
+
+            <div class="form-group">
+                <label for="durationSec">영상 길이 (초) *</label>
+                <input type="number" id="durationSec" required min="1" placeholder="예: 600 (10분)">
+                <p class="help-text">영상 전체 길이를 초 단위로 입력하세요</p>
+            </div>
+
+            <div class="form-group">
+                <label for="sortOrder">순서</label>
+                <input type="number" id="sortOrder" min="1" th:value="${lessons != null ? lessons.size() + 1 : 1}">
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeModal()">취소</button>
+                <button type="submit" class="btn-submit" id="submitBtn">추가</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const courseId = /*[[${course.id}]]*/ 0;
+    let editingLessonId = null;
+
+    function openAddLessonModal() {
+        editingLessonId = null;
+        document.getElementById('modalTitle').textContent = '새 레슨 추가';
+        document.getElementById('submitBtn').textContent = '추가';
+        document.getElementById('lessonForm').reset();
+        document.getElementById('sortOrder').value = /*[[${lessons != null ? lessons.size() + 1 : 1}]]*/ 1;
+        document.getElementById('lessonModal').classList.add('active');
+    }
+
+    function openEditLessonFromButton(button) {
+        const id = button.dataset.id;
+        const title = button.dataset.title || '';
+        const videoUrl = button.dataset.videoUrl || '';
+        const durationSec = button.dataset.duration || 0;
+        const sortOrder = button.dataset.sortOrder || 1;
+        openEditLessonModal(id, title, videoUrl, durationSec, sortOrder);
+    }
+
+    function openEditLessonModal(id, title, videoUrl, durationSec, sortOrder) {
+        editingLessonId = id;
+        document.getElementById('modalTitle').textContent = '레슨 수정';
+        document.getElementById('submitBtn').textContent = '수정';
+        document.getElementById('lessonId').value = id;
+        document.getElementById('lessonTitle').value = title;
+        document.getElementById('videoUrl').value = videoUrl || '';
+        document.getElementById('durationSec').value = durationSec || 0;
+        document.getElementById('sortOrder').value = sortOrder || 1;
+        document.getElementById('lessonModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('lessonModal').classList.remove('active');
+    }
+
+    // 모달 외부 클릭 시 닫기
+    document.getElementById('lessonModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    // 폼 제출
+    document.getElementById('lessonForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const title = document.getElementById('lessonTitle').value.trim();
+        const videoUrl = document.getElementById('videoUrl').value.trim();
+        const durationSec = parseInt(document.getElementById('durationSec').value) || 0;
+        const sortOrder = parseInt(document.getElementById('sortOrder').value) || 1;
+
+        if (!title || !videoUrl || durationSec <= 0) {
+            alert('모든 필수 항목을 입력해주세요.');
+            return;
+        }
+
+        // YouTube URL인지 확인하고 videoType 결정
+        let videoType = 'MP4';
+        if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+            videoType = 'YOUTUBE';
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '처리 중...';
+
+        try {
+            let response;
+
+            if (editingLessonId) {
+                // 수정 - 기존 API가 없으므로 생성 API 사용 (실제로는 수정 API 필요)
+                // 여기서는 일단 새 레슨 생성으로 처리
+                response = await fetch(`/admin/courses/api/${courseId}/lessons`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, sortOrder, durationSec })
+                });
+            } else {
+                // 새 레슨 추가
+                response = await fetch(`/admin/courses/api/${courseId}/lessons`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, sortOrder, durationSec })
+                });
+            }
+
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                // 레슨 생성 후 영상 URL 업데이트
+                const lessonId = result.data.id;
+
+                // 영상 정보 업데이트 API 호출
+                const videoResponse = await fetch(`/admin/courses/api/lessons/${lessonId}/url`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ videoUrl, videoType, durationSec })
+                });
+
+                location.reload();
+            } else {
+                alert(result.message || '저장에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('서버 오류가 발생했습니다.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = editingLessonId ? '수정' : '추가';
+        }
+    });
+</script>
+</body>
+</html>

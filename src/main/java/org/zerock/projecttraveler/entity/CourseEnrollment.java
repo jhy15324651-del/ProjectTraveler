@@ -1,5 +1,6 @@
 package org.zerock.projecttraveler.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -17,10 +18,12 @@ public class CourseEnrollment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
@@ -44,6 +47,7 @@ public class CourseEnrollment {
     @Column(name = "assigned_at")
     private LocalDateTime assignedAt;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_by_admin_id")
     private User assignedByAdmin;
@@ -51,6 +55,7 @@ public class CourseEnrollment {
     @Column(columnDefinition = "TEXT")
     private String note;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_lesson_id")
     private Lesson lastLesson;

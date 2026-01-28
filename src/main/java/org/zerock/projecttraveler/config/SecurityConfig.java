@@ -29,7 +29,7 @@ public class SecurityConfig {
         http
             // CSRF 설정
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**") // API는 CSRF 비활성화
+                .ignoringRequestMatchers("/api/**", "/admin/courses/api/**", "/admin/enrollments/api/**") // API는 CSRF 비활성화
             )
             // 인증/인가 규칙
             .authorizeHttpRequests(auth -> auth
@@ -49,6 +49,7 @@ public class SecurityConfig {
                 .requestMatchers("/main", "/learning", "/course-detail", "/my-classroom",
                                "/attendance", "/online-learning", "/guide", "/select").authenticated()
                 .anyRequest().authenticated()
+
             )
             // 로그인 설정
             .formLogin(form -> form

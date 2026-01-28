@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${lesson.title + ' - ' + course.title}">레슨 시청</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <style>
+        .lesson-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .lesson-header { margin-bottom: 20px; }
+        .lesson-back { display: inline-flex; align-items: center; gap: 8px; color: #666; text-decoration: none; margin-bottom: 15px; }
+        .lesson-back:hover { color: var(--primary-red); }
+        .lesson-title { font-size: 24px; font-weight: 700; margin: 0 0 10px 0; }
+        .lesson-meta { display: flex; gap: 15px; color: #666; font-size: 14px; }
+
+        .lesson-content { display: grid; grid-template-columns: 1fr 350px; gap: 30px; }
+        @media (max-width: 1024px) {
+            .lesson-content { grid-template-columns: 1fr; }
+        }
+
+        /* 비디오 영역 */
+        .video-wrapper { background: #000; border-radius: 12px; overflow: hidden; position: relative; }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; }
+        .video-container iframe, .video-container video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        /* 진도 정보 */
+        .progress-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-top: 20px; }
+        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .progress-title { font-weight: 600; }
+        .progress-percent { font-size: 24px; font-weight: 700; color: var(--primary-red); }
+        .progress-bar { height: 8px; background: #eee; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary-red); border-radius: 4px; transition: width 0.3s; }
+        .progress-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .stat-item { text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+        .stat-value { font-size: 20px; font-weight: 700; color: #333; }
+        .stat-label { font-size: 12px; color: #666; margin-top: 5px; }
+
+        /* 사이드바 */
+        .sidebar { }
+        .curriculum-card { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .curriculum-header { padding: 20px; background: #f8f9fa; border-bottom: 1px solid #eee; }
+        .curriculum-title { font-weight: 600; margin: 0; }
+        .curriculum-list { max-height: 500px; overflow-y: auto; }
+        .curriculum-item { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.2s; }
+        .curriculum-item:hover { background: #f8f9fa; }
+        .curriculum-item.active { background: #fff3e0; border-left: 3px solid var(--primary-red); }
+        .curriculum-item.completed { background: #e8f5e9; }
+        .item-number { width: 28px; height: 28px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+        .curriculum-item.active .item-number { background: var(--primary-red); color: white; }
+        .curriculum-item.completed .item-number { background: #4caf50; color: white; }
+        .item-info { flex: 1; min-width: 0; }
+        .item-title { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-duration { font-size: 12px; color: #666; }
+
+        /* 완료 버튼 */
+        .complete-btn { width: 100%; padding: 15px; background: #4caf50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 20px; }
+        .complete-btn:hover { background: #43a047; }
+        .complete-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .complete-btn.completed { background: #81c784; }
+
+        /* 접근 불가 */
+        .access-denied { text-align: center; padding: 100px 20px; }
+        .access-denied h2 { color: #c62828; margin-bottom: 20px; }
+        .access-denied p { color: #666; margin-bottom: 30px; }
+        .access-denied a { display: inline-block; padding: 12px 30px; background: var(--primary-red); color: white; text-decoration: none; border-radius: 8px; }
+    </style>
+</head>
+<body class="main-page">
+<div th:replace="fragments/main-header :: mainHeader"></div>
+
+<!-- 접근 불가 (수강 권한 없음) -->
+<div th:if="${!canAccess}" class="lesson-container">
+    <div class="access-denied">
+        <h2>접근 권한이 없습니다</h2>
+        <p th:if="${enrollment == null}">이 강좌를 수강하려면 먼저 수강 신청을 해주세요.</p>
+        <p th:if="${enrollment != null and enrollment.status.name() == 'REQUESTED'}">수강 신청이 승인 대기 중입니다. 관리자 승인 후 학습이 가능합니다.</p>
+        <p th:if="${enrollment != null and enrollment.status.name() == 'REJECTED'}">수강 신청이 반려되었습니다.</p>
+        <a th:href="@{/course-detail(id=${course.id})}">강좌 상세로 이동</a>
+    </div>
+</div>
+
+<!-- 레슨 시청 (수강 권한 있음) -->
+<div th:if="${canAccess}" class="lesson-container">
+    <div class="lesson-header">
+        <a th:href="@{/course-detail(id=${course.id})}" class="lesson-back">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            <span th:text="${course.title}">강좌명</span>
+        </a>
+        <h1 class="lesson-title" th:text="${lesson.sortOrder + '강. ' + lesson.title}">레슨 제목</h1>
+        <div class="lesson-meta">
+            <span th:text="${lesson.formattedDuration}">15분</span>
+            <span th:text="${course.categoryDisplayName}">카테고리</span>
+        </div>
+    </div>
+
+    <div class="lesson-content">
+        <div class="main-content">
+            <!-- 비디오 플레이어 -->
+            <div class="video-wrapper">
+                <div class="video-container">
+                    <!-- YouTube -->
+                    <th:block th:if="${lesson.videoType.name() == 'YOUTUBE'}">
+                        <iframe th:id="'youtube-player'"
+                                th:src="${youtubeEmbedUrl}"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen>
+                        </iframe>
+                    </th:block>
+
+                    <!-- MP4/HLS -->
+                    <th:block th:if="${lesson.videoType.name() == 'MP4' or lesson.videoType.name() == 'HLS'}">
+                        <video id="video-player" controls th:src="${lesson.videoUrl}">
+                            브라우저가 비디오를 지원하지 않습니다.
+                        </video>
+                    </th:block>
+
+                    <!-- 영상 없음 -->
+                    <th:block th:if="${lesson.videoType.name() == 'NONE'}">
+                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #333; color: white;">
+                            <p>이 레슨에는 영상이 없습니다.</p>
+                        </div>
+                    </th:block>
+                </div>
+            </div>
+
+            <!-- 진도 정보 -->
+            <div class="progress-card">
+                <div class="progress-header">
+                    <span class="progress-title">이 레슨 진도</span>
+                    <span class="progress-percent" id="lessonProgress">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="lessonProgressBar" style="width: 0%;"></div>
+                </div>
+                <div class="progress-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="watchedTime">0분</div>
+                        <div class="stat-label">시청 시간</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalTime" th:text="${lesson.formattedDuration}">0분</div>
+                        <div class="stat-label">전체 시간</div>
+                    </div>
+                </div>
+
+                <button class="complete-btn" id="completeBtn" onclick="markComplete()">
+                    레슨 완료하기
+                </button>
+            </div>
+        </div>
+
+        <!-- 사이드바: 커리큘럼 -->
+        <div class="sidebar">
+            <div class="curriculum-card">
+                <div class="curriculum-header">
+                    <h3 class="curriculum-title">커리큘럼</h3>
+                </div>
+                <div class="curriculum-list">
+                    <div th:each="item : ${allLessons}"
+                         class="curriculum-item"
+                         th:classappend="${item.id == lesson.id ? 'active' : ''} + ' ' + ${progressMap != null and progressMap.containsKey(item.id) and progressMap.get(item.id).completed ? 'completed' : ''}"
+                         th:onclick="'goToLesson(' + ${item.id} + ')'">
+                        <div class="item-number">
+                            <th:block th:if="${progressMap != null and progressMap.containsKey(item.id) and progressMap.get(item.id).completed}">✓</th:block>
+                            <th:block th:unless="${progressMap != null and progressMap.containsKey(item.id) and progressMap.get(item.id).completed}" th:text="${item.sortOrder}">1</th:block>
+                        </div>
+                        <div class="item-info">
+                            <div class="item-title" th:text="${item.title}">레슨명</div>
+                            <div class="item-duration" th:text="${item.formattedDuration}">15분</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const courseId = /*[[${course.id}]]*/ 0;
+    const lessonId = /*[[${lesson.id}]]*/ 0;
+    const durationSec = /*[[${lesson.durationSec}]]*/ 0;
+    const videoType = /*[[${lesson.videoType.name()}]]*/ 'NONE';
+    const canAccess = /*[[${canAccess}]]*/ false;
+
+    let lastSavedPosition = 0;
+    let totalWatchedSec = 0;
+    let heartbeatInterval = null;
+    let isCompleted = false;
+
+    // 초기 진도 로드
+    async function loadProgress() {
+        try {
+            const response = await fetch(`/api/learning/progress?courseId=${courseId}&lessonId=${lessonId}`);
+            const result = await response.json();
+            if (result.success && result.data) {
+                lastSavedPosition = result.data.lastPositionSec || 0;
+                totalWatchedSec = result.data.watchedSec || 0;
+                isCompleted = result.data.completed || false;
+                updateProgressUI();
+
+                if (isCompleted) {
+                    document.getElementById('completeBtn').textContent = '완료됨 ✓';
+                    document.getElementById('completeBtn').classList.add('completed');
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load progress:', e);
+        }
+    }
+
+    // 진도 UI 업데이트
+    function updateProgressUI() {
+        const percent = durationSec > 0 ? Math.min(Math.round((totalWatchedSec / durationSec) * 100), 100) : 0;
+        document.getElementById('lessonProgress').textContent = percent + '%';
+        document.getElementById('lessonProgressBar').style.width = percent + '%';
+        document.getElementById('watchedTime').textContent = formatTime(totalWatchedSec);
+    }
+
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        if (mins > 0) {
+            return mins + '분';
+        }
+        return secs + '초';
+    }
+
+    // Heartbeat 전송
+    async function sendHeartbeat(positionSec, deltaSec) {
+        if (!canAccess || deltaSec <= 0) return;
+
+        try {
+            await fetch('/api/learning/heartbeat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    courseId: courseId,
+                    lessonId: lessonId,
+                    positionSec: positionSec,
+                    deltaWatchedSec: deltaSec
+                })
+            });
+            totalWatchedSec += deltaSec;
+            updateProgressUI();
+        } catch (e) {
+            console.error('Heartbeat failed:', e);
+        }
+    }
+
+    // 레슨 완료
+    async function markComplete() {
+        if (isCompleted) return;
+
+        try {
+            const response = await fetch('/api/learning/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ courseId: courseId, lessonId: lessonId })
+            });
+            const result = await response.json();
+
+            if (result.success && result.data && result.data.completed) {
+                isCompleted = true;
+                document.getElementById('completeBtn').textContent = '완료됨 ✓';
+                document.getElementById('completeBtn').classList.add('completed');
+                alert('레슨을 완료했습니다!');
+            } else {
+                alert(result.message || '완료 조건을 충족하지 못했습니다. 영상을 더 시청해주세요.');
+            }
+        } catch (e) {
+            console.error('Complete failed:', e);
+            alert('오류가 발생했습니다.');
+        }
+    }
+
+    // 다른 레슨으로 이동
+    function goToLesson(targetLessonId) {
+        if (targetLessonId !== lessonId) {
+            window.location.href = `/lesson?courseId=${courseId}&lessonId=${targetLessonId}`;
+        }
+    }
+
+    // HTML5 Video 이벤트 (MP4/HLS)
+    function setupVideoPlayer() {
+        const video = document.getElementById('video-player');
+        if (!video) return;
+
+        let lastTime = 0;
+
+        video.addEventListener('loadedmetadata', function() {
+            if (lastSavedPosition > 0) {
+                video.currentTime = lastSavedPosition;
+            }
+        });
+
+        video.addEventListener('timeupdate', function() {
+            const currentTime = Math.floor(video.currentTime);
+            const delta = currentTime - lastTime;
+
+            // 10초마다 heartbeat
+            if (delta >= 10) {
+                sendHeartbeat(currentTime, delta);
+                lastTime = currentTime;
+            }
+        });
+
+        video.addEventListener('pause', function() {
+            const currentTime = Math.floor(video.currentTime);
+            const delta = currentTime - lastTime;
+            if (delta > 0) {
+                sendHeartbeat(currentTime, delta);
+                lastTime = currentTime;
+            }
+        });
+
+        video.addEventListener('ended', function() {
+            sendHeartbeat(durationSec, durationSec - lastTime);
+        });
+    }
+
+    // YouTube API (간단한 타이머 방식)
+    function setupYouTubeTracking() {
+        if (videoType !== 'YOUTUBE') return;
+
+        // YouTube iframe API는 복잡하므로 간단한 타이머로 대체
+        let watchedSec = 0;
+        heartbeatInterval = setInterval(() => {
+            watchedSec += 10;
+            sendHeartbeat(watchedSec, 10);
+        }, 10000); // 10초마다
+    }
+
+    // 초기화
+    if (canAccess) {
+        loadProgress();
+
+        if (videoType === 'MP4' || videoType === 'HLS') {
+            setupVideoPlayer();
+        } else if (videoType === 'YOUTUBE') {
+            setupYouTubeTracking();
+        }
+    }
+
+    // 페이지 이탈 시 정리
+    window.addEventListener('beforeunload', function() {
+        if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+        }
+    });
+</script>
+</body>
+</html>

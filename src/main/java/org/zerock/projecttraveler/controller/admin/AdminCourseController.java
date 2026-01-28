@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,6 +30,7 @@ import java.util.UUID;
 @RequestMapping("/admin/courses")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
+@Slf4j
 public class AdminCourseController {
 
     private final CourseService courseService;
@@ -99,9 +101,15 @@ public class AdminCourseController {
         List<CourseUnit> units = courseService.findUnitsWithLessons(id);
         List<Lesson> lessons = courseService.findLessonsByCourseId(id);
 
+        log.info("=== 강좌 상세 페이지 ===");
+        log.info("강좌 ID: {}, 제목: {}", id, course.getTitle());
+        log.info("조회된 레슨 수: {}", lessons.size());
+        lessons.forEach(l -> log.info("  - 레슨: id={}, title={}, sortOrder={}", l.getId(), l.getTitle(), l.getSortOrder()));
+
         model.addAttribute("course", course);
         model.addAttribute("units", units);
         model.addAttribute("lessons", lessons);
+        model.addAttribute("lessonCount", lessons.size());
         model.addAttribute("activePage", "admin-courses");
         model.addAttribute("username", SecurityUtils.getCurrentUserDetails()
                 .map(u -> u.getFullName()).orElse("관리자"));
@@ -155,6 +163,31 @@ public class AdminCourseController {
 
             Course updated = courseService.updateCourse(id, course);
             return ResponseEntity.ok(ApiResponse.success("강좌가 수정되었습니다.", updated));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    /**
+     * 강좌 삭제 API
+     */
+    @DeleteMapping("/api/{id}")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<Void>> deleteCourse(
+            @PathVariable Long id,
+            @RequestBody DeleteRequest request) {
+        try {
+            // 현재 로그인한 사용자 정보 가져오기
+            String deletedBy = SecurityUtils.getCurrentUserDetails()
+                    .map(u -> u.getFullName())
+                    .orElse("관리자");
+            Long deletedByUserId = SecurityUtils.getCurrentUserDetails()
+                    .map(u -> u.getId())
+                    .orElse(null);
+
+            courseService.deleteCourse(id, request.getReason(), deletedBy, deletedByUserId);
+
+            return ResponseEntity.ok(ApiResponse.success("강좌가 삭제되었습니다.", null));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
@@ -236,6 +269,42 @@ public class AdminCourseController {
         }
     }
 
+    /**
+     * 레슨 영상 URL 업데이트 API (외부 URL 방식)
+     */
+    @PutMapping("/api/lessons/{lessonId}/url")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<Lesson>> updateVideoUrl(
+            @PathVariable Long lessonId,
+            @RequestBody VideoUrlRequest request) {
+        try {
+            Lesson.VideoType videoType = Lesson.VideoType.MP4;
+            if ("YOUTUBE".equalsIgnoreCase(request.getVideoType())) {
+                videoType = Lesson.VideoType.YOUTUBE;
+            } else if ("HLS".equalsIgnoreCase(request.getVideoType())) {
+                videoType = Lesson.VideoType.HLS;
+            }
+
+            Lesson lesson = courseService.updateLessonVideo(
+                    lessonId,
+                    videoType,
+                    request.getVideoUrl(),
+                    request.getDurationSec()
+            );
+
+            return ResponseEntity.ok(ApiResponse.success("영상 URL이 등록되었습니다.", lesson));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    @Data
+    public static class VideoUrlRequest {
+        private String videoUrl;
+        private String videoType;
+        private Integer durationSec;
+    }
+
     @Data
     public static class CourseRequest {
         @NotBlank(message = "강좌명은 필수입니다.")
@@ -262,5 +331,11 @@ public class AdminCourseController {
         private Long unitId;
         private int sortOrder;
         private Integer durationSec;
+    }
+
+    @Data
+    public static class DeleteRequest {
+        @NotBlank(message = "삭제 이유는 필수입니다.")
+        private String reason;
     }
 }
