@@ -221,21 +221,40 @@
                     <h3 class="post-title" th:text="${post.title}">제목</h3>
 
                     <div class="post-meta">
-                <span class="badge"
-                      th:if="${post.travelType != null}"
-                      th:text="${post.travelType}">유형</span>
+                        <!-- 여행유형: 코드 -> 한글 -->
+                        <span class="badge"
+                              th:if="${post.travelType != null}"
+                              th:text="${post.travelType == 'solo' ? '혼자' :
+                                         post.travelType == 'couple' ? '커플' :
+                                         post.travelType == 'family' ? '가족' :
+                                         post.travelType == 'friends' ? '친구' :
+                                         post.travelType}">유형</span>
 
+                        <!-- 테마: 코드 -> 한글 -->
                         <span class="badge"
                               th:if="${post.theme != null}"
-                              th:text="${post.theme}">테마</span>
+                              th:text="${post.theme == 'freedom' ? '자유여행' :
+                                         post.theme == 'healing' ? '힐링' :
+                                         post.theme == 'food' ? '맛집' :
+                                         post.theme == 'activity' ? '액티비티' :
+                                         post.theme == 'nature' ? '자연' :
+                                         post.theme}">테마</span>
 
                         <span class="badge"
                               th:if="${post.period != null}"
                               th:text="${post.period}">기간</span>
+
+                        <span class="badge"
+                              th:if="${post.level != null}"
+                              th:text="${post.level}">난이도</span>
+
+                        <span class="badge"
+                              th:each="tag : ${post.regionTags}"
+                              th:text="${tag}">지역</span>
                     </div>
 
                     <p class="post-desc"
-                       th:text="${#strings.abbreviate(#strings.replace(post.content, '<[^>]*>', ''), 80)}">
+                       th:text="${#strings.abbreviate(post.summary, 80)}">
                         요약
                     </p>
 
@@ -1032,7 +1051,7 @@
 
     /* 빈 결과 */
     .reviews .empty {
-        margin-top: 12px;
+        margin-top: 0px;
         color: #6b7280;
         font-weight: 700;
     }
