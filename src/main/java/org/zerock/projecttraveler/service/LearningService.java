@@ -91,6 +91,82 @@ public class LearningService {
         Lesson continueLesson = null;
         Lesson firstIncompleteLesson = null;
 
+        // 유닛에 속하지 않은 레슨들 처리 (unit_id가 NULL인 레슨들)
+        List<Lesson> unassignedLessons = allLessons.stream()
+                .filter(l -> l.getUnit() == null)
+                .collect(Collectors.toList());
+
+        if (!unassignedLessons.isEmpty()) {
+            List<CourseDetailDto.LessonDto> lessonDtos = new ArrayList<>();
+            int unitCompletedCount = 0;
+            boolean hasInProgress = false;
+
+            for (Lesson lesson : unassignedLessons) {
+                LessonProgress progress = progressMap.get(lesson.getId());
+
+                String status = "미시작";
+                int progressPercent = 0;
+                int lastPositionSec = 0;
+                boolean completed = false;
+
+                if (progress != null) {
+                    completed = progress.getCompleted();
+                    lastPositionSec = progress.getLastPositionSec() != null ? progress.getLastPositionSec() : 0;
+                    progressPercent = progress.getProgressPercent();
+
+                    if (completed) {
+                        status = "완료";
+                        unitCompletedCount++;
+                    } else if (progress.getWatchedSec() != null && progress.getWatchedSec() > 0) {
+                        status = "진행중";
+                        hasInProgress = true;
+                        if (continueLesson == null) {
+                            continueLesson = lesson;
+                        }
+                    }
+                }
+
+                if (!completed && firstIncompleteLesson == null) {
+                    firstIncompleteLesson = lesson;
+                }
+
+                lessonDtos.add(CourseDetailDto.LessonDto.builder()
+                        .id(lesson.getId())
+                        .title(lesson.getTitle())
+                        .sortOrder(lesson.getSortOrder())
+                        .formattedDuration(lesson.getFormattedDuration())
+                        .videoType(lesson.getVideoType().name())
+                        .videoUrl(lesson.getVideoUrl())
+                        .isPreview(lesson.getIsPreview())
+                        .status(status)
+                        .progressPercent(progressPercent)
+                        .lastPositionSec(lastPositionSec)
+                        .completed(completed)
+                        .build());
+            }
+
+            // 유닛 상태 결정
+            String unitStatus;
+            if (unitCompletedCount == unassignedLessons.size()) {
+                unitStatus = "완료";
+            } else if (hasInProgress || unitCompletedCount > 0) {
+                unitStatus = "진행중";
+            } else {
+                unitStatus = "미시작";
+            }
+
+            // 기본 유닛으로 추가
+            unitDtos.add(CourseDetailDto.UnitDto.builder()
+                    .id(0L)
+                    .title("기본 커리큘럼")
+                    .sortOrder(0)
+                    .lessonCount(unassignedLessons.size())
+                    .formattedDuration(formatLessonsTotalDuration(unassignedLessons))
+                    .status(unitStatus)
+                    .lessons(lessonDtos)
+                    .build());
+        }
+
         for (CourseUnit unit : units) {
             List<CourseDetailDto.LessonDto> lessonDtos = new ArrayList<>();
             int unitCompletedCount = 0;
@@ -303,6 +379,13 @@ public class LearningService {
         return progressRepository.sumWatchedSecByUserId(userId);
     }
 
+    /**
+     * 특정 강좌의 레슨별 진도 목록 (레슨 정보 포함)
+     */
+    public List<LessonProgress> getProgressListByUserAndCourse(Long userId, Long courseId) {
+        return progressRepository.findByUserIdAndCourseIdWithLesson(userId, courseId);
+    }
+
     private String formatTime(long seconds) {
         long hours = seconds / 3600;
         long minutes = (seconds % 3600) / 60;
@@ -313,5 +396,19 @@ public class LearningService {
         } else {
             return String.format("%d분", minutes);
         }
+    }
+
+    private String formatLessonsTotalDuration(List<Lesson> lessons) {
+        int totalSec = lessons.stream()
+                .mapToInt(l -> l.getDurationSec() != null ? l.getDurationSec() : 0)
+                .sum();
+        if (totalSec == 0) return "미정";
+        int minutes = totalSec / 60;
+        if (minutes >= 60) {
+            int hours = minutes / 60;
+            int remainingMin = minutes % 60;
+            return remainingMin > 0 ? String.format("약 %d시간 %d분", hours, remainingMin) : String.format("약 %d시간", hours);
+        }
+        return String.format("약 %d분", minutes);
     }
 }

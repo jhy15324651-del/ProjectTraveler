@@ -10,6 +10,7 @@ import org.zerock.projecttraveler.dto.EnrollmentDto;
 import org.zerock.projecttraveler.dto.MyLearningSummaryDto;
 import org.zerock.projecttraveler.entity.Course;
 import org.zerock.projecttraveler.entity.CourseEnrollment;
+import org.zerock.projecttraveler.entity.Lesson;
 import org.zerock.projecttraveler.security.CustomUserDetails;
 import org.zerock.projecttraveler.security.SecurityUtils;
 import org.zerock.projecttraveler.service.*;
@@ -119,12 +120,19 @@ public class MainPageController {
                 .map(enrollmentService::toEnrollmentDtoWithProgress)
                 .collect(Collectors.toList());
 
+        // 승인 대기 중인 강좌
+        List<CourseEnrollment> pendingEnrollments = enrollmentService.findPendingEnrollments(userId);
+        List<EnrollmentDto> pending = pendingEnrollments.stream()
+                .map(EnrollmentDto::from)
+                .collect(Collectors.toList());
+
         model.addAttribute("activePage", "myClassroom");
         model.addAttribute("username", user != null ? user.getFullName() : "사용자");
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
         model.addAttribute("summary", summary);
         model.addAttribute("inProgressCourses", inProgress);
         model.addAttribute("completedCourses", completed);
+        model.addAttribute("pendingCourses", pending);
 
         return "my-classroom";
     }
@@ -237,6 +245,108 @@ public class MainPageController {
     }
 
 
+
+    /**
+     * 레슨 시청 페이지
+     */
+    @GetMapping("/lesson")
+    public String lesson(
+            @RequestParam Long courseId,
+            @RequestParam(required = false) Long lessonId,
+            Model model) {
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
+
+        // 강좌 조회
+        Course course = courseService.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("강좌를 찾을 수 없습니다."));
+
+        // 수강 정보 조회
+        CourseEnrollment enrollment = enrollmentService.findEnrollment(userId, courseId).orElse(null);
+        boolean canAccess = enrollment != null && enrollment.isAccessible();
+
+        // 레슨 목록
+        List<Lesson> allLessons = courseService.findLessonsByCourseId(courseId);
+
+        // 레슨 결정 (지정된 레슨 또는 첫 번째 레슨)
+        Lesson lesson;
+        if (lessonId != null) {
+            lesson = courseService.findLessonById(lessonId)
+                    .orElseThrow(() -> new IllegalArgumentException("레슨을 찾을 수 없습니다."));
+        } else {
+            lesson = courseService.findFirstLesson(courseId)
+                    .orElseThrow(() -> new IllegalArgumentException("등록된 레슨이 없습니다."));
+        }
+
+        // 진도 맵 (레슨별 완료 여부)
+        java.util.Map<Long, org.zerock.projecttraveler.entity.LessonProgress> progressMap = new java.util.HashMap<>();
+        if (canAccess) {
+            List<org.zerock.projecttraveler.entity.LessonProgress> progressList =
+                    learningService.getProgressListByUserAndCourse(userId, courseId);
+            for (var p : progressList) {
+                progressMap.put(p.getLesson().getId(), p);
+            }
+        }
+
+        // YouTube URL → embed URL 변환
+        String youtubeEmbedUrl = null;
+        if (lesson.getVideoType() == Lesson.VideoType.YOUTUBE && lesson.getVideoUrl() != null) {
+            youtubeEmbedUrl = convertToYoutubeEmbed(lesson.getVideoUrl());
+        }
+
+        model.addAttribute("activePage", "lesson");
+        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
+        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
+        model.addAttribute("course", course);
+        model.addAttribute("lesson", lesson);
+        model.addAttribute("allLessons", allLessons);
+        model.addAttribute("enrollment", enrollment);
+        model.addAttribute("canAccess", canAccess);
+        model.addAttribute("progressMap", progressMap);
+        model.addAttribute("youtubeEmbedUrl", youtubeEmbedUrl);
+
+        return "lesson";
+    }
+
+    /**
+     * YouTube URL을 embed URL로 변환
+     */
+    private String convertToYoutubeEmbed(String url) {
+        if (url == null) return null;
+
+        String videoId = null;
+
+        // youtube.com/watch?v=VIDEO_ID
+        if (url.contains("youtube.com/watch")) {
+            int idx = url.indexOf("v=");
+            if (idx != -1) {
+                videoId = url.substring(idx + 2);
+                int ampIdx = videoId.indexOf("&");
+                if (ampIdx != -1) {
+                    videoId = videoId.substring(0, ampIdx);
+                }
+            }
+        }
+        // youtu.be/VIDEO_ID
+        else if (url.contains("youtu.be/")) {
+            int idx = url.indexOf("youtu.be/");
+            videoId = url.substring(idx + 9);
+            int queryIdx = videoId.indexOf("?");
+            if (queryIdx != -1) {
+                videoId = videoId.substring(0, queryIdx);
+            }
+        }
+        // 이미 embed URL인 경우
+        else if (url.contains("youtube.com/embed/")) {
+            return url;
+        }
+
+        if (videoId != null) {
+            return "https://www.youtube.com/embed/" + videoId + "?enablejsapi=1";
+        }
+
+        return url;
+    }
 
     /**
      * 강좌 + 진도 정보를 담는 내부 클래스

@@ -15,6 +15,26 @@
         .btn-new { background: var(--primary-red); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; }
         .btn-edit { background: #2196f3; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 13px; }
         .btn-view { background: #4caf50; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 13px; margin-right: 8px; }
+        .btn-delete { background: #f44336; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-left: 8px; }
+        .btn-delete:hover { background: #d32f2f; }
+
+        /* 삭제 모달 */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 450px; }
+        .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; color: #f44336; }
+        .modal-desc { color: #666; margin-bottom: 20px; }
+        .modal-course-info { background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .modal-course-info strong { display: block; margin-bottom: 5px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+        .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; resize: vertical; min-height: 100px; }
+        .form-group textarea:focus { outline: none; border-color: var(--primary-red); }
+        .modal-actions { display: flex; gap: 10px; }
+        .btn-confirm-delete { flex: 1; padding: 12px; background: #f44336; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-confirm-delete:hover { background: #d32f2f; }
+        .btn-cancel { flex: 1; padding: 12px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-cancel:hover { background: #e0e0e0; }
         .admin-nav { margin-bottom: 30px; display: flex; gap: 15px; }
         .admin-nav a { padding: 10px 20px; background: #f5f5f5; border-radius: 8px; text-decoration: none; color: #333; }
         .admin-nav a.active { background: var(--primary-red); color: white; }
@@ -71,10 +91,108 @@
                 <td>
                     <a th:href="@{/admin/courses/{id}(id=${c.id})}" class="btn-view">상세</a>
                     <a th:href="@{/admin/courses/{id}/edit(id=${c.id})}" class="btn-edit">수정</a>
+                    <button class="btn-delete"
+                            th:data-id="${c.id}"
+                            th:data-title="${c.title}"
+                            onclick="openDeleteModal(this)">삭제</button>
                 </td>
             </tr>
         </tbody>
     </table>
 </div>
+
+<!-- 삭제 확인 모달 -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal">
+        <h3 class="modal-title">강좌 삭제</h3>
+        <p class="modal-desc">이 작업은 취소할 수 없습니다. 삭제 전 신중히 확인해주세요.</p>
+
+        <div class="modal-course-info">
+            <strong id="deleteCourseTitle">강좌명</strong>
+            <span>위 강좌를 삭제합니다.</span>
+        </div>
+
+        <form id="deleteForm">
+            <input type="hidden" id="deleteCourseId" value="">
+
+            <div class="form-group">
+                <label for="deleteReason">삭제 이유 *</label>
+                <textarea id="deleteReason" required placeholder="예: 강좌 내용 리뉴얼 예정, 잘못 등록된 강좌, 운영 종료 등"></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeDeleteModal()">취소</button>
+                <button type="submit" class="btn-confirm-delete" id="confirmDeleteBtn">삭제</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let deleteTargetId = null;
+
+    function openDeleteModal(button) {
+        deleteTargetId = button.dataset.id;
+        const title = button.dataset.title;
+
+        document.getElementById('deleteCourseId').value = deleteTargetId;
+        document.getElementById('deleteCourseTitle').textContent = title;
+        document.getElementById('deleteReason').value = '';
+        document.getElementById('deleteModal').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('active');
+        deleteTargetId = null;
+    }
+
+    // 모달 외부 클릭 시 닫기
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+    });
+
+    // 삭제 폼 제출
+    document.getElementById('deleteForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const reason = document.getElementById('deleteReason').value.trim();
+
+        if (!reason) {
+            alert('삭제 이유를 입력해주세요.');
+            return;
+        }
+
+        if (!confirm('정말 이 강좌를 삭제하시겠습니까?\n\n삭제된 강좌는 복구할 수 없습니다.')) {
+            return;
+        }
+
+        const btn = document.getElementById('confirmDeleteBtn');
+        btn.disabled = true;
+        btn.textContent = '삭제 중...';
+
+        try {
+            const response = await fetch(`/admin/courses/api/${deleteTargetId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reason: reason })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('강좌가 삭제되었습니다.');
+                location.reload();
+            } else {
+                alert(result.message || '삭제에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('서버 오류가 발생했습니다.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '삭제';
+        }
+    });
+</script>
 </body>
 </html>

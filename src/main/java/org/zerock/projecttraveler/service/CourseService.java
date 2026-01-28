@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.zerock.projecttraveler.entity.*;
 import org.zerock.projecttraveler.repository.*;
+import org.zerock.projecttraveler.security.SecurityUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,7 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final CourseUnitRepository courseUnitRepository;
     private final LessonRepository lessonRepository;
+    private final CourseDeletionLogRepository courseDeletionLogRepository;
 
     /**
      * 모든 활성 강좌 조회
@@ -199,5 +201,53 @@ public class CourseService {
      */
     public int countLessons(Long courseId) {
         return lessonRepository.countByCourseId(courseId);
+    }
+
+    /**
+     * 강좌 삭제 (Soft Delete + 이력 저장)
+     * @param courseId 삭제할 강좌 ID
+     * @param reason 삭제 이유
+     * @param deletedBy 삭제한 사람 이름
+     * @param deletedByUserId 삭제한 사람 ID
+     */
+    @Transactional
+    public void deleteCourse(Long courseId, String reason, String deletedBy, Long deletedByUserId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("강좌를 찾을 수 없습니다."));
+
+        // 삭제 이력 저장
+        CourseDeletionLog deletionLog = CourseDeletionLog.builder()
+                .courseId(course.getId())
+                .courseTitle(course.getTitle())
+                .courseCategory(course.getCategory())
+                .courseLevel(course.getLevel())
+                .lessonCount(course.getTotalLessonCount())
+                .reason(reason)
+                .deletedBy(deletedBy)
+                .deletedByUserId(deletedByUserId)
+                .courseCreatedAt(course.getCreatedAt())
+                .build();
+
+        courseDeletionLogRepository.save(deletionLog);
+
+        log.info("강좌 삭제 이력 저장: courseId={}, title={}, deletedBy={}, reason={}",
+                course.getId(), course.getTitle(), deletedBy, reason);
+
+        // Soft Delete: active = false
+        course.setActive(false);
+    }
+
+    /**
+     * 삭제된 강좌 목록 조회
+     */
+    public List<Course> findAllDeletedCourses() {
+        return courseRepository.findByActiveFalseOrderByUpdatedAtDesc();
+    }
+
+    /**
+     * 강좌 삭제 이력 조회
+     */
+    public List<CourseDeletionLog> findDeletionLogs() {
+        return courseDeletionLogRepository.findTop10ByOrderByDeletedAtDesc();
     }
 }

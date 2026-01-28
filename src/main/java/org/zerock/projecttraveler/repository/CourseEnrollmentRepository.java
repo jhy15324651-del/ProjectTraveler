@@ -43,4 +43,8 @@ public interface CourseEnrollmentRepository extends JpaRepository<CourseEnrollme
     // 사용자의 완료한 강좌 수
     @Query("SELECT COUNT(e) FROM CourseEnrollment e WHERE e.user.id = :userId AND e.status = 'COMPLETED'")
     long countCompletedByUserId(@Param("userId") Long userId);
+
+    // 사용자의 승인 대기 목록
+    @Query("SELECT e FROM CourseEnrollment e JOIN FETCH e.course WHERE e.user.id = :userId AND e.status = 'REQUESTED' ORDER BY e.requestedAt DESC")
+    List<CourseEnrollment> findPendingByUserId(@Param("userId") Long userId);
 }

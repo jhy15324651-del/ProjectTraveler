@@ -110,6 +110,13 @@ public class EnrollmentService {
     }
 
     /**
+     * 사용자의 승인 대기 중인 수강 목록
+     */
+    public List<CourseEnrollment> findPendingEnrollments(Long userId) {
+        return enrollmentRepository.findPendingByUserId(userId);
+    }
+
+    /**
      * 사용자의 수강 중인 강좌 수
      */
     public long countInProgressCourses(Long userId) {
