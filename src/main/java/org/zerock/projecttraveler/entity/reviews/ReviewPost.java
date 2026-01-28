@@ -85,4 +85,7 @@ public class ReviewPost {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @Transient
+    private String thumbnailUrl;
 }
