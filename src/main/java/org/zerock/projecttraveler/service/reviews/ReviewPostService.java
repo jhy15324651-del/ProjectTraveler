@@ -51,9 +51,18 @@ public class ReviewPostService {
         for (ReviewPost p : posts) {
             // Quill HTML에서 첫 img src를 뽑아서 엔티티의 thumbnailUrl(@Transient)에 세팅
             p.setThumbnailUrl(extractFirstImageUrl(p.getContent()));
+
+            // ✅ 요약(텍스트만)
+            p.setSummary(extractTextOnly(p.getContent()));
+
         }
 
         return posts;
+    }
+
+    private String extractTextOnly(String html) {
+        if (html == null || html.isBlank()) return "";
+        return Jsoup.parse(html).text(); // ✅ HTML 태그, img src 같은 것 전부 제거됨
     }
 
     /**
@@ -77,4 +86,6 @@ public class ReviewPostService {
         String src = img.attr("src");
         return (src == null || src.isBlank()) ? null : src;
     }
+
+
 }

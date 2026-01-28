@@ -88,4 +88,7 @@ public class ReviewPost {
 
     @Transient
     private String thumbnailUrl;
+
+    @Transient
+    private String summary;
 }
