@@ -1,13 +1,16 @@
 package org.zerock.projecttraveler.service.reviews;
 
 import lombok.RequiredArgsConstructor;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 import org.zerock.projecttraveler.dto.reviews.ReviewPostCreateRequest;
 import org.zerock.projecttraveler.entity.reviews.ReviewPost;
 import org.zerock.projecttraveler.repository.reviews.ReviewPostRepository;
+
 import java.util.List;
 import java.util.NoSuchElementException;
-
 
 @Service
 @RequiredArgsConstructor
@@ -39,12 +42,39 @@ public class ReviewPostService {
         return saved.getId();
     }
 
+    /**
+     * 최신순 목록 조회 (+ 썸네일 추출)
+     */
     public List<ReviewPost> listLatest() {
-        return reviewPostRepository.findAllByOrderByCreatedAtDesc();
+        List<ReviewPost> posts = reviewPostRepository.findAllByOrderByCreatedAtDesc();
+
+        for (ReviewPost p : posts) {
+            // Quill HTML에서 첫 img src를 뽑아서 엔티티의 thumbnailUrl(@Transient)에 세팅
+            p.setThumbnailUrl(extractFirstImageUrl(p.getContent()));
+        }
+
+        return posts;
     }
 
+    /**
+     * 단건 조회
+     */
     public ReviewPost findById(Long id) {
         return reviewPostRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("ReviewPost not found: " + id));
+    }
+
+    /**
+     * 본문(HTML)에서 첫 번째 이미지 src 추출
+     */
+    private String extractFirstImageUrl(String html) {
+        if (html == null || html.isBlank()) return null;
+
+        Document doc = Jsoup.parse(html);
+        Element img = doc.selectFirst("img");
+        if (img == null) return null;
+
+        String src = img.attr("src");
+        return (src == null || src.isBlank()) ? null : src;
     }
 }

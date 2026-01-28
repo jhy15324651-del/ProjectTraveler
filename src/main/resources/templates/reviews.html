@@ -203,30 +203,46 @@
         <article class="post-card" th:each="post : ${posts}">
             <a class="post-link" th:href="@{/reviews/{id}(id=${post.id})}">
 
-                <h3 class="post-title" th:text="${post.title}">제목</h3>
+                <!-- 왼쪽: 섬네일 -->
+                <div class="post-thumb">
+                    <img th:if="${post.thumbnailUrl != null}"
+                         th:src="${post.thumbnailUrl}"
+                         alt="thumbnail"/>
 
-                <div class="post-meta">
+                    <div th:if="${post.thumbnailUrl == null}"
+                         class="post-thumb--placeholder">
+                        No Image
+                    </div>
+                </div>
+
+                <!-- 오른쪽: 콘텐츠 -->
+                <div class="post-body">
+
+                    <h3 class="post-title" th:text="${post.title}">제목</h3>
+
+                    <div class="post-meta">
                 <span class="badge"
                       th:if="${post.travelType != null}"
                       th:text="${post.travelType}">유형</span>
 
-                    <span class="badge"
-                          th:if="${post.theme != null}"
-                          th:text="${post.theme}">테마</span>
+                        <span class="badge"
+                              th:if="${post.theme != null}"
+                              th:text="${post.theme}">테마</span>
 
-                    <span class="badge"
-                          th:if="${post.period != null}"
-                          th:text="${post.period}">기간</span>
+                        <span class="badge"
+                              th:if="${post.period != null}"
+                              th:text="${post.period}">기간</span>
+                    </div>
+
+                    <p class="post-desc"
+                       th:text="${#strings.abbreviate(#strings.replace(post.content, '<[^>]*>', ''), 80)}">
+                        요약
+                    </p>
+
                 </div>
-
-                <!-- 임시 요약: 본문 앞부분 -->
-                <p class="post-desc"
-                   th:text="${#strings.abbreviate(#strings.replace(post.content, '<[^>]*>', ''), 80)}">
-                    요약
-                </p>
-
             </a>
         </article>
+
 
         <!-- 데이터 없을 때 -->
         <div class="empty" th:if="${posts == null || #lists.isEmpty(posts)}">
@@ -376,56 +392,6 @@
         font-size: 18px;
         font-weight: 900;
         cursor: pointer;
-    }
-
-    /* 게시글 리스트 */
-    .reviews .post-list {
-        margin-top: 18px;
-        display: grid;
-        gap: 12px;
-    }
-
-    .reviews .post-card {
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 14px;
-        background: #fff;
-    }
-
-    .reviews .post-link {
-        display: block;
-        color: inherit;
-        text-decoration: none;
-    }
-
-    .reviews .post-title {
-        font-size: 18px;
-        font-weight: 900;
-        margin-bottom: 8px;
-    }
-
-    /* 메타 정보 */
-    .reviews .post-meta {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-bottom: 8px;
-    }
-
-    .reviews .badge {
-        font-size: 12px;
-        font-weight: 800;
-        padding: 6px 10px;
-        border-radius: 999px;
-        background: #f3f4f6;
-        color: #111827;
-    }
-
-    /* 빈 결과 */
-    .reviews .empty {
-        margin-top: 12px;
-        color: #6b7280;
-        font-weight: 700;
     }
 
     /* =========================
@@ -933,6 +899,160 @@
     .reviews .reviews-budget-ticks .tick-label {
         color: #8b5e34;                        /* 글자도 통일 */
         font-weight: 700;
+    }
+
+    /* =========================
+   Reviews - 게시글 리스트 (완성본)
+   목표:
+   [섬네일] [타이틀]
+   [섬네일] [태그...]
+   [섬네일] [내용...]
+========================= */
+
+    .reviews .post-list {
+        margin-top: 18px;
+        display: grid;
+        gap: 12px;
+    }
+
+    /* 카드: 왼쪽 모서리까지 섬네일이 붙어야 하므로
+       padding은 카드가 아니라 링크(post-link)에 준다 */
+    .reviews .post-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #fff;
+        overflow: hidden; /* 섬네일이 카드 모서리와 딱 맞게 */
+        height: 150px;          /* 🔑 전체 카드 높이 */
+    }
+
+    /* 링크(카드 전체 클릭): 가로 레이아웃 */
+    .reviews .post-link {
+        display: flex;              /* ✅ block -> flex (충돌 해결) */
+        align-items: stretch;       /* 섬네일 세로 꽉 채움 */
+        gap: 14px;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    /* 왼쪽 섬네일 */
+    .reviews .post-thumb {
+        width: 180px;
+        height: 100%;
+        flex: 0 0 180px;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 섬네일 이미지: 박스 꽉 채우기 */
+    .reviews .post-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    /* 이미지 없을 때 */
+    .reviews .post-thumb--placeholder {
+        font-size: 13px;
+        font-weight: 800;
+        color: #9ca3af;
+    }
+
+    /* 오른쪽 콘텐츠 영역 */
+    .reviews .post-body {
+        padding: 14px;              /* ✅ 기존 post-card padding을 여기로 이동 */
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* 제목 */
+    .reviews .post-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 900;           /* 기존 톤 유지 */
+        line-height: 1.25;
+    }
+
+    /* =========================
+       ✅ 게시글 카드 태그(뱃지) = 태그 미리보기 칩과 동일 톤
+       - 기존 .reviews .badge 를 이걸로 교체
+    ========================= */
+    .reviews .post-meta{
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+        margin:0;
+        align-items:center;
+    }
+
+    /* 기존 회색 badge → 살구톤 칩으로 통일 */
+    .reviews .badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+
+        font-size: 0.82rem;
+        font-weight: 750;
+        line-height: 1;
+
+        padding: 6px 10px;
+        border-radius: 999px;
+
+        background: #ffe1bf;     /* tag-summary-mini 칩과 동일 */
+        border: 1px solid #e6b17a;
+        color: #3b2f22;
+
+        box-shadow: 0 2px 0 rgba(0,0,0,0.06);
+        white-space: nowrap;
+    }
+
+    /* 요약 */
+    .reviews .post-desc {
+        margin: 0;
+        color: #555;
+        line-height: 1.45;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;  /* 2줄 제한 */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* 카드 hover (게시판 느낌) */
+    .reviews .post-card:hover {
+        border-color: #d1d5db;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        transform: translateY(-1px);
+        transition: all 0.15s ease;
+    }
+
+    /* 빈 결과 */
+    .reviews .empty {
+        margin-top: 12px;
+        color: #6b7280;
+        font-weight: 700;
+    }
+
+    /* (선택) 모바일: 섬네일 위/본문 아래로 전환 */
+    @media (max-width: 768px) {
+        .reviews .post-link {
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .reviews .post-thumb {
+            width: 100%;
+            flex: 0 0 auto;
+            height: 180px;
+        }
+
+        .reviews .post-body {
+            padding: 14px;
+        }
     }
 
 

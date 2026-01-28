@@ -52,7 +52,7 @@
                 기타: <b th:text="${post.budgetExtra == null ? 0 : T(java.lang.Math).round(post.budgetExtra/10000.0)}">0</b>만
             </div>
             <div style="margin-top: 6px;">
-                총액:
+                사용 금액:
                 <b th:text="${T(java.lang.Math).round(post.budgetTotal/10000.0)}">0</b>만 원
             </div>
         </div>
