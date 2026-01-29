@@ -31,10 +31,23 @@
 
         <!-- 선택 메타 태그 -->
         <div class="post-meta" style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
-            <span class="chip" th:if="${post.travelType != null and !post.travelType.isEmpty()}"
-                  th:text="${post.travelType}">travelType</span>
-            <span class="chip" th:if="${post.theme != null and !post.theme.isEmpty()}"
-                  th:text="${post.theme}">theme</span>
+            <!-- 여행유형 칩 -->
+            <span class="chip"
+                  th:if="${post.travelType != null}"
+                  th:text="${post.travelType == 'solo' ? '혼자' :
+               post.travelType == 'couple' ? '커플' :
+               post.travelType == 'family' ? '가족' :
+               post.travelType == 'friends' ? '친구' : post.travelType}">
+</span>
+            <!-- 테마 칩 -->
+            <span class="chip"
+                  th:if="${post.theme != null}"
+                  th:text="${post.theme == 'freedom' ? '자유여행' :
+               post.theme == 'healing' ? '힐링' :
+               post.theme == 'food' ? '맛집' :
+               post.theme == 'activity' ? '액티비티' :
+               post.theme == 'nature' ? '자연' : post.theme}">
+</span>
             <span class="chip" th:if="${post.period != null and !post.period.isEmpty()}"
                   th:text="${post.period}">period</span>
             <span class="chip" th:if="${post.level != null and !post.level.isEmpty()}"
@@ -44,18 +57,24 @@
         </div>
 
         <!-- 예산 -->
-        <div class="post-budget" th:if="${post.budgetTotal != null}" style="margin-top: 14px;">
+        <div class="post-budget" style="margin-top: 14px;">
             <div>
-                항공: <b th:text="${post.budgetFlight == null ? 0 : T(java.lang.Math).round(post.budgetFlight/10000.0)}">0</b>만 /
-                숙박: <b th:text="${post.budgetLodging == null ? 0 : T(java.lang.Math).round(post.budgetLodging/10000.0)}">0</b>만 /
-                식비: <b th:text="${post.budgetFood == null ? 0 : T(java.lang.Math).round(post.budgetFood/10000.0)}">0</b>만 /
-                기타: <b th:text="${post.budgetExtra == null ? 0 : T(java.lang.Math).round(post.budgetExtra/10000.0)}">0</b>만
+                항공: <b th:text="${post.budgetFlight ?: 0}">0</b>만 /
+                숙박: <b th:text="${post.budgetLodging ?: 0}">0</b>만 /
+                식비: <b th:text="${post.budgetFood ?: 0}">0</b>만 /
+                기타: <b th:text="${post.budgetExtra ?: 0}">0</b>만
             </div>
             <div style="margin-top: 6px;">
                 사용 금액:
-                <b th:text="${T(java.lang.Math).round(post.budgetTotal/10000.0)}">0</b>만 원
+                <b th:text="${
+            (post.budgetFlight ?: 0)
+          + (post.budgetLodging ?: 0)
+          + (post.budgetFood ?: 0)
+          + (post.budgetExtra ?: 0)
+        }">0</b>만 원
             </div>
         </div>
+
 
         <hr style="margin: 18px 0; border: 0; border-top: 1px solid #e5e7eb;">
 
@@ -67,6 +86,10 @@
     </section>
 
 </main>
+
+<!-- JS 분리 로딩 -->
+<script th:src="@{/js/main.js}" src="/js/main.js"></script>
+<script th:src="@{/js/reviews.js}" src="/js/reviews.js"></script>
 
 <style>
     /* =========================================

@@ -251,6 +251,16 @@
                         <span class="badge"
                               th:each="tag : ${post.regionTags}"
                               th:text="${tag}">지역</span>
+
+                        <!-- ✅ 총액 칩 (만 원 단위) -->
+                        <span class="badge total"
+                              th:text="|총액: ${#numbers.formatInteger(
+        (post.budgetFlight  ?: 0)
+      + (post.budgetLodging ?: 0)
+      + (post.budgetFood   ?: 0)
+      + (post.budgetExtra  ?: 0)
+      , 0, 'COMMA')}만|">
+</span>
                     </div>
 
                     <p class="post-desc"
@@ -1028,6 +1038,13 @@
 
         box-shadow: 0 2px 0 rgba(0,0,0,0.06);
         white-space: nowrap;
+    }
+
+    /* 사용 총액 강조 */
+    .badge.total{
+        background: #fff7ed;
+        border-color: #f0c38d;
+        color: #4b3a2a;
     }
 
     /* 요약 */

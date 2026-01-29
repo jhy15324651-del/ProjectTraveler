@@ -18,10 +18,20 @@ public class ReviewPostService {
 
     private final ReviewPostRepository reviewPostRepository;
 
+    private void require(boolean cond, String msg) {
+        if (!cond) throw new IllegalArgumentException(msg);
+    }
+
     /**
      * 여행 후기 저장
      */
     public Long create(ReviewPostCreateRequest request) {
+
+        require(request.getTravelType() != null && !request.getTravelType().isBlank(), "여행 유형을 선택해주세요.");
+        require(request.getTheme() != null && !request.getTheme().isBlank(), "테마를 선택해주세요.");
+        require(request.getPeriod() != null && !request.getPeriod().isBlank(), "기간을 선택해주세요.");
+        require(request.getLevel() != null && !request.getLevel().isBlank(), "난이도를 선택해주세요.");
+        require(request.getRegionTags() != null && !request.getRegionTags().isEmpty(), "지역을 1개 이상 선택해주세요.");
 
         ReviewPost post = ReviewPost.builder()
                 .writer("testUser") // 로그인 연동 전 임시
@@ -43,18 +53,14 @@ public class ReviewPostService {
     }
 
     /**
-     * 최신순 목록 조회 (+ 썸네일 추출)
+     * 최신순 목록 조회 (+ 썸네일/요약 추출)
      */
     public List<ReviewPost> listLatest() {
         List<ReviewPost> posts = reviewPostRepository.findAllByOrderByCreatedAtDesc();
 
         for (ReviewPost p : posts) {
-            // Quill HTML에서 첫 img src를 뽑아서 엔티티의 thumbnailUrl(@Transient)에 세팅
             p.setThumbnailUrl(extractFirstImageUrl(p.getContent()));
-
-            // ✅ 요약(텍스트만)
             p.setSummary(extractTextOnly(p.getContent()));
-
         }
 
         return posts;
@@ -62,15 +68,21 @@ public class ReviewPostService {
 
     private String extractTextOnly(String html) {
         if (html == null || html.isBlank()) return "";
-        return Jsoup.parse(html).text(); // ✅ HTML 태그, img src 같은 것 전부 제거됨
+        String text = Jsoup.parse(html).text();
+        text = text.replace("\u00A0", " ").trim(); // NBSP 처리
+        return text.length() > 120 ? text.substring(0, 120) + "..." : text;
     }
 
     /**
-     * 단건 조회
+     * 단건 조회 (+ 썸네일/요약 추출)
      */
     public ReviewPost findById(Long id) {
-        return reviewPostRepository.findById(id)
+        ReviewPost post = reviewPostRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("ReviewPost not found: " + id));
+
+        post.setThumbnailUrl(extractFirstImageUrl(post.getContent()));
+        post.setSummary(extractTextOnly(post.getContent()));
+        return post;
     }
 
     /**
@@ -86,6 +98,4 @@ public class ReviewPostService {
         String src = img.attr("src");
         return (src == null || src.isBlank()) ? null : src;
     }
-
-
 }
