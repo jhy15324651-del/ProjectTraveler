@@ -29,6 +29,7 @@ public class MainPageController {
     private final LearningService learningService;
     private final AttendanceService attendanceService;
     private final ReviewPostService reviewPostService;
+    private final CertificateService certificateService;
 
 
     /**
@@ -126,6 +127,10 @@ public class MainPageController {
                 .map(EnrollmentDto::from)
                 .collect(Collectors.toList());
 
+        // 수료증 목록
+        var certificates = certificateService.getMyCertificates(userId);
+        int certificateCount = certificateService.getCertificateCount(userId);
+
         model.addAttribute("activePage", "myClassroom");
         model.addAttribute("username", user != null ? user.getFullName() : "사용자");
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
@@ -133,6 +138,8 @@ public class MainPageController {
         model.addAttribute("inProgressCourses", inProgress);
         model.addAttribute("completedCourses", completed);
         model.addAttribute("pendingCourses", pending);
+        model.addAttribute("certificates", certificates);
+        model.addAttribute("certificateCount", certificateCount);
 
         return "my-classroom";
     }
@@ -167,20 +174,35 @@ public class MainPageController {
     }
 
     /**
-     * 온라인 학습
+     * 온라인 학습 (내 수강 목록)
+     * 역할: 현재 수강 중인 강좌 목록과 진도율 표시
      */
     @GetMapping("/online-learning")
     public String onlineLearning(Model model) {
         Long userId = SecurityUtils.getCurrentUserIdOrThrow();
         CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
 
-        // 모든 강좌 조회
-        List<Course> courses = courseService.findAllActiveCourses();
+        // 수강 중인 강좌 (진도 정보 포함)
+        List<CourseEnrollment> inProgressEnrollments = enrollmentService.findInProgressEnrollments(userId);
+        List<EnrollmentDto> inProgress = inProgressEnrollments.stream()
+                .map(enrollmentService::toEnrollmentDtoWithProgress)
+                .collect(Collectors.toList());
+
+        // 완료된 강좌
+        List<CourseEnrollment> completedEnrollments = enrollmentService.findCompletedEnrollments(userId);
+        List<EnrollmentDto> completed = completedEnrollments.stream()
+                .map(enrollmentService::toEnrollmentDtoWithProgress)
+                .collect(Collectors.toList());
+
+        // 학습 요약 정보
+        MyLearningSummaryDto summary = dashboardService.getMyLearningSummary(userId);
 
         model.addAttribute("activePage", "online-learning");
         model.addAttribute("username", user != null ? user.getFullName() : "사용자");
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
-        model.addAttribute("courses", courses);
+        model.addAttribute("inProgressCourses", inProgress);
+        model.addAttribute("completedCourses", completed);
+        model.addAttribute("summary", summary);
 
         return "online-learning";
     }
