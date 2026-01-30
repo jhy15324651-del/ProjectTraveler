@@ -35,7 +35,7 @@ public class SecurityConfig {
 
                         // ✅ 권장: CSP로 허용할 출처만 지정 (유니티 WebGL 주소를 여기에)
                         .contentSecurityPolicy(csp -> csp
-                                .policyDirectives("frame-ancestors 'self' http://127.0.0.1:8080;")
+                                .policyDirectives("frame-ancestors 'self' http://127.0.0.1:8080 http://192.168.0.46:8080;")
                         )
                 )
             // CSRF 설정
@@ -46,8 +46,14 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 정적 리소스 허용
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
+                // Unity WebGL 정적 파일 허용
+                .requestMatchers("/unity/**").permitAll()
                 // 로그인/회원가입 페이지 허용
                 .requestMatchers("/", "/index", "/login", "/register", "/api/auth/**").permitAll()
+                // 에러 페이지 허용 (인증 실패 시에도 에러 표시)
+                .requestMatchers("/error").permitAll()
+                // 후기 페이지 (Unity iframe에서 접근) - 조회는 공개, 작성은 인증 필요
+                .requestMatchers("/reviews", "/reviews/{id}").permitAll()
                 // 관리자 전용
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
