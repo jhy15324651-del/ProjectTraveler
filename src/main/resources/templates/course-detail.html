@@ -80,22 +80,37 @@
                         <th:block th:if="${course.enrollmentInfo == null or !course.enrollmentInfo.accessible}">
                             <!-- 승인 대기 중 -->
                             <th:block th:if="${course.enrollmentInfo != null and course.enrollmentInfo.status == 'REQUESTED'}">
-                                <button class="btn-course-secondary" disabled>승인 대기 중</button>
+                                <button class="btn-course-secondary" disabled>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                    승인 대기 중
+                                </button>
+                                <span style="margin-left: 10px; color: #666; font-size: 14px;">
+                                    관리자 승인 후 학습 가능합니다
+                                </span>
                             </th:block>
-                            <!-- 수강 신청 가능 -->
-                            <th:block th:if="${course.enrollmentInfo == null or course.enrollmentInfo.status == 'REJECTED'}">
-                                <button class="btn-course-start" onclick="requestEnrollment()" id="enrollBtn">
+                            <!-- 수강 신청 가능 (미신청 또는 거절됨) -->
+                            <th:block th:if="${course.enrollmentInfo.status == null or course.enrollmentInfo.status == 'REJECTED'}">
+                                <button class="btn-course-start" onclick="requestEnrollment()" id="enrollBtn"
+                                        th:data-policy="${course.enrollmentInfo.enrollPolicy}">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                                         <circle cx="9" cy="7" r="4"/>
                                         <line x1="19" y1="8" x2="19" y2="14"/>
                                         <line x1="22" y1="11" x2="16" y2="11"/>
                                     </svg>
-                                    수강 신청
+                                    <th:block th:if="${course.enrollmentInfo.enrollPolicy == 'SELF'}">바로 수강하기</th:block>
+                                    <th:block th:if="${course.enrollmentInfo.enrollPolicy != 'SELF'}">수강 신청</th:block>
                                 </button>
-                                <span th:if="${course.enrollmentInfo != null and course.enrollmentInfo.enrollPolicy == 'APPROVAL'}"
+                                <span th:if="${course.enrollmentInfo.enrollPolicy == 'APPROVAL'}"
                                       style="margin-left: 10px; color: #666; font-size: 14px;">
                                     (관리자 승인 필요)
+                                </span>
+                                <span th:if="${course.enrollmentInfo.enrollPolicy == 'SELF'}"
+                                      style="margin-left: 10px; color: #4caf50; font-size: 14px;">
+                                    (바로 학습 가능)
                                 </span>
                             </th:block>
                         </th:block>
@@ -284,7 +299,7 @@
             }
         }
 
-        // 레슨 선택 (영상 재생 페이지로 이동 - 추후 구현)
+        // 레슨 선택 (영상 재생 페이지로 이동)
         function selectLesson(courseId, lessonId) {
             // 수강 권한이 있는 경우에만 이동
             const isAccessible = /*[[${course.enrollmentInfo != null and course.enrollmentInfo.accessible}]]*/ false;
@@ -292,8 +307,8 @@
                 alert('수강 신청 후 학습할 수 있습니다.');
                 return;
             }
-            // 영상 재생 페이지로 이동 (현재는 alert)
-            alert('레슨 ' + lessonId + ' 선택됨. 영상 재생 기능은 추후 구현 예정입니다.');
+            // 영상 재생 페이지로 이동
+            window.location.href = '/lesson?courseId=' + courseId + '&lessonId=' + lessonId;
         }
     </script>
 </body>
