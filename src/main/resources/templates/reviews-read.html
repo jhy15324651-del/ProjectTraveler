@@ -24,7 +24,7 @@
         </div>
 
         <div class="post-meta" style="margin-top: 8px;">
-            <span th:text="${post.writer}">writer</span>
+            <span th:text="${post.writer != null ? post.writer.fullName : '익명'}"></span>
             <span> · </span>
             <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">2026-01-27 16:40</span>
         </div>

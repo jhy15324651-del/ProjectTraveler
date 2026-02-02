@@ -28,7 +28,6 @@ public class MainPageController {
     private final EnrollmentService enrollmentService;
     private final LearningService learningService;
     private final AttendanceService attendanceService;
-    private final ReviewPostService reviewPostService;
 
 
     /**
@@ -212,38 +211,6 @@ public class MainPageController {
 
         return "guide";
     }
-
-
-    /**
-     * 후기 페이지
-     */
-    @GetMapping("/reviews")
-    public String reviews(Model model) {
-        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
-
-        model.addAttribute("activePage", "reviews");
-        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
-        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
-        model.addAttribute("posts", reviewPostService.listLatest());
-
-        return "reviews";
-    }
-
-
-    /**
-     * 후기 작성 페이지
-     */
-    @GetMapping("/reviews-post")
-    public String reviewsPost(Model model) {
-        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
-
-        model.addAttribute("activePage", "reviews-post");
-        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
-        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
-
-        return "reviews-post";
-    }
-
 
 
     /**

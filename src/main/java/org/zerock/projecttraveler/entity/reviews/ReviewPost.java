@@ -2,6 +2,7 @@ package org.zerock.projecttraveler.entity.reviews;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.zerock.projecttraveler.entity.User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -20,8 +21,10 @@ public class ReviewPost {
     private Long id;
 
     // 작성자(로그인 붙이면 User 엔티티로 ManyToOne 바꾸면 됨)
-    @Column(nullable = false)
-    private String writer;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "writer_id") // review_post.writer_id
+    private User writer;
+
 
     @Column(nullable = false, length = 200)
     private String title;

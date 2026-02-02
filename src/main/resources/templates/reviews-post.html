@@ -2,6 +2,9 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
     <title>여행 후기 작성</title>
 
     <!-- 공통 CSS -->
@@ -472,10 +475,25 @@
     </form>
 </main>
 
+
 <!-- Quill -->
 <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 
 <script>
+    // =========================
+    // CSRF 유틸
+    // =========================
+    function getCsrfHeaders() {
+        const tokenMeta = document.querySelector('meta[name="_csrf"]');
+        const headerMeta = document.querySelector('meta[name="_csrf_header"]');
+
+        if (!tokenMeta || !headerMeta) return {};
+
+        return {
+            [headerMeta.content]: tokenMeta.content
+        };
+    }
+
     // =========================
     // Quill + Image Upload
     // =========================
@@ -503,18 +521,20 @@
         }
     });
 
-    // ✅ 이미지 버튼 클릭 시 실행될 핸들러
+    // =========================
+    // 이미지 버튼 클릭 시 실행될 핸들러
+    // =========================
     function imageHandler() {
         const input = document.createElement("input");
-        input.setAttribute("type", "file");
-        input.setAttribute("accept", "image/*");
+        input.type = "file";
+        input.accept = "image/*";
         input.click();
 
         input.onchange = async () => {
             const file = input.files && input.files[0];
             if (!file) return;
 
-            // (선택) 클라에서 1차 용량 제한
+            // 클라 1차 용량 제한
             const maxSize = 5 * 1024 * 1024; // 5MB
             if (file.size > maxSize) {
                 alert("이미지는 최대 5MB까지 업로드할 수 있어요.");
@@ -523,10 +543,13 @@
 
             try {
                 const formData = new FormData();
-                formData.append("image", file);
+                formData.append("image", file); // 서버 @RequestParam("image")
 
                 const res = await fetch("/reviews/upload-image", {
                     method: "POST",
+                    headers: {
+                        ...getCsrfHeaders() // ✅ 핵심: CSRF 토큰 추가
+                    },
                     body: formData
                 });
 
@@ -538,12 +561,13 @@
 
                 const data = await res.json();
                 const imageUrl = data.url;
+
                 if (!imageUrl) {
                     alert("서버 응답에 url이 없습니다.");
                     return;
                 }
 
-                // ✅ 현재 커서 위치에 이미지 삽입
+                // 현재 커서 위치에 이미지 삽입
                 const range = quill.getSelection(true);
                 const index = range ? range.index : quill.getLength();
 
@@ -558,11 +582,14 @@
         };
     }
 
-    // ✅ submit 시 HTML 저장
+    // =========================
+    // submit 시 HTML 저장
+    // =========================
     document.getElementById("postForm").addEventListener("submit", () => {
         document.getElementById("content").value = quill.root.innerHTML;
     });
 </script>
+
 
 
 <script th:src="@{/js/main.js}" src="/js/main.js"></script>
