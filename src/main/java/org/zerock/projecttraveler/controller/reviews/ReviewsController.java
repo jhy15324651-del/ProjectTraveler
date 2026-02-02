@@ -2,12 +2,11 @@ package org.zerock.projecttraveler.controller.reviews;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-
 import org.zerock.projecttraveler.dto.reviews.ReviewPostCreateRequest;
 import org.zerock.projecttraveler.dto.reviews.ReviewPostSearchRequest;
 import org.zerock.projecttraveler.entity.reviews.ReviewPost;
@@ -33,18 +32,33 @@ public class ReviewsController {
     }
 
     /**
+     * ✅ 페이징 기본값/안전 처리 + 기본 정렬(createdAt desc)
+     * - req.page, req.size를 그대로 믿지 말고 안전 보정
+     */
+    private Pageable buildPageable(ReviewPostSearchRequest req) {
+        int page = (req.getPage() == null || req.getPage() < 0) ? 0 : req.getPage();
+        int size = (req.getSize() == null || req.getSize() <= 0) ? 12 : req.getSize();
+
+        // 너무 큰 size 방지(선택): 서버 보호용
+        if (size > 50) size = 50;
+
+        return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+    }
+
+    /**
      * ✅ 대표(웹) 후기 목록
      * GET /reviews
      */
     @GetMapping("/reviews")
-    public String reviewsWeb(ReviewPostSearchRequest req, Model model) {
+    public String reviewsWeb(@ModelAttribute("search") ReviewPostSearchRequest req, Model model) {
         applyCommonModel(model);
-        model.addAttribute("isUnity", false); // ✅ 추가
+        model.addAttribute("isUnity", false);
 
-        Page<ReviewPost> pageResult = reviewPostService.search(req);
+        Pageable pageable = buildPageable(req);
+        Page<ReviewPost> pageResult = reviewPostService.search(req, pageable);
+
         model.addAttribute("pageResult", pageResult);
-        model.addAttribute("posts", pageResult.getContent());   // 템플릿 호환
-        model.addAttribute("search", req);
+        model.addAttribute("posts", pageResult.getContent()); // 템플릿 호환 유지
 
         return "reviews-web";
     }
@@ -54,22 +68,22 @@ public class ReviewsController {
      * GET /reviews-unity
      */
     @GetMapping("/reviews-unity")
-    public String reviewsUnity(ReviewPostSearchRequest req, Model model) {
+    public String reviewsUnity(@ModelAttribute("search") ReviewPostSearchRequest req, Model model) {
         applyCommonModel(model);
-        model.addAttribute("isUnity", true); // ✅ 추가
+        model.addAttribute("isUnity", true);
 
-        Page<ReviewPost> pageResult = reviewPostService.search(req);
+        Pageable pageable = buildPageable(req);
+        Page<ReviewPost> pageResult = reviewPostService.search(req, pageable);
+
         model.addAttribute("pageResult", pageResult);
-        model.addAttribute("posts", pageResult.getContent());   // 템플릿 호환
-        model.addAttribute("search", req);
+        model.addAttribute("posts", pageResult.getContent()); // 템플릿 호환 유지
 
         return "reviews-unity";
     }
 
     /**
-     * ✅ 후기 작성 페이지 (일단 기존 유지)
+     * ✅ 후기 작성 페이지 (웹)
      * GET /reviews-post
-     * - post도 나중에 web/unity 분리할 예정이니, 지금은 그대로 둬도 OK
      */
     @GetMapping("/reviews-post")
     public String reviewsPostWeb(Model model,
@@ -79,6 +93,10 @@ public class ReviewsController {
         return "reviews-post-web";
     }
 
+    /**
+     * ✅ 후기 작성 페이지 (유니티)
+     * GET /reviews-unity-post
+     */
     @GetMapping("/reviews-unity-post")
     public String reviewsPostUnity(Model model,
                                    @ModelAttribute("request") ReviewPostCreateRequest request) {
@@ -99,7 +117,6 @@ public class ReviewsController {
 
         boolean isUnity = "1".equals(fromUnity) || "true".equalsIgnoreCase(fromUnity);
 
-        // 검증 실패 시 작성 페이지로 복귀 (web/unity 분기 유지)
         if (bindingResult.hasErrors()) {
             applyCommonModel(model);
             model.addAttribute("isUnity", isUnity);
@@ -107,8 +124,6 @@ public class ReviewsController {
         }
 
         reviewPostService.create(request);
-
-        // ✅ 성공 시 redirect 분기
         return isUnity ? "redirect:/reviews-unity" : "redirect:/reviews";
     }
 
@@ -119,10 +134,8 @@ public class ReviewsController {
     @GetMapping("/reviews/{id}")
     public String readWeb(@PathVariable Long id, Model model) {
         applyCommonModel(model);
-        model.addAttribute("isUnity", false); // ✅ 추가
+        model.addAttribute("isUnity", false);
         model.addAttribute("post", reviewPostService.findById(id));
-
-        // ✅ 이제 reviews-read는 fragment이므로 web 껍데기를 반환
         return "reviews-read-web";
     }
 
@@ -133,9 +146,8 @@ public class ReviewsController {
     @GetMapping("/reviews-unity/{id}")
     public String readUnity(@PathVariable Long id, Model model) {
         applyCommonModel(model);
-        model.addAttribute("isUnity", true); // ✅ 추가
+        model.addAttribute("isUnity", true);
         model.addAttribute("post", reviewPostService.findById(id));
-
         return "reviews-read-unity";
     }
 }

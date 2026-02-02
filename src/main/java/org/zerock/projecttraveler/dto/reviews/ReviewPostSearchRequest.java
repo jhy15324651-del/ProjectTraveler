@@ -8,18 +8,21 @@ import java.util.List;
 @Getter
 @Setter
 public class ReviewPostSearchRequest {
-
-    // 텍스트 검색어 (title/content)
     private String q;
 
-    // 지역태그 OR (regionTags)
+    private String travelType;
+    private String theme;
+
+    //중복선택가능
+    private List<String> periods;
+    private List<String> levels;
     private List<String> tags;
 
-    // 예산 총합 범위 (budgetTotal)
+    //예산
     private Integer minBudget;
     private Integer maxBudget;
 
-    // 페이징
     private Integer page = 0;
     private Integer size = 12;
 }
+

@@ -16,6 +16,11 @@
     ========================== -->
     <!-- ✅ action 제거: 현재 URL(/reviews 또는 /reviews-unity)로 GET 재요청 -->
     <form id="filterForm" method="get">
+
+        <!-- ✅ 페이징 상태 (JS에서 resetPage()로 제어) -->
+        <input type="hidden" id="f_page" name="page" value="0">
+        <input type="hidden" id="f_size" name="size" value="12">
+
         <section class="filter-panel">
 
             <!-- 여행 유형 (택1) : 현재 SearchRequest에 없으므로 서버 전송 X -->
@@ -24,7 +29,7 @@
                     여행유형
                     <div class="filter-hint single">* 한 개만 선택</div>
                 </div>
-                <div class="filter-chips" data-key="type" data-mode="single">
+                <div class="filter-chips" data-key="travelType" data-mode="single">
                     <button type="button" class="chip active" data-value="">전체</button>
                     <button type="button" class="chip" data-value="solo">혼자</button>
                     <button type="button" class="chip" data-value="couple">커플</button>
@@ -32,7 +37,7 @@
                     <button type="button" class="chip" data-value="friends">친구</button>
                 </div>
                 <!-- ✅ 서버 전송 안 함 (name 제거) -->
-                <input type="hidden" id="f_type" value="">
+                <input type="hidden" id="f_travelType" name="travelType" value="">
             </div>
 
             <!-- 테마 (택1) : 현재 SearchRequest에 없으므로 서버 전송 X -->
@@ -50,7 +55,7 @@
                     <button type="button" class="chip" data-value="nature">자연</button>
                 </div>
                 <!-- ✅ 서버 전송 안 함 (name 제거) -->
-                <input type="hidden" id="f_theme" value="">
+                <input type="hidden" id="f_theme" name="theme" value="">
             </div>
 
             <!-- 예산: ✅ DTO에 맞게 minBudget / maxBudget 로 전송 -->
@@ -93,10 +98,11 @@
 
                 <div class="filter-chips" data-key="period" data-mode="multi-or">
                     <button type="button" class="chip active" data-value="">전체</button>
-                    <button type="button" class="chip" data-value="d_당일치기">당일</button>
-                    <button type="button" class="chip" data-value="d_1박2일">1박2일</button>
-                    <button type="button" class="chip" data-value="d_2박3일">2박3일</button>
-                    <button type="button" class="chip" data-value="d_3박4일">3박4일</button>
+                    <button type="button" class="chip" data-value="당일치기">당일</button>
+                    <button type="button" class="chip" data-value="1박2일">1박2일</button>
+                    <button type="button" class="chip" data-value="2박3일">2박3일</button>
+                    <button type="button" class="chip" data-value="3박4일">3박4일</button>
+
                 </div>
                 <div id="periodInputs"></div>
             </div>
@@ -110,9 +116,10 @@
 
                 <div class="filter-chips" data-key="level" data-mode="multi-or">
                     <button type="button" class="chip active" data-value="">전체</button>
-                    <button type="button" class="chip" data-value="lv_초급">초급</button>
-                    <button type="button" class="chip" data-value="lv_중급">중급</button>
-                    <button type="button" class="chip" data-value="lv_상급">상급</button>
+                    <button type="button" class="chip" data-value="초급">초급</button>
+                    <button type="button" class="chip" data-value="중급">중급</button>
+                    <button type="button" class="chip" data-value="상급">상급</button>
+
                 </div>
                 <div id="levelInputs"></div>
             </div>
@@ -127,11 +134,11 @@
                 <div class="region-inline">
                     <div class="filter-chips" data-key="region" data-mode="multi-toggle">
                         <button type="button" class="chip active" data-value="">전체</button>
-                        <button type="button" class="chip" data-value="r_도쿄">도쿄</button>
-                        <button type="button" class="chip" data-value="r_오사카">오사카</button>
-                        <button type="button" class="chip" data-value="r_교토">교토</button>
-                        <button type="button" class="chip" data-value="r_후쿠오카">후쿠오카</button>
-                        <button type="button" class="chip" data-value="r_삿포로">삿포로</button>
+                        <button type="button" class="chip" data-value="도쿄">도쿄</button>
+                        <button type="button" class="chip" data-value="오사카">오사카</button>
+                        <button type="button" class="chip" data-value="교토">교토</button>
+                        <button type="button" class="chip" data-value="후쿠오카">후쿠오카</button>
+                        <button type="button" class="chip" data-value="삿포로">삿포로</button>
                     </div>
                 </div>
 

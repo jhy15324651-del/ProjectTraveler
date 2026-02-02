@@ -30,10 +30,6 @@ public class ReviewPostService {
         if (!cond) throw new IllegalArgumentException(msg);
     }
 
-    /**
-     * 여행 후기 저장
-     * - writer: 로그인 사용자(User) 연관관계로 저장
-     */
     public Long create(ReviewPostCreateRequest request) {
 
         require(request.getTravelType() != null && !request.getTravelType().isBlank(), "여행 유형을 선택해주세요.");
@@ -42,10 +38,8 @@ public class ReviewPostService {
         require(request.getLevel() != null && !request.getLevel().isBlank(), "난이도를 선택해주세요.");
         require(request.getRegionTags() != null && !request.getRegionTags().isEmpty(), "지역을 1개 이상 선택해주세요.");
 
-        // ✅ 로그인 principal에서 username 꺼내기
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // ✅ users 테이블에서 사용자 조회
         User writer = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalStateException("로그인 사용자 정보를 찾을 수 없습니다: " + username));
 
@@ -64,13 +58,11 @@ public class ReviewPostService {
                 .budgetExtra(request.getBudgetExtra())
                 .build();
 
-        ReviewPost saved = reviewPostRepository.save(post);
-        return saved.getId();
+        return reviewPostRepository.save(post).getId();
     }
 
-    /**
-     * 최신순 목록 조회 (+ 썸네일/요약 추출)
-     */
+
+    /** * 최신순 목록 조회 (+ 썸네일/요약 추출) */
     public List<ReviewPost> listLatest() {
         List<ReviewPost> posts = reviewPostRepository.findAllByOrderByCreatedAtDesc();
         posts.forEach(this::fillThumbAndSummary);
@@ -78,34 +70,31 @@ public class ReviewPostService {
     }
 
     /**
-     * 검색 + 페이징 (+ 썸네일/요약 추출)
-     * - q: 제목/본문 키워드
-     * - tags: regionTags OR
-     * - minBudget/maxBudget: budgetTotal 범위
+     * ✅ 검색 + 페이징 (+ 썸네일/요약)
+     * - pageable은 컨트롤러에서 만들어서 전달
      */
-    public Page<ReviewPost> search(ReviewPostSearchRequest req) {
+    private Specification<ReviewPost> alwaysTrue() {
+        return (root, query, cb) -> cb.conjunction();
+    }
 
-        int page = (req.getPage() == null || req.getPage() < 0) ? 0 : req.getPage();
-        int size = (req.getSize() == null || req.getSize() <= 0) ? 12 : req.getSize();
+    public Page<ReviewPost> search(ReviewPostSearchRequest req, Pageable pageable) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-
-        Specification<ReviewPost> spec =
-                Specification.where(ReviewPostSpecs.keyword(req.getQ()))
-                        .and(ReviewPostSpecs.regionTagsOr(req.getTags()))
-                        .and(ReviewPostSpecs.budgetTotalBetween(req.getMinBudget(), req.getMaxBudget()));
+        Specification<ReviewPost> spec = alwaysTrue()
+                .and(ReviewPostSpecs.keyword(req.getQ()))
+                .and(ReviewPostSpecs.travelTypeEq(req.getTravelType()))
+                .and(ReviewPostSpecs.themeEq(req.getTheme()))
+                .and(ReviewPostSpecs.periodIn(req.getPeriods()))
+                .and(ReviewPostSpecs.levelIn(req.getLevels()))
+                .and(ReviewPostSpecs.regionTagsOr(req.getTags()))
+                .and(ReviewPostSpecs.budgetTotalBetween(req.getMinBudget(), req.getMaxBudget()));
 
         Page<ReviewPost> result = reviewPostRepository.findAll(spec, pageable);
-
-        // ✅ 검색 결과에도 카드 썸네일/요약 적용
         result.getContent().forEach(this::fillThumbAndSummary);
-
         return result;
     }
 
-    /**
-     * 단건 조회 (+ 썸네일/요약 추출)
-     */
+
+    /** * 단건 조회 (+ 썸네일/요약 추출) */
     public ReviewPost findById(Long id) {
         ReviewPost post = reviewPostRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("ReviewPost not found: " + id));
@@ -114,27 +103,24 @@ public class ReviewPostService {
         return post;
     }
 
-    /**
-     * 공통: 썸네일/요약 채우기
-     */
+
+    /** * 공통: 썸네일/요약 채우기 */
     private void fillThumbAndSummary(ReviewPost p) {
         p.setThumbnailUrl(extractFirstImageUrl(p.getContent()));
         p.setSummary(extractTextOnly(p.getContent()));
     }
 
-    /**
-     * HTML에서 텍스트만 추출 후 120자 요약
-     */
+
+    /** * HTML에서 텍스트만 추출 후 120자 요약 */
     private String extractTextOnly(String html) {
         if (html == null || html.isBlank()) return "";
         String text = Jsoup.parse(html).text();
-        text = text.replace("\u00A0", " ").trim(); // NBSP 처리
+        text = text.replace("\u00A0", " ").trim();
         return text.length() > 120 ? text.substring(0, 120) + "..." : text;
     }
 
-    /**
-     * 본문(HTML)에서 첫 번째 이미지 src 추출
-     */
+
+    /** * 본문(HTML)에서 첫 번째 이미지 src 추출 */
     private String extractFirstImageUrl(String html) {
         if (html == null || html.isBlank()) return null;
 
