@@ -1,24 +1,15 @@
-<!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${post.title} + ' - 여행 후기'">여행 후기 상세</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
-</head>
-<body class="main-page">
-
-<!-- 헤더 -->
-<div th:replace="fragments/main-header :: mainHeader"></div>
-
-<main class="container reviews">
+<!-- templates/reviews-read.html -->
+<div th:fragment="reviewsReadContent" class="container reviews">
 
     <section class="post-read">
 
         <div class="reviews-title-row">
             <h1 class="page-title" th:text="${post.title}">제목</h1>
 
-            <a class="write-btn" th:href="@{/reviews}" href="/reviews">
+            <!-- ✅ 웹/유니티 분기: 유니티면 /reviews-unity 로, 아니면 /reviews 로 -->
+            <a class="write-btn"
+               th:href="${isUnity} ? @{/reviews-unity} : @{/reviews}"
+               href="/reviews">
                 ← 목록으로
             </a>
         </div>
@@ -35,25 +26,32 @@
             <span class="chip"
                   th:if="${post.travelType != null}"
                   th:text="${post.travelType == 'solo' ? '혼자' :
-               post.travelType == 'couple' ? '커플' :
-               post.travelType == 'family' ? '가족' :
-               post.travelType == 'friends' ? '친구' : post.travelType}">
-</span>
+                           post.travelType == 'couple' ? '커플' :
+                           post.travelType == 'family' ? '가족' :
+                           post.travelType == 'friends' ? '친구' : post.travelType}">
+            </span>
+
             <!-- 테마 칩 -->
             <span class="chip"
                   th:if="${post.theme != null}"
                   th:text="${post.theme == 'freedom' ? '자유여행' :
-               post.theme == 'healing' ? '힐링' :
-               post.theme == 'food' ? '맛집' :
-               post.theme == 'activity' ? '액티비티' :
-               post.theme == 'nature' ? '자연' : post.theme}">
-</span>
-            <span class="chip" th:if="${post.period != null and !post.period.isEmpty()}"
+                           post.theme == 'healing' ? '힐링' :
+                           post.theme == 'food' ? '맛집' :
+                           post.theme == 'activity' ? '액티비티' :
+                           post.theme == 'nature' ? '자연' : post.theme}">
+            </span>
+
+            <span class="chip"
+                  th:if="${post.period != null and !post.period.isEmpty()}"
                   th:text="${post.period}">period</span>
-            <span class="chip" th:if="${post.level != null and !post.level.isEmpty()}"
+
+            <span class="chip"
+                  th:if="${post.level != null and !post.level.isEmpty()}"
                   th:text="${post.level}">level</span>
 
-            <span class="chip" th:each="tag : ${post.regionTags}" th:text="${tag}">region</span>
+            <span class="chip"
+                  th:each="tag : ${post.regionTags}"
+                  th:text="${tag}">region</span>
         </div>
 
         <!-- 예산 -->
@@ -64,201 +62,25 @@
                 식비: <b th:text="${post.budgetFood ?: 0}">0</b>만 /
                 기타: <b th:text="${post.budgetExtra ?: 0}">0</b>만
             </div>
+
             <div style="margin-top: 6px;">
                 사용 금액:
                 <b th:text="${
-            (post.budgetFlight ?: 0)
-          + (post.budgetLodging ?: 0)
-          + (post.budgetFood ?: 0)
-          + (post.budgetExtra ?: 0)
-        }">0</b>만 원
+                    (post.budgetFlight ?: 0)
+                  + (post.budgetLodging ?: 0)
+                  + (post.budgetFood ?: 0)
+                  + (post.budgetExtra ?: 0)
+                }">0</b>만 원
             </div>
         </div>
 
-
         <hr style="margin: 18px 0; border: 0; border-top: 1px solid #e5e7eb;">
 
-        <!-- ✅ Quill HTML 본문 렌더링 (이미지 포함) -->
+        <!-- ✅ Quill HTML 본문 렌더링 -->
         <article class="post-content" th:utext="${post.content}">
             본문
         </article>
 
     </section>
 
-</main>
-
-<!-- JS 분리 로딩 -->
-<script th:src="@{/js/main.js}" src="/js/main.js"></script>
-<script th:src="@{/js/reviews.js}" src="/js/reviews.js"></script>
-
-<style>
-    /* =========================================
-   Reviews - Detail (reviews-read.html)
-   기존 reviews.html 톤과 통일
-========================================= */
-
-    .reviews .post-read{
-        max-width: 820px;     /* ← 핵심 */
-        margin: 24px auto;       /* 가운데 정렬 */
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 16px;
-        padding: 22px 24px;
-        box-shadow: 0 6px 16px rgba(17,24,39,0.05);
-    }
-
-    /* 제목 */
-    .reviews .post-read .page-title{
-        font-size: 30px;
-        line-height: 1.25;
-        letter-spacing: -0.3px;
-        margin: 0;
-    }
-
-    /* 작성자/시간 줄 */
-    .reviews .post-meta{
-        color: #6b7280;
-        font-size: 14px;
-    }
-
-    /* 목록으로 버튼: 게시판의 pill 버튼과 동일감 */
-    .reviews .reviews-title-row{
-        max-width: 820px;
-        margin: 0 auto 12px;
-        display:flex;
-        justify-content: space-between;
-        align-items:center;
-        gap: 12px;
-    }
-
-    .reviews .reviews-title-row .write-btn{
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-
-        height: 38px;
-        padding: 0 14px;
-        border-radius: 999px;
-
-        font-size: 0.86rem;
-        font-weight: 800;
-        line-height: 1;
-        text-decoration: none;
-        white-space: nowrap;
-
-        border: 1px solid #d9a26a;
-        background: #eea95b; /* 검색 버튼 톤 */
-        color: #fff;
-
-        box-shadow: 0 2px 0 rgba(0,0,0,0.10);
-        transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
-    }
-
-    .reviews .reviews-title-row .write-btn:hover{
-        transform: translateY(-1px);
-        filter: brightness(0.98);
-    }
-
-    /* 칩(해시태그 느낌): reviews.html과 동일감 */
-    .reviews .chip{
-        display:inline-flex;
-        align-items:center;
-        padding: 6px 12px;
-        border-radius: 999px;
-        font-size: 13px;
-        font-weight: 700;
-
-        background: #fff7ed;         /* 매우 연한 오렌지 */
-        color: #9a3412;              /* 오렌지 브라운 텍스트 */
-        border: 1px solid #fed7aa;   /* 연한 오렌지 보더 */
-    }
-
-    /* 예산 박스 */
-    .reviews .post-budget{
-        margin-top: 12px;
-        padding: 12px 14px;
-        border-radius: 12px;
-        background: #fffaf0;
-        border: 1px solid #fde68a;
-        color: #7c2d12;
-        font-size: 14px;
-        line-height: 1.55;
-    }
-
-    .reviews .post-budget b{
-        color: #9a3412;
-    }
-
-    /* 구분선 */
-    .reviews .post-read hr{
-        margin: 18px 0;
-        border: 0;
-        border-top: 1px solid #e5e7eb;
-    }
-
-    /* 본문(Quill 출력물) */
-    .reviews .post-content{
-        font-size: 16px;
-        line-height: 1.75;
-        color: #111827;
-    }
-
-    /* Quill 컨텐츠 내부 요소들 정리 */
-    .reviews .post-content p{
-        margin: 0 0 14px;
-    }
-
-    .reviews .post-content h1,
-    .reviews .post-content h2,
-    .reviews .post-content h3{
-        margin: 18px 0 10px;
-        line-height: 1.3;
-        letter-spacing: -0.2px;
-    }
-
-    .reviews .post-content h1{ font-size: 26px; }
-    .reviews .post-content h2{ font-size: 22px; }
-    .reviews .post-content h3{ font-size: 18px; }
-
-    /* 이미지: 게시판과 같은 안정감 (가로 넘침 방지 + 라운드) */
-    .reviews .post-content img{
-        max-width: 100%;
-        height: auto;
-        display: block;
-        margin: 16px auto;
-        border-radius: 14px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 8px 18px rgba(17,24,39,0.08);
-    }
-
-    /* 인용/코드 같은 블럭 스타일 */
-    .reviews .post-content blockquote{
-        margin: 14px 0;
-        padding: 12px 14px;
-        border-left: 4px solid #f59e0b;
-        background: #fff7ed;
-        color: #7c2d12;
-        border-radius: 10px;
-    }
-
-    .reviews .post-content pre{
-        margin: 14px 0;
-        padding: 14px;
-        background: #0b1220;
-        color: #e5e7eb;
-        border-radius: 12px;
-        overflow: auto;
-    }
-
-    /* 링크 */
-    .reviews .post-content a{
-        color: #f59e0b;
-        font-weight: 700;
-        text-decoration: underline;
-        text-underline-offset: 3px;
-    }
-
-</style>
-
-</body>
-</html>
+</div>

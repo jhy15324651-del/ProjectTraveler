@@ -1,15 +1,19 @@
-// reviews.js
+// reviews.js (최종 완전본 - ReviewPostSearchRequest DTO 기준)
+// DTO 필드: q, tags(List), minBudget, maxBudget, page, size
+
 document.addEventListener("DOMContentLoaded", () => {
-    const filterForm = document.getElementById("filterForm"); // (리스트 페이지)
+    const filterForm = document.getElementById("filterForm");
+    if (!filterForm) return; // ✅ 리스트 페이지 아닐 때는 즉시 종료
 
     // ==============================
     // multi tag hidden input 생성 영역 매핑
+    // - period/level/region은 UI 요약용으로만 유지
+    // - 실제 서버 전송은 region -> tags(List<String>)로만 보냄
     // ==============================
     const multiWrap = {
-        period: { wrapId: "periodInputs", inputName: "periodTags" },
-        // budget은 슬라이더로 변경했으므로 budgetTags는 사용하지 않음
-        level:  { wrapId: "levelInputs",  inputName: "levelTags" },
-        region: { wrapId: "regionInputs", inputName: "regionTags" }
+        period: { wrapId: "periodInputs", inputName: null },     // UI용(서버 전송 X)
+        level:  { wrapId: "levelInputs",  inputName: null },     // UI용(서버 전송 X)
+        region: { wrapId: "tagInputs",    inputName: "tags" }    // ✅ 서버 전송 O (List<String> tags)
     };
 
     function clearGroupActive(group) {
@@ -32,6 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
             .filter(v => v !== "");
     }
 
+    // ✅ key(period/level/region)에 따라 hidden inputs 동기화
+    // - inputName이 null이면 name 없이 만들어서 서버로 전송되지 않게 함
     function syncMultiHiddenInputs(key, values) {
         const cfg = multiWrap[key];
         if (!cfg) return;
@@ -43,7 +49,10 @@ document.addEventListener("DOMContentLoaded", () => {
         values.forEach(v => {
             const input = document.createElement("input");
             input.type = "hidden";
-            input.name = cfg.inputName;
+
+            if (cfg.inputName) {
+                input.name = cfg.inputName; // ✅ region만 name="tags"
+            }
             input.value = v;
             wrap.appendChild(input);
         });
@@ -56,10 +65,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const box = document.getElementById("miniSummary");
         if (!box) return;
 
-        // 1) 기존 내용 비우기
         box.innerHTML = "";
 
-        // 2) 라벨 매핑 (single 값 -> 한글 표시)
         const typeMap = {
             solo: "혼자",
             couple: "커플",
@@ -68,17 +75,16 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         const themeMap = {
-            freedom : "자유여행",
+            freedom: "자유여행",
             healing: "힐링",
             food: "맛집",
             activity: "액티비티",
             nature: "자연",
         };
 
-        // 3) 칩 생성 유틸
         const addChip = (label, className = "") => {
             const text = (label ?? "").toString().trim();
-            if (!text) return; // ✅ 빈칩 생성 방지
+            if (!text) return;
 
             const span = document.createElement("span");
             span.className = `chip ${className}`.trim();
@@ -86,40 +92,37 @@ document.addEventListener("DOMContentLoaded", () => {
             box.appendChild(span);
         };
 
-
-        // 4) 선택값 모으기
         const chips = [];
 
-        // (A) 단일: 여행유형
+        // (A) 단일: 여행유형 (UI 요약용)
         const typeVal = document.getElementById("f_type")?.value || "";
         if (typeVal) chips.push(typeMap[typeVal] || typeVal);
 
-        // (B) 단일: 테마
+        // (B) 단일: 테마 (UI 요약용)
         const themeVal = document.getElementById("f_theme")?.value || "";
         if (themeVal) chips.push(themeMap[themeVal] || themeVal);
 
-        // (C) 복수: 기간
+        // (C) 복수: 기간 (UI 요약용)
         document.querySelectorAll("#periodInputs input[type='hidden']").forEach((inp) => {
             const v = (inp.value || "").trim();
             if (!v) return;
-            chips.push(v.includes("_") ? v.split("_").slice(1).join("_") : v); // d_2박3일 -> 2박3일
+            chips.push(v.includes("_") ? v.split("_").slice(1).join("_") : v);
         });
 
-        // (D) 복수: 난이도
+        // (D) 복수: 난이도 (UI 요약용)
         document.querySelectorAll("#levelInputs input[type='hidden']").forEach((inp) => {
             const v = (inp.value || "").trim();
             if (!v) return;
-            chips.push(v.includes("_") ? v.split("_").slice(1).join("_") : v); // lv_초급 -> 초급
+            chips.push(v.includes("_") ? v.split("_").slice(1).join("_") : v);
         });
 
-        // (E) 복수: 지역
-        document.querySelectorAll("#regionInputs input[type='hidden']").forEach((inp) => {
+        // (E) 복수: 지역 → ✅ tagInputs (UI 요약 + 서버 전송 tags)
+        document.querySelectorAll("#tagInputs input[type='hidden']").forEach((inp) => {
             const v = (inp.value || "").trim();
             if (!v) return;
-            chips.push(v.includes("_") ? v.split("_").slice(1).join("_") : v); // r_도쿄 -> 도쿄
+            chips.push(v.includes("_") ? v.split("_").slice(1).join("_") : v);
         });
 
-        // 5) 일반 칩들 먼저 출력
         if (chips.length === 0) {
             const empty = document.createElement("span");
             empty.className = "empty";
@@ -129,21 +132,20 @@ document.addEventListener("DOMContentLoaded", () => {
             chips.forEach((label) => addChip(label));
         }
 
-        // 6) 예산은 무조건 아래줄(항상 마지막에 추가)
-        const min = parseInt(document.getElementById("f_budgetMin")?.value || "0", 10);
-        const max = parseInt(document.getElementById("f_budgetMax")?.value || "5000000", 10);
+        // (F) 예산 (DTO: minBudget/maxBudget) - 항상 마지막
+        const min = parseInt(document.getElementById("f_minBudget")?.value || "0", 10);
+        const max = parseInt(document.getElementById("f_maxBudget")?.value || "5000000", 10);
 
         const fmt = (n) => (isNaN(n) ? "0" : n).toLocaleString("ko-KR");
-        const budgetText = `예산 범위 : ${fmt(min)}원 ~ ${fmt(max)}원`;
-        addChip(budgetText, "budget");
+        addChip(`예산 범위 : ${fmt(min)}원 ~ ${fmt(max)}원`, "budget");
     }
 
     // ==============================
     // 칩 클릭 핸들러 (필터 선택)
     // ==============================
     document.querySelectorAll(".filter-chips").forEach(group => {
-        const key = group.dataset.key;     // type/theme/period/level/region
-        const mode = group.dataset.mode;   // single / multi-or / multi-toggle
+        const key = group.dataset.key;   // type/theme/period/level/region
+        const mode = group.dataset.mode; // single / multi-or / multi-toggle
 
         group.addEventListener("click", (e) => {
             const btn = e.target.closest(".chip");
@@ -156,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 clearGroupActive(group);
                 btn.classList.add("active");
 
-                // single hidden 처리
+                // single hidden 처리 (UI 요약용)
                 if (mode === "single") {
                     const hidden = document.getElementById("f_" + key);
                     if (hidden) hidden.value = "";
@@ -175,6 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (mode === "single") {
                 clearGroupActive(group);
                 btn.classList.add("active");
+
                 const hidden = document.getElementById("f_" + key);
                 if (hidden) hidden.value = val;
 
@@ -193,7 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 clearGroupActive(group);
                 setAllActive(group);
                 syncMultiHiddenInputs(key, []);
-
                 renderMiniSummary();
                 return;
             }
@@ -205,15 +207,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ==============================
     // 예산 슬라이더 (듀얼 range)
+    // - hidden: f_minBudget / f_maxBudget (DTO 매칭)
     // ==============================
     const minInput  = document.getElementById("budgetMin");
     const maxInput  = document.getElementById("budgetMax");
     const minLabel  = document.getElementById("budgetMinLabel");
     const maxLabel  = document.getElementById("budgetMaxLabel");
-    const hiddenMin = document.getElementById("f_budgetMin");
-    const hiddenMax = document.getElementById("f_budgetMax");
 
-    // ✅ 50만원 단위 구분선(ticks) 컨테이너
+    const hiddenMin = document.getElementById("f_minBudget"); // ✅ 변경
+    const hiddenMax = document.getElementById("f_maxBudget"); // ✅ 변경
+
     const ticksWrap = document.getElementById("budgetTicks");
     const rangeBar  = document.getElementById("budgetRange");
 
@@ -238,7 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (hiddenMin) hiddenMin.value = String(minVal);
         if (hiddenMax) hiddenMax.value = String(maxVal);
 
-        // ✅ 선택 구간 하이라이트 갱신
+        // 선택 구간 하이라이트
         if (rangeBar) {
             const min = parseInt(minInput.min, 10);
             const max = parseInt(minInput.max, 10);
@@ -250,18 +253,17 @@ document.addEventListener("DOMContentLoaded", () => {
             rangeBar.style.width = (right - left) + "%";
         }
 
-        // ✅ 예산 변경 시 요약도 즉시 갱신
         renderMiniSummary();
     }
 
-    // ✅ 50만원 단위 구분선 + 100만원 단위 라벨
+    // 50만 단위 구분선 + 100만 단위 라벨
     function renderBudgetTicks() {
         if (!ticksWrap || !minInput) return;
 
         const min = parseInt(minInput.min, 10);   // 0
         const max = parseInt(minInput.max, 10);   // 5000000
-        const tickStep  = 500000;                 // 구분선 50만
-        const labelStep = 1000000;                // 라벨 100만
+        const tickStep  = 500000;                 // 50만
+        const labelStep = 1000000;                // 100만
 
         ticksWrap.innerHTML = "";
 
@@ -284,13 +286,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         };
 
-        // ✅ 0도 라벨 포함
         addTick(min, true);
 
-        // ✅ 50만 단위 tick, 100만 단위 라벨(끝 500만 포함)
         for (let v = tickStep; v <= max; v += tickStep) {
-            const withLabel = (v % labelStep === 0);
-            addTick(v, withLabel);
+            addTick(v, (v % labelStep === 0));
         }
     }
 
@@ -298,14 +297,12 @@ document.addEventListener("DOMContentLoaded", () => {
         minInput.addEventListener("input", syncBudget);
         maxInput.addEventListener("input", syncBudget);
 
-        syncBudget();         // 초기 표시 (+ 요약 갱신 포함)
-        renderBudgetTicks();  // 구분선 렌더링
+        syncBudget();
+        renderBudgetTicks();
     }
 
     // ==============================
-    // ✅ 최초 1회 렌더 (칩/예산 포함)
+    // 최초 1회 렌더
     // ==============================
     renderMiniSummary();
-
-    if (!document.getElementById("filterForm")) return; // 리스트 페이지 아니면 실행 안 함
 });

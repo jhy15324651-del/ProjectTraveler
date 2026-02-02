@@ -35,15 +35,15 @@ public class ReviewsController {
     /**
      * ✅ 대표(웹) 후기 목록
      * GET /reviews
-     * - reviews.html은 fragment이므로 문서 템플릿인 reviews-web을 반환
      */
     @GetMapping("/reviews")
     public String reviewsWeb(ReviewPostSearchRequest req, Model model) {
         applyCommonModel(model);
+        model.addAttribute("isUnity", false); // ✅ 추가
 
         Page<ReviewPost> pageResult = reviewPostService.search(req);
         model.addAttribute("pageResult", pageResult);
-        model.addAttribute("posts", pageResult.getContent());   // ✅ 추가: 템플릿 호환
+        model.addAttribute("posts", pageResult.getContent());   // 템플릿 호환
         model.addAttribute("search", req);
 
         return "reviews-web";
@@ -56,25 +56,35 @@ public class ReviewsController {
     @GetMapping("/reviews-unity")
     public String reviewsUnity(ReviewPostSearchRequest req, Model model) {
         applyCommonModel(model);
+        model.addAttribute("isUnity", true); // ✅ 추가
 
         Page<ReviewPost> pageResult = reviewPostService.search(req);
         model.addAttribute("pageResult", pageResult);
-        model.addAttribute("posts", pageResult.getContent());   // ✅ 추가: 템플릿 호환
+        model.addAttribute("posts", pageResult.getContent());   // 템플릿 호환
         model.addAttribute("search", req);
 
         return "reviews-unity";
     }
 
     /**
-     * ✅ 후기 작성 페이지
+     * ✅ 후기 작성 페이지 (일단 기존 유지)
      * GET /reviews-post
+     * - post도 나중에 web/unity 분리할 예정이니, 지금은 그대로 둬도 OK
      */
     @GetMapping("/reviews-post")
-    public String reviewsPost(Model model,
-                              @ModelAttribute("request") ReviewPostCreateRequest request) {
+    public String reviewsPostWeb(Model model,
+                                 @ModelAttribute("request") ReviewPostCreateRequest request) {
         applyCommonModel(model);
-        // request는 폼 바인딩용(빈 객체) - 이미 @ModelAttribute로 올라감
-        return "reviews-post";
+        model.addAttribute("isUnity", false);
+        return "reviews-post-web";
+    }
+
+    @GetMapping("/reviews-unity-post")
+    public String reviewsPostUnity(Model model,
+                                   @ModelAttribute("request") ReviewPostCreateRequest request) {
+        applyCommonModel(model);
+        model.addAttribute("isUnity", true);
+        return "reviews-post-unity";
     }
 
     /**
@@ -84,27 +94,48 @@ public class ReviewsController {
     @PostMapping("/reviews")
     public String create(@Valid @ModelAttribute("request") ReviewPostCreateRequest request,
                          BindingResult bindingResult,
-                         Model model) {
+                         Model model,
+                         @RequestParam(name = "fromUnity", defaultValue = "0") String fromUnity) {
 
-        // 필수값 검증 실패 시 작성 페이지로 복귀
+        boolean isUnity = "1".equals(fromUnity) || "true".equalsIgnoreCase(fromUnity);
+
+        // 검증 실패 시 작성 페이지로 복귀 (web/unity 분기 유지)
         if (bindingResult.hasErrors()) {
             applyCommonModel(model);
-            return "reviews-post";
+            model.addAttribute("isUnity", isUnity);
+            return isUnity ? "reviews-post-unity" : "reviews-post-web";
         }
 
         reviewPostService.create(request);
-        return "redirect:/reviews";
+
+        // ✅ 성공 시 redirect 분기
+        return isUnity ? "redirect:/reviews-unity" : "redirect:/reviews";
     }
 
     /**
-     * ✅ 후기 상세 페이지
+     * ✅ 후기 상세 (웹 대표)
      * GET /reviews/{id}
      */
     @GetMapping("/reviews/{id}")
-    public String read(@PathVariable Long id, Model model) {
+    public String readWeb(@PathVariable Long id, Model model) {
         applyCommonModel(model);
-
+        model.addAttribute("isUnity", false); // ✅ 추가
         model.addAttribute("post", reviewPostService.findById(id));
-        return "reviews-read";
+
+        // ✅ 이제 reviews-read는 fragment이므로 web 껍데기를 반환
+        return "reviews-read-web";
+    }
+
+    /**
+     * ✅ 후기 상세 (유니티 전용)
+     * GET /reviews-unity/{id}
+     */
+    @GetMapping("/reviews-unity/{id}")
+    public String readUnity(@PathVariable Long id, Model model) {
+        applyCommonModel(model);
+        model.addAttribute("isUnity", true); // ✅ 추가
+        model.addAttribute("post", reviewPostService.findById(id));
+
+        return "reviews-read-unity";
     }
 }
