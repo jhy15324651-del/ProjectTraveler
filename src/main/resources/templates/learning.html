@@ -95,14 +95,33 @@
                               th:text="${item.course.levelDisplayName}">입문</span>
                     </div>
 
-                    <!-- 상태에 따른 링크 텍스트 -->
-                    <span class="learn-course-link">
-                        <th:block th:if="${item.enrollment == null}">수강 신청하기 &gt;</th:block>
-                        <th:block th:if="${item.enrollment != null and item.enrollment.status.name() == 'REQUESTED'}">승인 대기 중</th:block>
-                        <th:block th:if="${item.enrollment != null and item.enrollment.isAccessible() and item.progressPercent == 0}">학습 시작하기 &gt;</th:block>
-                        <th:block th:if="${item.enrollment != null and item.enrollment.isAccessible() and item.progressPercent > 0 and item.progressPercent < 100}">이어서 학습하기 &gt;</th:block>
-                        <th:block th:if="${item.enrollment != null and item.enrollment.isAccessible() and item.progressPercent >= 100}">복습하기 &gt;</th:block>
-                    </span>
+                    <!-- 상태에 따른 액션 버튼 -->
+                    <div class="learn-course-action">
+                        <!-- 미수강: 수강신청 버튼 -->
+                        <button th:if="${item.enrollment == null}"
+                                class="learn-enroll-btn"
+                                th:classappend="${item.course.enrollPolicy != null and item.course.enrollPolicy.name() == 'SELF' ? 'btn-instant' : ''}"
+                                th:data-course-id="${item.course.id}"
+                                th:data-policy="${item.course.enrollPolicy != null ? item.course.enrollPolicy.name() : 'SELF'}"
+                                onclick="requestEnrollment(event, this)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            <th:block th:if="${item.course.enrollPolicy != null and item.course.enrollPolicy.name() == 'SELF'}">바로 수강</th:block>
+                            <th:block th:if="${item.course.enrollPolicy == null or item.course.enrollPolicy.name() != 'SELF'}">수강 신청</th:block>
+                        </button>
+                        <!-- 승인 대기 중 -->
+                        <span th:if="${item.enrollment != null and item.enrollment.status.name() == 'REQUESTED'}"
+                              class="learn-status-badge pending">승인 대기 중</span>
+                        <!-- 수강 가능: 학습 시작/이어하기 -->
+                        <span th:if="${item.enrollment != null and item.enrollment.isAccessible() and item.progressPercent == 0}"
+                              class="learn-course-link">학습 시작하기 &gt;</span>
+                        <span th:if="${item.enrollment != null and item.enrollment.isAccessible() and item.progressPercent > 0 and item.progressPercent < 100}"
+                              class="learn-course-link">이어서 학습하기 &gt;</span>
+                        <span th:if="${item.enrollment != null and item.enrollment.isAccessible() and item.progressPercent >= 100}"
+                              class="learn-course-link">복습하기 &gt;</span>
+                    </div>
                 </div>
             </a>
 
@@ -150,7 +169,109 @@
         </div>
     </section>
 
+    <style>
+        /* 수강신청 버튼 스타일 */
+        .learn-course-action {
+            margin-top: 12px;
+        }
+
+        .learn-enroll-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #e63946, #d62839);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .learn-enroll-btn:hover {
+            background: linear-gradient(135deg, #d62839, #c41e30);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
+        }
+
+        .learn-enroll-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .learn-status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .learn-status-badge.pending {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .learn-enroll-btn.btn-instant {
+            background: linear-gradient(135deg, #4caf50, #43a047);
+        }
+
+        .learn-enroll-btn.btn-instant:hover {
+            background: linear-gradient(135deg, #43a047, #388e3c);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+    </style>
+
     <script th:src="@{/js/main.js}" src="/js/main.js"></script>
     <script th:src="@{/js/learning.js}" src="/js/learning.js"></script>
+    <script>
+        // 수강 신청 함수
+        async function requestEnrollment(event, button) {
+            // 카드 링크 클릭 방지
+            event.preventDefault();
+            event.stopPropagation();
+
+            const courseId = button.dataset.courseId;
+            const policy = button.dataset.policy;
+
+            // 버튼 비활성화
+            button.disabled = true;
+            const originalText = button.innerHTML;
+            button.innerHTML = '처리 중...';
+
+            try {
+                const response = await fetch('/api/enrollments/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ courseId: parseInt(courseId) })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(result.message);
+                    // 페이지 새로고침하여 상태 업데이트
+                    location.reload();
+                } else {
+                    alert(result.message || '수강 신청에 실패했습니다.');
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                }
+            } catch (error) {
+                console.error('수강 신청 오류:', error);
+                alert('오류가 발생했습니다. 다시 시도해주세요.');
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+        }
+    </script>
 </body>
 </html>

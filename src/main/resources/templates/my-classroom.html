@@ -140,6 +140,61 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- 수료증 목록 -->
+        <div class="table-container" style="margin-top: 40px;">
+            <h3 style="margin-bottom: 20px; color: var(--dark-gray);">
+                수료증
+                <span th:if="${certificateCount > 0}" style="font-size: 14px; color: #666; font-weight: normal;"
+                      th:text="'(' + ${certificateCount} + '개)'"></span>
+            </h3>
+
+            <!-- 수료증이 없는 경우 -->
+            <div th:if="${#lists.isEmpty(certificates)}" style="text-align: center; padding: 40px; color: #666; background: #f9f9f9; border-radius: 8px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">🏆</div>
+                <p style="margin-bottom: 8px;">아직 발급받은 수료증이 없습니다.</p>
+                <p style="font-size: 14px;">승인형 강좌를 수강하고 진도율 90% + 퀴즈 90% 이상 달성 시 수료증이 발급됩니다.</p>
+            </div>
+
+            <!-- 수료증 카드 그리드 -->
+            <div th:unless="${#lists.isEmpty(certificates)}" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+                <div th:each="cert : ${certificates}"
+                     style="background: linear-gradient(135deg, #fff9e6 0%, #fff 100%); border: 1px solid #e0d5b8; border-radius: 12px; padding: 24px; position: relative; overflow: hidden;">
+                    <!-- 수료 마크 -->
+                    <div style="position: absolute; top: 16px; right: 16px; width: 48px; height: 48px; background: #ffd700; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);">
+                        🎓
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <h4 style="font-size: 18px; font-weight: 600; color: #333; margin-bottom: 8px; padding-right: 60px;"
+                            th:text="${cert.courseTitle}">강좌명</h4>
+                        <p style="font-size: 12px; color: #888;" th:text="'발급번호: ' + ${cert.certificateNumber}">CERT-XXXXXXXX</p>
+                    </div>
+
+                    <div style="display: flex; gap: 20px; margin-bottom: 16px; font-size: 14px;">
+                        <div>
+                            <span style="color: #666;">진도율</span>
+                            <strong style="display: block; color: #4caf50;" th:text="${cert.progressPercent + '%'}">100%</strong>
+                        </div>
+                        <div>
+                            <span style="color: #666;">퀴즈</span>
+                            <strong style="display: block; color: #2196f3;" th:text="${cert.quizPercent + '%'}">100%</strong>
+                        </div>
+                        <div>
+                            <span style="color: #666;">발급일</span>
+                            <strong style="display: block; color: #333;" th:text="${cert.issuedAt}">2024.01.01</strong>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 8px;">
+                        <a th:href="@{/lesson(courseId=${cert.courseId})}"
+                           style="flex: 1; padding: 10px; text-align: center; background: #f5f5f5; color: #333; border-radius: 6px; text-decoration: none; font-size: 14px;">
+                            복습하기
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 
 <script th:src="@{/js/main.js}" src="/js/main.js"></script>
