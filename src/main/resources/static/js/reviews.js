@@ -1,12 +1,14 @@
-// reviews.js (복붙용 최적화 완성본)
-// DTO 필드: q, travelType/theme, periods(List), levels(List), tags(List), minBudget/maxBudget, page/size
+// reviews.js
+// - chips(single/multi) + hidden inputs + 페이지 reset
+// - budget: min/max slider + range bar + ticks + reset/unlock
+// - URL 파라미터로 UI 복원 (페이지네이션 이동 시 유지)
 
 document.addEventListener("DOMContentLoaded", () => {
     const filterForm = document.getElementById("filterForm");
-    if (!filterForm) return; // ✅ 리스트 페이지 아닐 때는 즉시 종료
+    if (!filterForm) return;
 
     // ==============================
-    // multi hidden input 생성 매핑
+    // Multi hidden input mapping
     // ==============================
     const multiWrap = {
         period: { wrapId: "periodInputs", inputName: "periods" },
@@ -14,45 +16,46 @@ document.addEventListener("DOMContentLoaded", () => {
         region: { wrapId: "tagInputs",    inputName: "tags"    }
     };
 
+    const params = new URLSearchParams(window.location.search);
+
     // ==============================
     // Utils
     // ==============================
-    const params = new URLSearchParams(window.location.search);
+    const isBlank = (v) => v == null || String(v).trim() === "";
+    const toIntOrNull = (v) => {
+        if (isBlank(v)) return null;
+        const n = parseInt(v, 10);
+        return Number.isFinite(n) ? n : null;
+    };
 
     function clearGroupActive(group) {
-        group.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+        group.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
     }
-
     function setAllActive(group) {
         const allBtn = group.querySelector('.chip[data-value=""]');
         if (allBtn) allBtn.classList.add("active");
     }
-
     function unsetAllActive(group) {
         const allBtn = group.querySelector('.chip[data-value=""]');
         if (allBtn) allBtn.classList.remove("active");
     }
-
     function getSelectedValues(group) {
         return [...group.querySelectorAll(".chip.active")]
-            .map(c => c.dataset.value)
-            .filter(v => v !== "");
+            .map((c) => c.dataset.value)
+            .filter((v) => v !== "");
     }
-
     function resetPage() {
         const pageInput = document.getElementById("f_page");
         if (pageInput) pageInput.value = "0";
     }
-
     function syncMultiHiddenInputs(key, values) {
         const cfg = multiWrap[key];
         if (!cfg) return;
-
         const wrap = document.getElementById(cfg.wrapId);
         if (!wrap) return;
 
         wrap.innerHTML = "";
-        values.forEach(v => {
+        values.forEach((v) => {
             const input = document.createElement("input");
             input.type = "hidden";
             input.name = cfg.inputName;
@@ -62,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==============================
-    // Mini Summary
+    // Mini Summary (선택된 조건 요약)
     // ==============================
     function renderMiniSummary() {
         const box = document.getElementById("miniSummary");
@@ -70,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         box.innerHTML = "";
 
-        const typeMap = { solo: "혼자", couple: "커플", family: "가족", friends: "친구" };
+        const typeMap  = { solo: "혼자", couple: "커플", family: "가족", friends: "친구" };
         const themeMap = { freedom: "자유여행", healing: "힐링", food: "맛집", activity: "액티비티", nature: "자연" };
 
         const addChip = (label, className = "") => {
@@ -84,25 +87,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const chips = [];
 
-        // 단일: travelType/theme
+        // single
         const typeVal = document.getElementById("f_travelType")?.value || "";
         if (typeVal) chips.push(typeMap[typeVal] || typeVal);
 
         const themeVal = document.getElementById("f_theme")?.value || "";
         if (themeVal) chips.push(themeMap[themeVal] || themeVal);
 
-        // 다중: periods/levels/tags
-        document.querySelectorAll("#periodInputs input[type='hidden']").forEach(inp => {
+        // multi
+        document.querySelectorAll("#periodInputs input[type='hidden']").forEach((inp) => {
             const v = (inp.value || "").trim();
             if (v) chips.push(v);
         });
-
-        document.querySelectorAll("#levelInputs input[type='hidden']").forEach(inp => {
+        document.querySelectorAll("#levelInputs input[type='hidden']").forEach((inp) => {
             const v = (inp.value || "").trim();
             if (v) chips.push(v);
         });
-
-        document.querySelectorAll("#tagInputs input[type='hidden']").forEach(inp => {
+        document.querySelectorAll("#tagInputs input[type='hidden']").forEach((inp) => {
             const v = (inp.value || "").trim();
             if (v) chips.push(v);
         });
@@ -113,18 +114,18 @@ document.addEventListener("DOMContentLoaded", () => {
             empty.textContent = "선택된 조건 없음";
             box.appendChild(empty);
         } else {
-            chips.forEach(label => addChip(label));
+            chips.forEach((label) => addChip(label));
         }
 
-        // 예산
+        // budget
         const min = parseInt(document.getElementById("f_minBudget")?.value || "0", 10);
         const max = parseInt(document.getElementById("f_maxBudget")?.value || "5000000", 10);
-        const fmt = n => (isNaN(n) ? "0" : n).toLocaleString("ko-KR");
+        const fmt = (n) => (isNaN(n) ? "0" : n).toLocaleString("ko-KR");
         addChip(`예산 범위 : ${fmt(min)}원 ~ ${fmt(max)}원`, "budget");
     }
 
     // ==============================
-    // URL -> UI 복원 (핵심)
+    // URL -> UI 복원
     // ==============================
     function restoreSingle(key, paramName) {
         const group = document.querySelector(`.filter-chips[data-key="${key}"]`);
@@ -132,11 +133,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const val = params.get(paramName) || "";
 
-        // hidden
         const hidden = document.getElementById("f_" + key);
         if (hidden) hidden.value = val;
 
-        // chips
         clearGroupActive(group);
         const btn = group.querySelector(`.chip[data-value="${val}"]`) || group.querySelector(`.chip[data-value=""]`);
         if (btn) btn.classList.add("active");
@@ -147,7 +146,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!group) return;
 
         const values = params.getAll(paramName) || [];
-
         syncMultiHiddenInputs(key, values);
 
         clearGroupActive(group);
@@ -157,14 +155,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         unsetAllActive(group);
-        values.forEach(v => {
+        values.forEach((v) => {
             const btn = group.querySelector(`.chip[data-value="${v}"]`);
             if (btn) btn.classList.add("active");
         });
     }
 
     // ==============================
-    // Budget slider
+    // Budget slider (HTML ID 완전 일치)
     // ==============================
     const minInput  = document.getElementById("budgetMin");
     const maxInput  = document.getElementById("budgetMax");
@@ -177,48 +175,47 @@ document.addEventListener("DOMContentLoaded", () => {
     const ticksWrap = document.getElementById("budgetTicks");
     const rangeBar  = document.getElementById("budgetRange");
 
+    // 버튼/상태 hidden (HTML 기준)
+    const resetBtn   = document.getElementById("budgetResetBtn");
+    const unlockBtn  = document.getElementById("budgetUnlockBtn");     // ✅ 핵심: HTML은 UnlockBtn
+    const hiddenUnlimit = document.getElementById("f_budgetUnlimit");  // ✅ hidden 상태
+
+    // 기본값 / 제한해제 max
+    const DEFAULT_MIN = 0;
+    const DEFAULT_MAX = 5000000;
+    const UNLIMIT_MAX = 50000000; // 5천만 (원하면 조절)
+
     function formatWon(n) {
         return Number(n).toLocaleString("ko-KR") + "원";
     }
 
-    // ✅ 초기 로드에는 resetPage를 하면 안 됨 (page 복원이 깨짐)
-    function syncBudget({ reset = false } = {}) {
-        if (!minInput || !maxInput) return;
+    function isUnlocked() {
+        return (hiddenUnlimit?.value || "0") === "1";
+    }
 
-        let minVal = parseInt(minInput.value, 10);
-        let maxVal = parseInt(maxInput.value, 10);
+    function setUnlocked(on) {
+        if (hiddenUnlimit) hiddenUnlimit.value = on ? "1" : "0";
+        if (unlockBtn) unlockBtn.setAttribute("aria-pressed", on ? "true" : "false");
+        // 버튼 텍스트는 취향 (원하면 유지)
+        // unlockBtn.textContent = on ? "제한해제됨" : "제한해제";
+    }
 
-        if (minVal > maxVal) {
-            minVal = maxVal;
-            minInput.value = String(minVal);
-        }
-
-        if (minLabel) minLabel.textContent = formatWon(minVal);
-        if (maxLabel) maxLabel.textContent = formatWon(maxVal);
-
-        if (hiddenMin) hiddenMin.value = String(minVal);
-        if (hiddenMax) hiddenMax.value = String(maxVal);
-
-        if (rangeBar) {
-            const min = parseInt(minInput.min, 10);
-            const max = parseInt(minInput.max, 10);
-            const left  = ((minVal - min) / (max - min)) * 100;
-            const right = ((maxVal - min) / (max - min)) * 100;
-            rangeBar.style.left  = left + "%";
-            rangeBar.style.width = (right - left) + "%";
-        }
-
-        if (reset) resetPage();
-        renderMiniSummary();
+    // tick step 자동 계산(대략 10칸)
+    function calcTickStep(max) {
+        // max=5,000,000이면 500,000 정도 나오게
+        const rough = max / 10;
+        // 보기 좋게 10만 단위로 반올림
+        return Math.max(100000, Math.round(rough / 100000) * 100000);
     }
 
     function renderBudgetTicks() {
-        if (!ticksWrap || !minInput) return;
+        if (!ticksWrap || !minInput || !maxInput) return;
 
         const min = parseInt(minInput.min, 10);
-        const max = parseInt(minInput.max, 10);
-        const tickStep  = 500000;   // 50만
-        const labelStep = 1000000;  // 100만
+        const max = parseInt(maxInput.max, 10);
+
+        const tickStep  = calcTickStep(max);
+        const labelStep = tickStep * 2;
 
         ticksWrap.innerHTML = "";
 
@@ -242,32 +239,98 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         addTick(min, true);
-        for (let v = tickStep; v <= max; v += tickStep) addTick(v, (v % labelStep === 0));
+        for (let v = min + tickStep; v <= max; v += tickStep) {
+            addTick(v, (v % labelStep === 0));
+        }
+    }
+
+    function syncBudget({ reset = false } = {}) {
+        if (!minInput || !maxInput) return;
+
+        let minVal = parseInt(minInput.value, 10);
+        let maxVal = parseInt(maxInput.value, 10);
+
+        // NaN 방지
+        if (!Number.isFinite(minVal)) minVal = DEFAULT_MIN;
+        if (!Number.isFinite(maxVal)) maxVal = parseInt(maxInput.max || String(DEFAULT_MAX), 10);
+
+        // 교차 방지
+        if (minVal > maxVal) {
+            minVal = maxVal;
+            minInput.value = String(minVal);
+        }
+
+        // 라벨
+        if (minLabel) minLabel.textContent = formatWon(minVal);
+        if (maxLabel) maxLabel.textContent = formatWon(maxVal);
+
+        // hidden
+        if (hiddenMin) hiddenMin.value = String(minVal);
+        if (hiddenMax) hiddenMax.value = String(maxVal);
+
+        // range bar (%는 maxInput.max 기준)
+        if (rangeBar) {
+            const min = parseInt(minInput.min, 10);
+            const max = parseInt(maxInput.max, 10);
+            const left  = ((minVal - min) / (max - min)) * 100;
+            const right = ((maxVal - min) / (max - min)) * 100;
+            rangeBar.style.left  = left + "%";
+            rangeBar.style.width = (right - left) + "%";
+        }
+
+        if (reset) resetPage();
+        renderMiniSummary();
+    }
+
+    function applyMaxLimit(unlocked, { clamp = true } = {}) {
+        if (!minInput || !maxInput) return;
+
+        const newMax = unlocked ? UNLIMIT_MAX : DEFAULT_MAX;
+
+        minInput.max = String(newMax);
+        maxInput.max = String(newMax);
+
+        if (clamp && !unlocked) {
+            // 잠금으로 돌아갈 때 현재 값이 500만 넘으면 500만으로 clamp
+            const curMin = parseInt(minInput.value || "0", 10);
+            const curMax = parseInt(maxInput.value || "0", 10);
+            if (curMin > DEFAULT_MAX) minInput.value = String(DEFAULT_MAX);
+            if (curMax > DEFAULT_MAX) maxInput.value = String(DEFAULT_MAX);
+        }
+
+        renderBudgetTicks();
+        syncBudget({ reset: false });
     }
 
     // ==============================
     // 1) URL 기반 복원 먼저
     // ==============================
-    // single
     restoreSingle("travelType", "travelType");
     restoreSingle("theme", "theme");
 
-    // multi
     restoreMulti("period", "periods");
     restoreMulti("level", "levels");
     restoreMulti("region", "tags");
 
-    // budget (URL 값 있으면 range에도 반영)
-    if (minInput && maxInput) {
-        const minQ = params.get("minBudget");
-        const maxQ = params.get("maxBudget");
-        if (minQ !== null) minInput.value = minQ;
-        if (maxQ !== null) maxInput.value = maxQ;
-    }
-    syncBudget({ reset: false });
-    renderBudgetTicks();
+    // budget unlock 상태 (URL param or hidden)
+    // - HTML에서 th:value="${param.budgetUnlimit}" 로 들어오므로 hidden 값을 신뢰
+    const unlockedInit = isUnlocked();
+    setUnlocked(unlockedInit);
+    applyMaxLimit(unlockedInit, { clamp: false });
 
-    // page/size 복원 (있을 때만)
+    // budget 값: 숫자일 때만 반영 (빈값이면 유지)
+    if (minInput && maxInput) {
+        const minQ = toIntOrNull(params.get("minBudget"));
+        const maxQ = toIntOrNull(params.get("maxBudget"));
+        if (minQ !== null) minInput.value = String(minQ);
+        if (maxQ !== null) maxInput.value = String(maxQ);
+    }
+
+    // ticks + sync
+    renderBudgetTicks();
+    syncBudget({ reset: false });
+
+    // page/size 복원(있으면)
     const pageHidden = document.getElementById("f_page");
     const sizeHidden = document.getElementById("f_size");
     if (pageHidden && params.get("page") !== null) pageHidden.value = params.get("page");
@@ -276,7 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==============================
     // 2) 이벤트 바인딩 (사용자 조작 시 page=0)
     // ==============================
-    document.querySelectorAll(".filter-chips").forEach(group => {
+    document.querySelectorAll(".filter-chips").forEach((group) => {
         const key = group.dataset.key;
         const mode = group.dataset.mode;
 
@@ -337,8 +400,37 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    // budget sliders
     if (minInput && maxInput) {
         minInput.addEventListener("input", () => syncBudget({ reset: true }));
         maxInput.addEventListener("input", () => syncBudget({ reset: true }));
+    }
+
+    // ==============================
+    // Budget buttons
+    // ==============================
+    if (resetBtn) {
+        resetBtn.addEventListener("click", () => {
+            if (!minInput || !maxInput) return;
+
+            const curMax = parseInt(maxInput.max, 10); // 잠금/해제 상태에 따른 현재 max
+            minInput.value = String(DEFAULT_MIN);
+            maxInput.value = String(curMax);
+
+            syncBudget({ reset: true });
+        });
+    }
+
+    if (unlockBtn) {
+        // 초기 aria
+        unlockBtn.setAttribute("aria-pressed", isUnlocked() ? "true" : "false");
+
+        unlockBtn.addEventListener("click", () => {
+            const next = !isUnlocked();
+            setUnlocked(next);
+            applyMaxLimit(next, { clamp: true });
+
+            resetPage();
+        });
     }
 });

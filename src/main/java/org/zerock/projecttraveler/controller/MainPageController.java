@@ -28,6 +28,7 @@ public class MainPageController {
     private final EnrollmentService enrollmentService;
     private final LearningService learningService;
     private final AttendanceService attendanceService;
+    private final CertificateService certificateService;
 
 
     /**

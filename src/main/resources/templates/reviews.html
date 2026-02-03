@@ -17,79 +17,121 @@
     <!-- ✅ action 제거: 현재 URL(/reviews 또는 /reviews-unity)로 GET 재요청 -->
     <form id="filterForm" method="get">
 
-        <!-- ✅ 페이징 상태 (JS에서 resetPage()로 제어) -->
-        <input type="hidden" id="f_page" name="page" value="0">
-        <input type="hidden" id="f_size" name="size" value="12">
+        <!-- ✅ 페이징 상태 -->
+        <input type="hidden" id="f_page" name="page"
+               th:value="${search != null && search.page != null ? search.page : 0}" value="0"/>
+
+        <!-- ✅ size도 고정이면 같이 보내두는게 안전 (컨트롤러에서 5 고정이라면 생략 가능) -->
+        <!-- <input type="hidden" name="size" th:value="${search != null && search.size != null ? search.size : 5}" value="5"/> -->
 
         <section class="filter-panel">
 
-            <!-- 여행 유형 (택1) : 현재 SearchRequest에 없으므로 서버 전송 X -->
+            <!-- =========================
+                 travelType (서버 전송 O)
+            ========================== -->
             <div class="filter-row">
                 <div class="filter-label">
                     여행유형
                     <div class="filter-hint single">* 한 개만 선택</div>
                 </div>
+
                 <div class="filter-chips" data-key="travelType" data-mode="single">
-                    <button type="button" class="chip active" data-value="">전체</button>
+                    <button type="button" class="chip" data-value="">전체</button>
                     <button type="button" class="chip" data-value="solo">혼자</button>
                     <button type="button" class="chip" data-value="couple">커플</button>
                     <button type="button" class="chip" data-value="family">가족</button>
                     <button type="button" class="chip" data-value="friends">친구</button>
                 </div>
-                <!-- ✅ 서버 전송 안 함 (name 제거) -->
-                <input type="hidden" id="f_travelType" name="travelType" value="">
+
+                <!-- ✅ 핵심: value를 search에서 복원 -->
+                <input type="hidden" id="f_travelType" name="travelType"
+                       th:value="${search != null ? search.travelType : ''}" value=""/>
             </div>
 
-            <!-- 테마 (택1) : 현재 SearchRequest에 없으므로 서버 전송 X -->
+
+            <!-- =========================
+                 theme (서버 전송 O)
+            ========================== -->
             <div class="filter-row">
                 <div class="filter-label">
                     테마
                     <div class="filter-hint single">* 한 개만 선택</div>
                 </div>
+
                 <div class="filter-chips" data-key="theme" data-mode="single">
-                    <button type="button" class="chip active" data-value="">전체</button>
+                    <button type="button" class="chip" data-value="">전체</button>
                     <button type="button" class="chip" data-value="freedom">자유</button>
                     <button type="button" class="chip" data-value="healing">힐링</button>
                     <button type="button" class="chip" data-value="food">맛집</button>
                     <button type="button" class="chip" data-value="activity">액티비티</button>
                     <button type="button" class="chip" data-value="nature">자연</button>
                 </div>
-                <!-- ✅ 서버 전송 안 함 (name 제거) -->
-                <input type="hidden" id="f_theme" name="theme" value="">
+
+                <!-- ✅ 핵심: value를 search에서 복원 -->
+                <input type="hidden" id="f_theme" name="theme"
+                       th:value="${search != null ? search.theme : ''}" value=""/>
             </div>
 
-            <!-- 예산: ✅ DTO에 맞게 minBudget / maxBudget 로 전송 -->
+
+            <!-- 예산 -->
             <div class="filter-row">
-                <div class="filter-label">예산</div>
+                <div class="filter-label budget-label">
+                    예산
+                    <button type="button" id="budgetResetBtn" class="budget-reset-btn" title="예산 초기화">↺</button>
+                </div>
 
                 <div class="reviews-budget">
-                    <div class="reviews-budget-values">
-                        <span id="budgetMinLabel">0원</span>
-                        <span> ~ </span>
-                        <span id="budgetMaxLabel">5,000,000원</span>
-                    </div>
 
-                    <div class="reviews-budget-slider">
-                        <div class="reviews-budget-track">
-                            <div class="reviews-budget-range" id="budgetRange"></div>
+                    <div class="reviews-budget-line">
+                        <div class="reviews-budget-values">
+                            <span id="budgetMinLabel">0원</span>
+                            <span> ~ </span>
+                            <span id="budgetMaxLabel">5,000,000원</span>
                         </div>
 
-                        <input type="range" id="budgetMin"
-                               min="0" max="5000000" step="100" value="0"/>
+                        <div class="reviews-budget-slider">
+                            <div class="reviews-budget-track">
+                                <div class="reviews-budget-range" id="budgetRange"></div>
+                            </div>
 
-                        <input type="range" id="budgetMax"
-                               min="0" max="5000000" step="100" value="5000000"/>
+                            <input type="range" id="budgetMin"
+                                   min="0" max="5000000" step="100"
+                                   th:value="${search != null and search.minBudget != null ? search.minBudget : 0}"
+                                   value="0"/>
+
+                            <input type="range" id="budgetMax"
+                                   min="0" max="5000000" step="100"
+                                   th:value="${search != null and search.maxBudget != null ? search.maxBudget : 5000000}"
+                                   value="5000000"/>
+
+                            <div class="reviews-budget-ticks" id="budgetTicks"></div>
+                        </div>
+
+                        <button type="button" id="budgetUnlockBtn" class="budget-unlock-btn">제한해제</button>
                     </div>
 
-                    <div class="reviews-budget-ticks" id="budgetTicks"></div>
+                    <!-- hidden -->
+                    <input type="hidden" name="minBudget" id="f_minBudget"
+                           th:value="${search != null and search.minBudget != null ? search.minBudget : 0}"
+                           value="0">
+                    <input type="hidden" name="maxBudget" id="f_maxBudget"
+                           th:value="${search != null and search.maxBudget != null ? search.maxBudget : 5000000}"
+                           value="5000000">
 
-                    <!-- ✅ 서버로 전달될 값 -->
-                    <input type="hidden" name="minBudget" id="f_minBudget" value="0">
-                    <input type="hidden" name="maxBudget" id="f_maxBudget" value="5000000">
+                    <!-- ✅ 제한해제 상태 -->
+                    <input type="hidden" name="budgetUnlimit" id="f_budgetUnlimit"
+                           th:value="${param.budgetUnlimit}" value="0">
                 </div>
             </div>
 
-            <!-- 기간 : 현재 SearchRequest에 없으므로 서버 전송 X -->
+            <!-- =========================
+                 기간(periods) / 난이도(levels) / 지역(tags)
+                 - 여기서 “서버 렌더링”으로 hidden을 미리 박아두면
+                   페이지 이동 시에도 값이 URL로 유지됨 (초기화 방지 1차)
+                 - 칩 active 복원은 JS에서 따로 해줘야 완벽함
+            ========================== -->
+
+            <!-- 기간 -->
             <div class="filter-row">
                 <div class="filter-label">
                     기간
@@ -97,17 +139,21 @@
                 </div>
 
                 <div class="filter-chips" data-key="period" data-mode="multi-or">
-                    <button type="button" class="chip active" data-value="">전체</button>
+                    <button type="button" class="chip" data-value="">전체</button>
                     <button type="button" class="chip" data-value="당일치기">당일</button>
                     <button type="button" class="chip" data-value="1박2일">1박2일</button>
                     <button type="button" class="chip" data-value="2박3일">2박3일</button>
                     <button type="button" class="chip" data-value="3박4일">3박4일</button>
-
                 </div>
-                <div id="periodInputs"></div>
+
+                <!-- ✅ 서버가 받은 periods를 hidden으로 미리 렌더링 -->
+                <div id="periodInputs">
+                    <input th:each="p : ${search != null ? search.periods : null}"
+                           type="hidden" name="periods" th:value="${p}"/>
+                </div>
             </div>
 
-            <!-- 난이도 : 현재 SearchRequest에 없으므로 서버 전송 X -->
+            <!-- 난이도 -->
             <div class="filter-row">
                 <div class="filter-label">
                     난이도
@@ -115,16 +161,19 @@
                 </div>
 
                 <div class="filter-chips" data-key="level" data-mode="multi-or">
-                    <button type="button" class="chip active" data-value="">전체</button>
+                    <button type="button" class="chip" data-value="">전체</button>
                     <button type="button" class="chip" data-value="초급">초급</button>
                     <button type="button" class="chip" data-value="중급">중급</button>
                     <button type="button" class="chip" data-value="상급">상급</button>
-
                 </div>
-                <div id="levelInputs"></div>
+
+                <div id="levelInputs">
+                    <input th:each="lv : ${search != null ? search.levels : null}"
+                           type="hidden" name="levels" th:value="${lv}"/>
+                </div>
             </div>
 
-            <!-- ✅ 지역: DTO의 tags(List<String>)로 OR 검색 -->
+            <!-- 지역 -->
             <div class="filter-row region-row">
                 <div class="filter-label">
                     지역
@@ -133,7 +182,7 @@
 
                 <div class="region-inline">
                     <div class="filter-chips" data-key="region" data-mode="multi-toggle">
-                        <button type="button" class="chip active" data-value="">전체</button>
+                        <button type="button" class="chip" data-value="">전체</button>
                         <button type="button" class="chip" data-value="도쿄">도쿄</button>
                         <button type="button" class="chip" data-value="오사카">오사카</button>
                         <button type="button" class="chip" data-value="교토">교토</button>
@@ -146,26 +195,32 @@
                     * 지역 중복 선택 시 선택한 지역이 모두 포함된 게시글이 먼저 보입니다.
                 </div>
 
-                <!-- ✅ JS가 name="tags" hidden input들을 여기에 생성 -->
-                <div id="tagInputs"></div>
+                <!-- ✅ 서버가 받은 tags를 hidden으로 미리 렌더링 -->
+                <div id="tagInputs">
+                    <input th:each="t : ${search != null ? search.tags : null}"
+                           type="hidden" name="tags" th:value="${t}"/>
+                </div>
             </div>
 
-            <!-- ✅ 하단 검색 툴바 -->
+
+            <!-- =========================
+                 검색어 q 복원
+            ========================== -->
             <div class="reviews search-toolbar">
 
                 <div class="tag-summary-mini" id="miniSummary">
                     <span class="empty">선택된 조건 없음</span>
                 </div>
 
-                <!-- ✅ SearchRequest에는 qField가 없으므로 UI 유지하되 서버로는 보내지 않음 -->
                 <select class="q-field">
                     <option value="tc">제목 + 내용</option>
                     <option value="t">제목</option>
                     <option value="c">내용</option>
                 </select>
 
-                <!-- ✅ DTO: q -->
-                <textarea name="q" class="q-input" rows="1" placeholder="검색어를 입력하세요"></textarea>
+                <!-- ✅ 핵심: q 복원 -->
+                <textarea name="q" class="q-input" rows="1" placeholder="검색어를 입력하세요"
+                          th:text="${search != null ? search.q : ''}"></textarea>
 
                 <button type="submit" class="q-btn">검색</button>
             </div>
@@ -173,10 +228,12 @@
         </section>
     </form>
 
+
     <!-- =========================
          게시글 리스트
     ========================== -->
-    <section class="post-list">
+    <section id="postList" class="post-list">
+        <h1 class="page-title">후기 리스트</h1>
 
         <article class="post-card" th:each="post : ${posts}">
             <a class="post-link"
@@ -253,5 +310,222 @@
         </div>
 
     </section>
+
+    <!-- =========================
+         Pagination (BOTTOM)
+    ========================= -->
+    <div class="reviews-pagination bottom"
+         th:if="${pageResult != null and pageResult.totalPages > 1}"
+         th:with="
+        current=${pageResult.number},
+        total=${pageResult.totalPages},
+        blockSize=${10},
+        blockStart=${(current / blockSize) * blockSize},
+        blockEnd=${(blockStart + blockSize - 1) < (total - 1) ? (blockStart + blockSize - 1) : (total - 1)},
+        minB=${(search != null and search.minBudget != null) ? search.minBudget : 0},
+        maxB=${(search != null and search.maxBudget != null) ? search.maxBudget : 5000000}
+     ">
+
+        <!-- «« 맨앞 -->
+        <a class="reviews-page-btn"
+           th:if="${current > 0 and !isUnity}"
+           th:href="@{/reviews(
+            page=0,
+            q=${search.q},
+            travelType=${search.travelType},
+            theme=${search.theme},
+            minBudget=${minB},
+            maxBudget=${maxB},
+            periods=${search.periods},
+            levels=${search.levels},
+            tags=${search.tags}
+       )} + '#postList'">
+            &laquo;&laquo;
+        </a>
+
+        <a class="reviews-page-btn"
+           th:if="${current > 0 and isUnity}"
+           th:href="@{/reviews-unity(
+            page=0,
+            q=${search.q},
+            travelType=${search.travelType},
+            theme=${search.theme},
+            minBudget=${minB},
+            maxBudget=${maxB},
+            periods=${search.periods},
+            levels=${search.levels},
+            tags=${search.tags}
+       )} + '#postList'">
+            &laquo;&laquo;
+        </a>
+
+        <span class="reviews-page-btn disabled" th:if="${current == 0}">
+        &laquo;&laquo;
+    </span>
+
+
+        <!-- « 블록 이전 -->
+        <a class="reviews-page-btn"
+           th:if="${blockStart > 0 and !isUnity}"
+           th:href="@{/reviews(
+            page=${blockStart - 1},
+            q=${search.q},
+            travelType=${search.travelType},
+            theme=${search.theme},
+            minBudget=${minB},
+            maxBudget=${maxB},
+            periods=${search.periods},
+            levels=${search.levels},
+            tags=${search.tags}
+       )} + '#postList'">
+            &laquo;
+        </a>
+
+        <a class="reviews-page-btn"
+           th:if="${blockStart > 0 and isUnity}"
+           th:href="@{/reviews-unity(
+            page=${blockStart - 1},
+            q=${search.q},
+            travelType=${search.travelType},
+            theme=${search.theme},
+            minBudget=${minB},
+            maxBudget=${maxB},
+            periods=${search.periods},
+            levels=${search.levels},
+            tags=${search.tags}
+       )} + '#postList'">
+            &laquo;
+        </a>
+
+        <span class="reviews-page-btn disabled" th:if="${blockStart == 0}">
+        &laquo;
+    </span>
+
+
+        <!-- 페이지 번호 -->
+        <span class="reviews-page-numbers">
+        <span th:each="p : ${#numbers.sequence(blockStart, blockEnd)}">
+
+            <!-- 현재 페이지 -->
+            <span class="reviews-page-btn active"
+                  th:if="${p == current}"
+                  th:text="${p + 1}">1</span>
+
+            <!-- 웹 -->
+            <a class="reviews-page-btn"
+               th:if="${p != current and !isUnity}"
+               th:text="${p + 1}"
+               th:href="@{/reviews(
+                    page=${p},
+                    q=${search.q},
+                    travelType=${search.travelType},
+                    theme=${search.theme},
+                    minBudget=${minB},
+                    maxBudget=${maxB},
+                    periods=${search.periods},
+                    levels=${search.levels},
+                    tags=${search.tags}
+               )} + '#postList'">1</a>
+
+            <!-- 유니티 -->
+            <a class="reviews-page-btn"
+               th:if="${p != current and isUnity}"
+               th:text="${p + 1}"
+               th:href="@{/reviews-unity(
+                    page=${p},
+                    q=${search.q},
+                    travelType=${search.travelType},
+                    theme=${search.theme},
+                    minBudget=${minB},
+                    maxBudget=${maxB},
+                    periods=${search.periods},
+                    levels=${search.levels},
+                    tags=${search.tags}
+               )} + '#postList'">1</a>
+
+        </span>
+    </span>
+
+
+        <!-- 블록 다음 » -->
+        <a class="reviews-page-btn"
+           th:if="${blockEnd < (total - 1) and !isUnity}"
+           th:href="@{/reviews(
+            page=${blockEnd + 1},
+            q=${search.q},
+            travelType=${search.travelType},
+            theme=${search.theme},
+            minBudget=${minB},
+            maxBudget=${maxB},
+            periods=${search.periods},
+            levels=${search.levels},
+            tags=${search.tags}
+       )} + '#postList'">
+            &raquo;
+        </a>
+
+        <a class="reviews-page-btn"
+           th:if="${blockEnd < (total - 1) and isUnity}"
+           th:href="@{/reviews-unity(
+            page=${blockEnd + 1},
+            q=${search.q},
+            travelType=${search.travelType},
+            theme=${search.theme},
+            minBudget=${minB},
+            maxBudget=${maxB},
+            periods=${search.periods},
+            levels=${search.levels},
+            tags=${search.tags}
+       )} + '#postList'">
+            &raquo;
+        </a>
+
+        <span class="reviews-page-btn disabled" th:if="${blockEnd >= (total - 1)}">
+        &raquo;
+    </span>
+
+
+        <!-- 맨끝 »» -->
+        <a class="reviews-page-btn"
+           th:if="${current < (total - 1) and !isUnity}"
+           th:href="@{/reviews(
+            page=${total - 1},
+            q=${search.q},
+            travelType=${search.travelType},
+            theme=${search.theme},
+            minBudget=${minB},
+            maxBudget=${maxB},
+            periods=${search.periods},
+            levels=${search.levels},
+            tags=${search.tags}
+       )} + '#postList'">
+            &raquo;&raquo;
+        </a>
+
+        <a class="reviews-page-btn"
+           th:if="${current < (total - 1) and isUnity}"
+           th:href="@{/reviews-unity(
+            page=${total - 1},
+            q=${search.q},
+            travelType=${search.travelType},
+            theme=${search.theme},
+            minBudget=${minB},
+            maxBudget=${maxB},
+            periods=${search.periods},
+            levels=${search.levels},
+            tags=${search.tags}
+       )} + '#postList'">
+            &raquo;&raquo;
+        </a>
+
+        <span class="reviews-page-btn disabled" th:if="${current >= (total - 1)}">
+        &raquo;&raquo;
+    </span>
+
+    </div>
+
+
+
+
 
 </div>
