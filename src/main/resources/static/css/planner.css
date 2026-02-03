@@ -108,13 +108,26 @@
     font-size: 16px;
     font-weight: 600;
     text-decoration: none;
-    border: 1px solid var(--border-gray);
+    border: 2px solid var(--border-gray);
     transition: all 0.3s;
     cursor: pointer;
 }
 
 .btn-planner-secondary:hover {
     background: var(--light-gray);
+    border-color: var(--primary-red);
+    color: var(--primary-red);
+    transform: translateY(-2px);
+}
+
+.btn-planner-secondary svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s;
+}
+
+.btn-planner-secondary:hover svg {
+    transform: translateX(4px);
 }
 
 .planner-hero-image {
@@ -1021,6 +1034,17 @@
 
 .btn-planner-action.secondary:hover {
     border-color: var(--primary-red);
+}
+
+.btn-planner-action.danger {
+    background: var(--white);
+    color: #dc3545;
+    border: 2px solid #dc3545;
+}
+
+.btn-planner-action.danger:hover {
+    background: #dc3545;
+    color: var(--white);
 }
 
 .btn-planner-action svg {
@@ -2310,4 +2334,241 @@
     .share-add-form button {
         width: 100%;
     }
+}
+
+/* ========================================
+   추가 스타일 (읽기 전용, 빈 상태 등)
+   ======================================== */
+
+/* 읽기 전용 배지 */
+.planner-detail-readonly {
+    display: flex;
+    align-items: center;
+}
+
+.readonly-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* 빈 상태 공통 */
+.checklist-empty,
+.budget-empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: #999;
+    font-size: 14px;
+}
+
+.itinerary-empty svg {
+    width: 64px;
+    height: 64px;
+    color: #ddd;
+    margin-bottom: 16px;
+}
+
+/* 예산 추가 폼 */
+.budget-add {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-gray);
+}
+
+.budget-add input[type="text"] {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.budget-add input[type="number"] {
+    width: 100px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.budget-add input:focus {
+    outline: none;
+    border-color: var(--primary-red);
+}
+
+.budget-add button {
+    padding: 10px 16px;
+    background: var(--primary-red);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.budget-add button:hover {
+    background: #A11F24;
+}
+
+/* 예산 초과 표시 */
+.budget-item-percent.over {
+    color: #dc3545;
+}
+
+.budget-item-fill.over {
+    background: linear-gradient(90deg, #dc3545, #ff6b6b);
+}
+
+/* 체크리스트 삭제 버튼 */
+.btn-delete-checklist {
+    width: 24px;
+    height: 24px;
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    transition: color 0.3s;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-delete-checklist:hover {
+    color: #dc3545;
+}
+
+.btn-delete-checklist svg {
+    width: 14px;
+    height: 14px;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+/* 공유 아이템 스타일 */
+.share-user {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.share-username {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--dark-gray);
+}
+
+.share-permission {
+    font-size: 12px;
+    color: #666;
+}
+
+.btn-remove-share {
+    width: 28px;
+    height: 28px;
+    background: none;
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-remove-share:hover {
+    background: #dc3545;
+    color: var(--white);
+}
+
+.btn-remove-share svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* 일정 추가 모달 폼 스타일 */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark-gray);
+    margin-bottom: 8px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="time"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--white);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-red);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* 모달 버튼 스타일 */
+.btn-modal-confirm {
+    padding: 10px 20px;
+    background: var(--primary-red);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-modal-confirm:hover {
+    background: #A11F24;
+}
+
+.btn-modal-cancel {
+    padding: 10px 20px;
+    background: var(--white);
+    color: #666;
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-modal-cancel:hover {
+    background: var(--light-gray);
 }
