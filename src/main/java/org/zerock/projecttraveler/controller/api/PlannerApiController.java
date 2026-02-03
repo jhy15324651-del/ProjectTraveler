@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.zerock.projecttraveler.entity.*;
 import org.zerock.projecttraveler.security.SecurityUtils;
 import org.zerock.projecttraveler.service.PlannerService;
+import org.zerock.projecttraveler.service.UserService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.Map;
 public class PlannerApiController {
 
     private final PlannerService plannerService;
+    private final UserService userService;
 
     // ==================== 플래너 CRUD ====================
 
@@ -233,7 +235,34 @@ public class PlannerApiController {
     // ==================== 공유 관리 ====================
 
     /**
-     * 플래너 공유
+     * 공유 목록 조회
+     */
+    @GetMapping("/{id}/shares")
+    public ResponseEntity<?> getShares(@PathVariable Long id) {
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+
+        TravelPlanner planner = plannerService.findById(id).orElse(null);
+        if (planner == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (!planner.getUser().getId().equals(userId)) {
+            return ResponseEntity.status(403).body(Map.of("error", "권한이 없습니다."));
+        }
+
+        List<PlannerShare> shares = plannerService.getShares(id);
+        List<Map<String, Object>> result = shares.stream().map(share -> Map.<String, Object>of(
+                "userId", share.getSharedUser().getId(),
+                "username", share.getSharedUser().getUsername(),
+                "fullName", share.getSharedUser().getFullName() != null ? share.getSharedUser().getFullName() : share.getSharedUser().getUsername(),
+                "permission", share.getPermission().name()
+        )).toList();
+
+        return ResponseEntity.ok(Map.of("success", true, "data", result));
+    }
+
+    /**
+     * 플래너 공유 (username 또는 userId로)
      */
     @PostMapping("/{id}/share")
     public ResponseEntity<?> sharePlanner(@PathVariable Long id, @RequestBody Map<String, Object> request) {
@@ -243,7 +272,27 @@ public class PlannerApiController {
             return ResponseEntity.status(403).body(Map.of("error", "권한이 없습니다."));
         }
 
-        Long sharedUserId = ((Number) request.get("userId")).longValue();
+        Long sharedUserId = null;
+
+        // username으로 공유하는 경우
+        if (request.containsKey("username")) {
+            String username = (String) request.get("username");
+            User sharedUser = userService.findByUsername(username).orElse(null);
+            if (sharedUser == null) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "존재하지 않는 사용자입니다."));
+            }
+            if (sharedUser.getId().equals(userId)) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "본인에게는 공유할 수 없습니다."));
+            }
+            sharedUserId = sharedUser.getId();
+        }
+        // userId로 공유하는 경우
+        else if (request.containsKey("userId")) {
+            sharedUserId = ((Number) request.get("userId")).longValue();
+        } else {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "username 또는 userId가 필요합니다."));
+        }
+
         String permissionStr = (String) request.getOrDefault("permission", "VIEW");
         PlannerShare.Permission permission = PlannerShare.Permission.valueOf(permissionStr.toUpperCase());
 
@@ -318,6 +367,15 @@ public class PlannerApiController {
     }
 
     /**
+     * 일정 완료 토글
+     */
+    @PutMapping("/itinerary/{itineraryId}/toggle")
+    public ResponseEntity<?> toggleItinerary(@PathVariable Long itineraryId) {
+        plannerService.toggleItinerary(itineraryId);
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    /**
      * 일정 삭제
      */
     @DeleteMapping("/itinerary/{itineraryId}")
@@ -371,12 +429,43 @@ public class PlannerApiController {
     // ==================== 예산 관리 ====================
 
     /**
+     * 예산 항목 추가
+     */
+    @PostMapping("/{id}/budget")
+    public ResponseEntity<?> addBudgetItem(@PathVariable Long id, @RequestBody Map<String, Object> request) {
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+
+        if (!plannerService.canEdit(id, userId)) {
+            return ResponseEntity.status(403).body(Map.of("error", "권한이 없습니다."));
+        }
+
+        String name = (String) request.get("name");
+        Integer plannedAmount = request.get("plannedAmount") != null ? ((Number) request.get("plannedAmount")).intValue() : 0;
+
+        PlannerBudget budget = plannerService.addBudgetItem(id, name, plannedAmount);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "id", budget.getId()
+        ));
+    }
+
+    /**
      * 예산 실제 지출 업데이트
      */
     @PutMapping("/budget/{budgetId}")
     public ResponseEntity<?> updateBudgetActual(@PathVariable Long budgetId, @RequestBody Map<String, Object> request) {
         Integer actualAmount = ((Number) request.get("actualAmount")).intValue();
         plannerService.updateBudgetActual(budgetId, actualAmount);
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    /**
+     * 예산 항목 삭제
+     */
+    @DeleteMapping("/budget/{budgetId}")
+    public ResponseEntity<?> deleteBudgetItem(@PathVariable Long budgetId) {
+        plannerService.deleteBudgetItem(budgetId);
         return ResponseEntity.ok(Map.of("success", true));
     }
 }

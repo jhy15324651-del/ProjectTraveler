@@ -305,6 +305,16 @@ public class PlannerService {
     }
 
     /**
+     * 일정 완료 토글
+     */
+    @Transactional
+    public void toggleItinerary(Long itineraryId) {
+        itineraryRepository.findById(itineraryId).ifPresent(itinerary -> {
+            itinerary.setCompleted(!Boolean.TRUE.equals(itinerary.getCompleted()));
+        });
+    }
+
+    /**
      * 일정 삭제
      */
     @Transactional

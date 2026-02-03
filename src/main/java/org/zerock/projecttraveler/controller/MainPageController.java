@@ -11,6 +11,7 @@ import org.zerock.projecttraveler.dto.MyLearningSummaryDto;
 import org.zerock.projecttraveler.entity.Course;
 import org.zerock.projecttraveler.entity.CourseEnrollment;
 import org.zerock.projecttraveler.entity.Lesson;
+import org.zerock.projecttraveler.entity.TravelPlanner;
 import org.zerock.projecttraveler.security.CustomUserDetails;
 import org.zerock.projecttraveler.security.SecurityUtils;
 import org.zerock.projecttraveler.service.*;
@@ -29,6 +30,7 @@ public class MainPageController {
     private final LearningService learningService;
     private final AttendanceService attendanceService;
     private final CertificateService certificateService;
+    private final PlannerService plannerService;
 
 
     /**
@@ -275,12 +277,56 @@ public class MainPageController {
      */
     @GetMapping("/planner/detail/{id}")
     public String plannerDetail(@org.springframework.web.bind.annotation.PathVariable Long id, Model model) {
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
         CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
+
+        // 플래너 조회 (사용자 정보 포함)
+        TravelPlanner planner = plannerService.findByIdWithUser(id)
+                .orElseThrow(() -> new IllegalArgumentException("플래너를 찾을 수 없습니다."));
+
+        // 접근 권한 확인
+        boolean canAccess = plannerService.canAccess(id, userId);
+        if (!canAccess) {
+            throw new IllegalArgumentException("이 플래너에 접근할 권한이 없습니다.");
+        }
+
+        // 편집 권한 확인
+        boolean canEdit = plannerService.canEdit(id, userId);
+        boolean isOwner = planner.getUser().getId().equals(userId);
+
+        // 일정, 체크리스트, 예산 조회
+        var itineraries = plannerService.getItineraries(id);
+        var checklists = plannerService.getChecklists(id);
+        var budgets = plannerService.getBudgets(id);
+
+        // 총 예산 계산
+        int totalPlanned = budgets.stream().mapToInt(b -> b.getPlannedAmount() != null ? b.getPlannedAmount() : 0).sum();
+        int totalActual = budgets.stream().mapToInt(b -> b.getActualAmount() != null ? b.getActualAmount() : 0).sum();
+
+        // 체크리스트 진행률 계산
+        int totalChecklist = checklists.size();
+        int completedChecklist = (int) checklists.stream().filter(c -> Boolean.TRUE.equals(c.getCompleted())).count();
+
+        // 조회수 증가 (본인 플래너가 아닌 경우)
+        if (!isOwner) {
+            plannerService.incrementViewCount(id);
+        }
 
         model.addAttribute("activePage", "planner");
         model.addAttribute("username", user != null ? user.getFullName() : "사용자");
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
         model.addAttribute("plannerId", id);
+        model.addAttribute("planner", planner);
+        model.addAttribute("itineraries", itineraries);
+        model.addAttribute("checklists", checklists);
+        model.addAttribute("budgets", budgets);
+        model.addAttribute("canEdit", canEdit);
+        model.addAttribute("isOwner", isOwner);
+        model.addAttribute("totalPlanned", totalPlanned);
+        model.addAttribute("totalActual", totalActual);
+        model.addAttribute("totalRemaining", totalPlanned - totalActual);
+        model.addAttribute("totalChecklist", totalChecklist);
+        model.addAttribute("completedChecklist", completedChecklist);
 
         return "planner-detail";
     }
