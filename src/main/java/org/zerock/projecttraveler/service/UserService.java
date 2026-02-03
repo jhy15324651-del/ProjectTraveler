@@ -67,6 +67,24 @@ public class UserService {
     }
 
     /**
+     * 로그인 (API용)
+     */
+    public User login(String username, String password) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다."));
+
+        if (!user.getEnabled()) {
+            throw new IllegalArgumentException("비활성화된 계정입니다.");
+        }
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다.");
+        }
+
+        return user;
+    }
+
+    /**
      * 사용자 조회
      */
     public Optional<User> findByUsername(String username) {

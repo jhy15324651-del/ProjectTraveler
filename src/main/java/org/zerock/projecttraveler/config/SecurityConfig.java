@@ -62,6 +62,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/enrollments/**").authenticated()
                 .requestMatchers("/api/attendance/**").authenticated()
                 .requestMatchers("/api/dashboard/**").authenticated()
+                // 플래너 API - 공개 플래너 목록은 허용, 나머지는 인증 필요
+                .requestMatchers("/api/planner/public").permitAll()
+                .requestMatchers("/api/planner/**").authenticated()
                 // 나머지 페이지는 로그인 필요
                 .requestMatchers("/main", "/learning", "/course-detail", "/my-classroom",
                                "/attendance", "/online-learning", "/guide", "/select", "/planner", "/planner/**").authenticated()

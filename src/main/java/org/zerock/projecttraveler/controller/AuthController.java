@@ -2,6 +2,7 @@ package org.zerock.projecttraveler.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,9 +32,10 @@ public class AuthController {
      */
     @GetMapping("/login")
     public String loginPage(@RequestParam(value = "error", required = false) String error,
-                           @RequestParam(value = "logout", required = false) String logout,
-                           @RequestParam(value = "expired", required = false) String expired,
-                           Model model) {
+                            @RequestParam(value = "logout", required = false) String logout,
+                            @RequestParam(value = "expired", required = false) String expired,
+                            Model model) {
+
         if (error != null) {
             model.addAttribute("errorMessage", "아이디 또는 비밀번호가 올바르지 않습니다.");
         }
@@ -43,6 +45,7 @@ public class AuthController {
         if (expired != null) {
             model.addAttribute("expiredMessage", "세션이 만료되었습니다. 다시 로그인해주세요.");
         }
+
         return "index";
     }
 
@@ -54,23 +57,53 @@ public class AuthController {
         return "register";
     }
 
-    /**
-     * 회원가입 API
-     */
+    // =========================
+    // API: 유니티/앱용 로그인
+    // =========================
+    @PostMapping("/api/auth/login")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<UserResponseDTO>> login(@Valid @RequestBody LoginRequest request) {
+
+        // 실패(아이디/비번 틀림 등)는 IllegalArgumentException 던진다고 가정
+        User user = userService.login(request.getUsername(), request.getPassword());
+
+        UserResponseDTO response = new UserResponseDTO(
+                user.getId(),
+                user.getUsername(),
+                user.getFullName()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success("로그인 성공", response));
+    }
+
+    // =========================
+    // API: 회원가입
+    // =========================
     @PostMapping("/api/auth/register")
     @ResponseBody
     public ResponseEntity<ApiResponse<Void>> register(@Valid @RequestBody RegisterRequest request) {
-        try {
-            userService.register(
-                    request.getUsername(),
-                    request.getPassword(),
-                    request.getEmail(),
-                    request.getFullName()
-            );
-            return ResponseEntity.ok(ApiResponse.success("회원가입이 완료되었습니다."));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
-        }
+
+        // 실패(중복 아이디 등)는 IllegalArgumentException 던진다고 가정
+        userService.register(
+                request.getUsername(),
+                request.getPassword(),
+                request.getEmail(),
+                request.getFullName()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success("회원가입이 완료되었습니다."));
+    }
+
+    // =========================
+    // DTOs
+    // =========================
+    @Data
+    public static class LoginRequest {
+        @NotBlank(message = "아이디는 필수입니다.")
+        private String username;
+
+        @NotBlank(message = "비밀번호는 필수입니다.")
+        private String password;
     }
 
     @Data
@@ -82,6 +115,14 @@ public class AuthController {
         private String password;
 
         private String email;
+        private String fullName;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class UserResponseDTO {
+        private Long id;
+        private String username;
         private String fullName;
     }
 }

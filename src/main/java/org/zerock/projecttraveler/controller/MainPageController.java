@@ -285,6 +285,20 @@ public class MainPageController {
         return "planner-detail";
     }
 
+    /**
+     * 여행 플래너 둘러보기 (공개된 플래너 목록)
+     */
+    @GetMapping("/planner/explore")
+    public String plannerExplore(Model model) {
+        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
+
+        model.addAttribute("activePage", "planner");
+        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
+        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
+
+        return "planner-explore";
+    }
+
 
     /**
      * 레슨 시청 페이지
