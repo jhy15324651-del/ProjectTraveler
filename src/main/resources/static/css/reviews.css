@@ -1,35 +1,75 @@
 /* ===============================
    REVIEWS PAGE ONLY (namespaced)
+   - clean / optimized / full
 ================================ */
 
-/* 레이아웃 */
-.reviews {
+/* =========================
+   0) Theme Tokens (only reviews)
+========================= */
+.reviews{
+    /* layout */
     width: min(1100px, 92%);
     margin: 0 auto;
     padding: 24px 0 24px;
+
+    /* tone */
+    --rv-text: #111827;
+    --rv-subtext: #6b7280;
+    --rv-border: #e5e7eb;
+    --rv-bg: #ffffff;
+
+    /* chip/button palette (apricot) */
+    --rv-chip-bg: #f6c792;
+    --rv-chip-bg-hover: #f3bc7f;
+    --rv-chip-bg-active: #eea95b;
+    --rv-chip-border: #d9a26a;
+    --rv-chip-text: #3b2f22;
+
+    --rv-chip-bg-off: #ffffff;
+    --rv-chip-border-off: #e5e7eb;
+    --rv-chip-text-off: #374151;
+
+    /* control sizes */
+    --rv-radius-lg: 12px;
+    --rv-radius-md: 10px;
+    --rv-pill: 999px;
+
+    /* shadows */
+    --rv-shadow-btn: 0 2px 0 rgba(0,0,0,0.10);
+    --rv-shadow-btn-hover: 0 4px 0 rgba(0,0,0,0.12);
+    --rv-shadow-card: 0 8px 24px rgba(0,0,0,0.06);
+
+    /* budget */
+    --rv-budget-track-bg: #fffaf3;
+    --rv-budget-track-border: #e6b17a;
+    --rv-budget-range-from: #f6c792;
+    --rv-budget-range-to: #eea95b;
+    --rv-budget-thumb-bg: #fffaf3;
+    --rv-budget-thumb-border: #eea95b;
+
+    /* anchor scroll */
+    --rv-anchor-offset: 90px;
 }
 
-.reviews .page-title {
+/* =========================
+   1) Title Row
+========================= */
+.reviews .page-title{
     font-size: 28px;
     font-weight: 800;
     margin: 10px 0 18px;
 }
 
-/* ✅ 제목 + 오른쪽 버튼 한 줄 */
 .reviews .reviews-title-row{
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin: 10px 0 18px; /* 기존 page-title margin 역할 */
+    margin: 10px 0 18px;
 }
+.reviews .reviews-title-row .page-title{ margin: 0; }
 
-/* 기존 page-title margin 제거(줄 겹침 방지) */
-.reviews .reviews-title-row .page-title{
-    margin: 0;
-}
-
-/* ✅ 검색 버튼(q-btn)과 같은 느낌의 '후기 작성하기' */
+/* write button (same feel as q-btn) */
 .reviews .write-btn{
     display: inline-flex;
     align-items: center;
@@ -37,7 +77,7 @@
 
     height: 38px;
     padding: 0 14px;
-    border-radius: 999px;
+    border-radius: var(--rv-pill);
 
     font-size: 0.86rem;
     font-weight: 800;
@@ -45,35 +85,36 @@
     text-decoration: none;
     white-space: nowrap;
 
-    border: 1px solid var(--chip-border);
-    background: var(--chip-bg-active);
+    border: 1px solid var(--rv-chip-border);
+    background: var(--rv-chip-bg-active);
     color: #fff;
 
-    box-shadow: 0 2px 0 rgba(0,0,0,0.10);
+    box-shadow: var(--rv-shadow-btn);
     transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
 }
-
 .reviews .write-btn:hover{
     transform: translateY(-1px);
-    box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+    box-shadow: var(--rv-shadow-btn-hover);
     filter: brightness(0.98);
 }
-
 .reviews .write-btn:active{
     transform: translateY(0);
     box-shadow: 0 1px 0 rgba(0,0,0,0.10);
 }
 
 
-/* 필터 패널 */
-.reviews .filter-panel {
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+/* =========================
+   2) Filter Panel
+========================= */
+.reviews .filter-panel{
+    border: 1px solid var(--rv-border);
+    border-radius: var(--rv-radius-lg);
     padding: 18px;
-    background: #fff;
+    background: var(--rv-bg);
 }
 
-.reviews .filter-row {
+/* 2-column rows */
+.reviews .filter-row{
     display: grid;
     grid-template-columns: 90px 1fr;
     gap: 14px;
@@ -81,628 +122,514 @@
     margin-bottom: 14px;
 }
 
-.reviews .filter-label {
+.reviews .filter-label{
     font-weight: 800;
-    color: #111827;
-    padding-top: 0px;
+    color: var(--rv-text);
     line-height: 1.2;
 }
 
-/* 칩 랩: (중요) 가로 wrap 안정화 */
-.reviews .filter-chips {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 10px !important;
-    align-items: center;
-}
-
-/* 칩 버튼 */
-.reviews .chip {
-    display: inline-flex;          /* ✅ 버튼이 세로로 100% 늘어나는 전역CSS 방어 */
-    width: auto;                   /* ✅ 전역 button { width:100% } 방어 */
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    padding: 10px 14px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: 700;
-    color: #374151;
-    transition: 0.15s ease;
-}
-
-.reviews .chip:hover {
-    transform: translateY(-1px);
-}
-
-.reviews .chip.active {
-    background: #ef4444;
-    border-color: #ef4444;
-    color: #fff;
-}
-
-/* 검색 버튼 */
-.reviews .search-btn {
-    width: 100%;
-    margin-top: 14px;
-    height: 54px;
-    border-radius: 12px;
-    border: none;
-    background: #3b82f6;
-    color: #fff;
-    font-size: 18px;
-    font-weight: 900;
-    cursor: pointer;
-}
-
-/* =========================
-   예산 슬라이더
-========================= */
-.reviews .reviews-budget {
-    display: grid;
-    gap: 0px;
-}
-
-.reviews .reviews-budget-values {
-    font-weight: 800;
-    color: #111827;
-    margin-bottom: 2px;
-}
-
-.reviews .reviews-budget-slider {
-    position: relative;  /* ✅ 필수 */
-    height: 36px;        /* ✅ 필수 (input 높이랑 맞춤) */
-    margin-bottom: 0px;
-}
-
-/* 트랙 레이어(전체는 흰색 + 테두리) */
-.reviews .reviews-budget-track {
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 100%;
-    height: 8px;
-    border-radius: 999px;
-    background: #ffffff;
-    border: 1px solid rgba(17,24,39,0.18);
-    overflow: hidden;
-}
-
-/* 선택 구간(파란색) */
-.reviews .reviews-budget-range {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    border-radius: 999px;
-    background: rgba(37, 99, 235, 0.95);
-    left: 0%;
-    width: 100%;
-}
-
-/* 두 range 겹치기 */
-.reviews .reviews-budget-slider input[type="range"] {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 36px;
-    background: transparent;
-    pointer-events: none; /* 트랙 클릭 막고 thumb만 잡히게 */
-    appearance: none;
-    -webkit-appearance: none;
-}
-
-/* webkit 트랙은 투명(우리가 track 레이어를 별도로 깔았으므로) */
-.reviews .reviews-budget-slider input[type="range"]::-webkit-slider-runnable-track {
-    height: 8px;
-    border-radius: 999px;
-    background: transparent;
-}
-
-/* webkit thumb */
-.reviews .reviews-budget-slider input[type="range"]::-webkit-slider-thumb {
-    pointer-events: auto;
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    border-radius: 999px;
-    background: #ffffff;
-    border: 2px solid rgba(37, 99, 235, 0.95);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.18);
-    margin-top: -5px;
-    cursor: grab;
-}
-
-.reviews .reviews-budget-slider input[type="range"]:active::-webkit-slider-thumb {
-    cursor: grabbing;
-}
-
-.reviews .reviews-budget-slider input[type="range"]:hover::-webkit-slider-thumb {
-    background: #f8fafc;
-    border-color: rgba(29, 78, 216, 1);
-}
-
-/* Firefox 트랙/썸도 투명 트랙 */
-.reviews .reviews-budget-slider input[type="range"]::-moz-range-track {
-    height: 8px;
-    border-radius: 999px;
-    background: transparent;
-}
-
-.reviews .reviews-budget-slider input[type="range"]::-moz-range-thumb {
-    pointer-events: auto;
-    width: 18px;
-    height: 18px;
-    border-radius: 999px;
-    background: #ffffff;
-    border: 2px solid rgba(37, 99, 235, 0.95);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.18);
-    cursor: grab;
-}
-
-.reviews .reviews-budget-slider input[type="range"]:hover::-moz-range-thumb {
-    background: #f8fafc;
-    border-color: rgba(29, 78, 216, 1);
-}
-
-/* ====== ticks + label ====== */
-.reviews .reviews-budget-ticks {
-    position: relative;
-    height: 22px;
-    margin-top: 2px;
-    user-select: none;
-}
-
-.reviews .reviews-budget-ticks .tick {
-    position: absolute;
-    top: 0;
-    width: 1px;
-    height: 8px;
-    background: rgba(17, 24, 39, 0.22);
-}
-
-.reviews .reviews-budget-ticks .tick-label {
-    position: absolute;
-    top: 10px;
-    transform: translateX(-50%);
-    font-size: 11px;
-    font-weight: 800;
-    color: rgba(17, 24, 39, 0.55);
-    white-space: nowrap;
-}
-
-/* =========================
-   지역 행(가로 안정화)
-========================= */
-.reviews .region-row .region-inline {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    width: 100%;
-}
-
-/* region-inline 안에서 chips가 공간을 먹도록 */
-.reviews .region-row .region-inline .filter-chips {
-    flex: 1;
-    min-width: 0;
-}
-
-/* =========================
-   필터 힌트(안내문구)
-========================= */
-.reviews .filter-hint {
+/* hints */
+.reviews .filter-hint{
     margin-top: 4px;
     font-size: 11px;
     font-weight: 600;
     line-height: 1.2;
     color: #9ca3af;
 }
-
-.reviews .filter-hint.single {
-    color: #9ca3af; /* 단일도 그레이 통일 */
-}
-
-.reviews .filter-hint.multi {
-    color: #9ca3af;
-}
-
-.reviews .filter-hint.sub {
-    font-weight: 500;
-}
-
-.reviews .filter-hint.one-line {
+.reviews .filter-hint.sub{ font-weight: 500; }
+.reviews .filter-hint.one-line{
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* ✅ 지역 설명문: 아래 줄에서 2열을 가로로 차지 */
-.reviews .region-row .region-desc{
-    grid-column: 1 / -1;          /* 왼쪽~오른쪽 전체 span */
-    padding-left: 0;              /* 시작점 고정(필요시 아래처럼 조절 가능) */
-    margin-top: -6px;             /* 칩과 간격 조금 붙이기(원하면 조절) */
-
-    white-space: nowrap;          /* 한 줄 고정 */
-    overflow: visible;            /* ... 자르지 않음 */
-    text-overflow: clip;          /* ellipsis 제거 */
-}
-
-/* ✅ 하단 검색 툴바 */
-.reviews.search-toolbar{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 0px;
-}
-
-/* (2) 사용자 태그 요약 */
-.reviews .tag-summary-mini{
-    flex: 1;                  /* 왼쪽 영역 넓게 */
-    min-width: 260px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 10px 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    background: #fff;
-}
-
-.reviews .tag-summary-mini .empty{
-    color: #94a3b8;
-    font-size: 0.95rem;
-}
-
-/* (3-1) 드롭다운 */
-.reviews .q-field{
-    width: 150px;
-    height: 42px;
-    padding: 0 10px;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    background: #fff;
-}
-
-/* (3-2) 검색 textarea를 input처럼 */
-.reviews .q-input{
-    width: 320px;
-    height: 42px;
-    padding: 10px 12px;
-    resize: none;
-    overflow: hidden;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    line-height: 1.2;
-}
-
-/* (3-3) 검색 버튼 작게 + 오른쪽 */
-.reviews .q-btn{
-    height: 42px;
-    padding: 0 18px;
-    border: none;
-    border-radius: 10px;
-    background: #3b82f6;
-    color: #fff;
-    font-weight: 700;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-/* ✅ 태그 칩 공통 (있으면 패스, 없으면 추가) */
-.reviews .tag-summary-mini .chip{
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-
-    white-space: nowrap;
-
-    font-size: 0.85rem;          /* ✅ 글씨 조금 작게 */
-    font-weight: 700;
-    padding: 5px 9px;            /* ✅ 칩 높이 살짝 줄이기 */
-    border-radius: 999px;
-
-    background: #eef2ff;         /* ✅ 은은한 라벤더/블루 톤 */
-    border: 1px solid #c7d2fe;   /* ✅ 배경과 어울리는 테두리 */
-    color: #1f2a37;
-
-    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08); /* ✅ 살짝만 띄우기 */
-}
-
-/* ✅ 예산 칩은 무조건 다음 줄(아랫줄)로 */
-.reviews .tag-summary-mini .chip.budget{
-    flex-basis: 100%;      /* 이 한 줄을 통째로 차지 → 자동 줄바꿈 */
-    border-radius: 12px;   /* 예산은 pill 말고 박스 느낌 원하면 */
-    justify-content: flex-start;
-    white-space: normal;
-
-    font-size: 0.84rem;
-
-    background: #ecfeff;         /* ✅ 민트 계열로 구분감 */
-    border-color: #a5f3fc;
-    color: #0f172a;
-
-}
-
-/* =========================
-✅ 버튼/칩 UI 통일 (이미지 느낌)
-- 필터칩(.chip)
-- 요약칩(.tag-summary-mini .chip)
-- 검색버튼(.q-btn)
-- 드롭다운/입력도 살짝 톤 맞춤
-========================= */
-
-/* 톤 변수 (원하면 여기만 바꾸면 전체 바뀜) */
-.reviews{
-    --chip-bg: #f6c792;          /* 살구/베이지 */
-    --chip-bg-hover: #f3bc7f;
-    --chip-bg-active: #eea95b;   /* 활성 더 진하게 */
-    --chip-border: #d9a26a;
-    --chip-text: #3b2f22;
-
-    --chip-bg-off: #ffffff;      /* 비활성(선택안됨) */
-    --chip-border-off: #e5e7eb;
-    --chip-text-off: #374151;
-}
-
-/* 칩 랩 간격/정렬 (버튼 뭉침 느낌으로 조금 줄임) */
+/* chips wrap */
 .reviews .filter-chips{
+    display: flex !important;
+    flex-wrap: wrap !important;
     gap: 8px !important;
+    align-items: center;
 }
 
-/* ✅ 필터칩 버튼 기본 */
+/* chip button */
 .reviews .chip{
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    width: auto;
-    border-radius: 999px;
+    width: auto; /* global button width:100% 방어 */
+    border-radius: var(--rv-pill);
 
-    /* 글자/크기: “버튼이 통통하지 않게” */
-    font-size: 0.86rem;          /* 전체적으로 살짝 다운 */
+    font-size: 0.86rem;
     font-weight: 700;
     line-height: 1;
 
-    padding: 7px 12px;           /* ✅ 여백 줄임 */
-    border: 1px solid var(--chip-border-off);
-    background: var(--chip-bg-off);
-    color: var(--chip-text-off);
+    padding: 7px 12px;
+    border: 1px solid var(--rv-chip-border-off);
+    background: var(--rv-chip-bg-off);
+    color: var(--rv-chip-text-off);
 
     cursor: pointer;
-    transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
-    box-shadow: 0 2px 0 rgba(0,0,0,0.07);  /* 이미지 느낌: 살짝 눌린 그림자 */
-}
+    user-select: none;
 
+    box-shadow: 0 2px 0 rgba(0,0,0,0.07);
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
+}
 .reviews .chip:hover{
     transform: translateY(-1px);
     box-shadow: 0 4px 0 rgba(0,0,0,0.08);
 }
-
 .reviews .chip:active{
     transform: translateY(0);
     box-shadow: 0 1px 0 rgba(0,0,0,0.08);
 }
-
-/* ✅ 활성(선택됨) */
 .reviews .chip.active{
-    background: var(--chip-bg);
-    border-color: var(--chip-border);
-    color: var(--chip-text);
+    background: var(--rv-chip-bg);
+    border-color: var(--rv-chip-border);
+    color: var(--rv-chip-text);
+}
+.reviews .chip.active:hover{
+    background: var(--rv-chip-bg-hover);
 }
 
-/* 활성 hover는 조금 더 진하게 */
-.reviews .chip.active:hover{
-    background: var(--chip-bg-hover);
+/* region extra line */
+.reviews .region-row .region-inline{
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+}
+.reviews .region-row .region-inline .filter-chips{
+    flex: 1;
+    min-width: 0;
+}
+.reviews .region-row .region-desc{
+    grid-column: 1 / -1;
+    margin-top: -6px;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+
+/* =========================
+   3) Budget (slider + reset icon + unlock button)
+   HTML assumptions:
+   - .filter-label.budget-label (left)
+   - .reviews-budget (right)
+   - .reviews-budget-line contains:
+       .reviews-budget-slider (relative)
+       #budgetTicks inside slider
+       #budgetRange inside track
+       #budgetMin/#budgetMax (range inputs)
+       .budget-unlock-btn (right)
+   - #budgetMinLabel/#budgetMaxLabel are positioned above the track
+========================= */
+
+/* label + spiral button */
+.reviews .budget-label{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* spiral icon button */
+.reviews .budget-reset-btn{
+    all: unset;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 1;
+    color: rgba(37, 99, 235, 0.9);
+    padding: 4px;
+    border-radius: 50%;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+.reviews .budget-reset-btn:hover{
+    background: rgba(37, 99, 235, 0.08);
+    transform: rotate(-90deg);
+}
+.reviews .budget-reset-btn:active{
+    transform: rotate(-180deg) scale(0.95);
+}
+
+.reviews .reviews-budget{
+    display: grid;
+    gap: 0;
+}
+
+/* one line: slider + unlock */
+.reviews .reviews-budget-line{
+    display: grid;
+    grid-template-columns: 1fr auto; /* (슬라이더영역) (버튼) */
+    column-gap: 10px;
+    align-items: center;            /* ✅ 버튼/슬라이더 세로 정렬 */
+    gap: 10px;
+}
+
+/* 슬라이더 영역: 텍스트가 위에 올라가므로 위 공간 확보 */
+.reviews .reviews-budget-slider{
+    grid-column: 1;
+    grid-row: 1;
+
+    position: relative;
+    padding-top: 18px;   /* ✅ values 들어갈 공간 */
+    height: 54px;        /* 텍스트+트랙+틱 포함 높이 */
+}
+
+/* values + slider를 같은 칸 표시(겹쳐서 배치) */
+.reviews .reviews-budget-values{
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    justify-self: start;
+
+    /* ✅ 슬라이더 트랙(0 tick 시작점) 바로 위로 */
+    margin: 0;
+    padding: 0;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.1;
+    white-space: nowrap;
+
+    /* 슬라이더 내부 왼쪽 끝과 정확히 맞추기 */
+    transform: translateY(-2px);
+    z-index: 2;
 }
 
 /* =========================
-   ✅ 검색 버튼도 칩 느낌으로 통일
+   예산 - 제한해제 버튼 (NEW: small / square / red outline toggle)
 ========================= */
-.reviews .q-btn{
-    height: 38px;                /* 42 -> 38로 줄여서 컴팩트 */
-    padding: 0 14px;
-    border-radius: 999px;
+.reviews .budget-unlock-btn{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
-    font-size: 0.86rem;
+    /* ✅ 크기 줄이기 */
+    height: 32px;
+    padding: 0 12px;
+
+    /* ✅ 사각형 박스 형태 */
+    border-radius: 10px;
+
+    font-size: 0.82rem;
     font-weight: 800;
     line-height: 1;
+    white-space: nowrap;
 
-    border: 1px solid var(--chip-border);
-    background: var(--chip-bg-active);
-    color: #fff;
+    /* ✅ 기본: 흰 배경 + 빨 테두리 + 빨 글자 */
+    background: #fff;
+    border: 1.5px solid #ef4444;
+    color: #ef4444;
 
     cursor: pointer;
-    box-shadow: 0 2px 0 rgba(0,0,0,0.10);
-    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+
+    /* ✅ "살짝 튀어나오는" 버튼 연출 */
+    box-shadow: 0 2px 0 rgba(239,68,68,0.25);
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease, color .12s ease, filter .12s ease;
+}
+
+.reviews .budget-unlock-btn:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 4px 0 rgba(239,68,68,0.28);
+    filter: brightness(0.99);
+}
+
+.reviews .budget-unlock-btn:active{
+    transform: translateY(0);
+    box-shadow: 0 1px 0 rgba(239,68,68,0.25);
+}
+
+/* ✅ 토글 ON (aria-pressed=true): 색 반전 */
+.reviews .budget-unlock-btn[aria-pressed="true"]{
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #fff;
+
+    box-shadow: 0 2px 0 rgba(0,0,0,0.12), 0 0 0 3px rgba(239,68,68,0.18);
+}
+
+.reviews .budget-unlock-btn[aria-pressed="true"]:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.14), 0 0 0 3px rgba(239,68,68,0.18);
+}
+
+/* track */
+.reviews .reviews-budget-track{
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 30px; /* padding-top(18) + 트랙 중심 대략 */
+    transform: translateY(-50%);
+
+    height: 8px;
+    border-radius: var(--rv-pill);
+    background: var(--rv-budget-track-bg);
+    border: 1px solid var(--rv-budget-track-border);
+    overflow: hidden;
+}
+
+/* selected range */
+.reviews .reviews-budget-range{
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border-radius: var(--rv-pill);
+    left: 0%;
+    width: 100%;
+    background: linear-gradient(90deg, var(--rv-budget-range-from) 0%, var(--rv-budget-range-to) 100%);
+}
+
+/* overlapped range inputs (thumb-only interactions) */
+.reviews .reviews-budget-slider input[type="range"]{
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 18px; /* 텍스트 아래로 */
+    width: 100%;
+    height: 28px;
+
+    background: transparent;
+    pointer-events: none; /* thumb only */
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+/* webkit track transparent */
+.reviews .reviews-budget-slider input[type="range"]::-webkit-slider-runnable-track{
+    height: 8px;
+    border-radius: var(--rv-pill);
+    background: transparent;
+}
+
+/* webkit thumb */
+.reviews .reviews-budget-slider input[type="range"]::-webkit-slider-thumb{
+    pointer-events: auto;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: var(--rv-pill);
+
+    background: var(--rv-budget-thumb-bg);
+    border: 2px solid var(--rv-budget-thumb-border);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    margin-top: -5px;
+    cursor: grab;
+}
+.reviews .reviews-budget-slider input[type="range"]:active::-webkit-slider-thumb{ cursor: grabbing; }
+.reviews .reviews-budget-slider input[type="range"]:hover::-webkit-slider-thumb{
+    background: #fff1dc;
+    border-color: #e59642;
+}
+
+/* firefox */
+.reviews .reviews-budget-slider input[type="range"]::-moz-range-track{
+    height: 8px;
+    border-radius: var(--rv-pill);
+    background: transparent;
+}
+.reviews .reviews-budget-slider input[type="range"]::-moz-range-thumb{
+    pointer-events: auto;
+    width: 18px;
+    height: 18px;
+    border-radius: var(--rv-pill);
+    background: var(--rv-budget-thumb-bg);
+    border: 2px solid var(--rv-budget-thumb-border);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    cursor: grab;
+}
+.reviews .reviews-budget-slider input[type="range"]:hover::-moz-range-thumb{
+    background: #fff1dc;
+    border-color: #e59642;
+}
+
+/* ticks (inside slider, aligned with slider width) */
+.reviews .reviews-budget-ticks{
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 40px; /* 트랙 아래쪽 */
+    height: 22px;
+    user-select: none;
+}
+.reviews .reviews-budget-ticks .tick{
+    position: absolute;
+    top: 0;
+    width: 1px;
+    height: 8px;
+    background: rgba(217, 162, 106, 0.6);
+}
+.reviews .reviews-budget-ticks .tick-label{
+    position: absolute;
+    top: 10px;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: 700;
+    color: #8b5e34;
     white-space: nowrap;
 }
 
-.reviews .q-btn:hover{
-    transform: translateY(-1px);
-    box-shadow: 0 4px 0 rgba(0,0,0,0.12);
-    filter: brightness(0.98);
-}
-
-.reviews .q-btn:active{
-    transform: translateY(0);
-    box-shadow: 0 1px 0 rgba(0,0,0,0.10);
-}
 
 /* =========================
-   ✅ 요약칩(미리보기 UI)도 동일 톤
+   4) Search Toolbar (bottom of filters)
 ========================= */
-.reviews .tag-summary-mini{
-    padding: 10px 12px;
-    border-radius: 12px;
+.reviews.search-toolbar{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 0;
 }
 
+/* summary box */
+.reviews .tag-summary-mini{
+    flex: 1;
+    min-width: 260px;
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--rv-radius-lg);
+    background: #fff;
+}
+.reviews .tag-summary-mini .empty{
+    color: #94a3b8;
+    font-size: 0.95rem;
+}
+
+/* summary chips */
 .reviews .tag-summary-mini .chip{
-    /* 필터칩과 동일하게 보이게 */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    white-space: nowrap;
     font-size: 0.82rem;
     font-weight: 750;
-    padding: 6px 10px;
-    border-radius: 999px;
+    line-height: 1;
 
-    background: #ffe1bf;          /* 요약칩은 조금 더 밝게 */
+    padding: 6px 10px;
+    border-radius: var(--rv-pill);
+
+    background: #ffe1bf;
     border: 1px solid #e6b17a;
     color: #3b2f22;
 
     box-shadow: 0 2px 0 rgba(0,0,0,0.06);
 }
-
-/* ✅ 예산은 아랫줄 + 정보 라인 느낌 */
 .reviews .tag-summary-mini .chip.budget{
     flex-basis: 100%;
-    border-radius: 12px;
+    border-radius: var(--rv-radius-lg);
     white-space: normal;
     justify-content: flex-start;
 
-    font-size: 0.82rem;
     padding: 8px 10px;
-
-    background: #fff7ed;          /* 조금 더 옅은 베이지 */
+    background: #fff7ed;
     border-color: #f0c38d;
     color: #4b3a2a;
 }
 
-/* =========================
-   (선택) 드롭다운/입력도 버튼과 톤 맞추기
-========================= */
+/* inputs */
 .reviews .q-field,
 .reviews .q-input{
-    height: 38px;                 /* 42 -> 38 */
+    height: 38px;
     font-size: 0.86rem;
-}
-
-.reviews .q-field{
-    border-radius: 12px;
     border: 1px solid #e5e7eb;
+    border-radius: var(--rv-radius-lg);
     background: #fff;
+}
+.reviews .q-field{
+    width: 150px;
     padding: 0 10px;
 }
-
 .reviews .q-input{
-    border-radius: 12px;
+    width: 320px;
     padding: 9px 12px;
+    resize: none;
+    overflow: hidden;
+    line-height: 1.2;
 }
+
+/* search button (same feel as write-btn) */
+.reviews .q-btn{
+    height: 38px;
+    padding: 0 14px;
+    border-radius: var(--rv-pill);
+
+    font-size: 0.86rem;
+    font-weight: 800;
+    line-height: 1;
+
+    border: 1px solid var(--rv-chip-border);
+    background: var(--rv-chip-bg-active);
+    color: #fff;
+
+    cursor: pointer;
+    white-space: nowrap;
+
+    box-shadow: var(--rv-shadow-btn);
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+.reviews .q-btn:hover{
+    transform: translateY(-1px);
+    box-shadow: var(--rv-shadow-btn-hover);
+    filter: brightness(0.98);
+}
+.reviews .q-btn:active{
+    transform: translateY(0);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.10);
+}
+
 
 /* =========================
-✅ 예산 슬라이더 컬러 통일
-(칩/버튼 살구 톤과 맞춤)
+   5) Post List (cards)
 ========================= */
-
-/* 트랙 전체(배경) */
-.reviews .reviews-budget-track {
-    background: #fffaf3;                 /* 아주 연한 베이지 */
-    border: 1px solid #e6b17a;            /* 칩 테두리 톤 */
-}
-
-/* 선택된 구간(range bar) */
-.reviews .reviews-budget-range {
-    background: linear-gradient(
-            90deg,
-            #f6c792 0%,
-            #eea95b 100%
-    );                                    /* 살구 → 진살구 */
-}
-
-/* ====== thumb (동그란 손잡이) ====== */
-
-/* Webkit (Chrome, Edge, Safari) */
-.reviews .reviews-budget-slider
-input[type="range"]::-webkit-slider-thumb {
-    background: #fffaf3;                  /* 흰베이지 */
-    border: 2px solid #eea95b;             /* 활성 칩 색 */
-    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
-}
-
-/* hover */
-.reviews .reviews-budget-slider
-input[type="range"]:hover::-webkit-slider-thumb {
-    background: #fff1dc;
-    border-color: #e59642;
-}
-
-/* Firefox */
-.reviews .reviews-budget-slider
-input[type="range"]::-moz-range-thumb {
-    background: #fffaf3;
-    border: 2px solid #eea95b;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
-}
-
-/* ====== 눈금(ticks) ====== */
-.reviews .reviews-budget-ticks .tick {
-    background: rgba(217, 162, 106, 0.6);  /* 베이지 브라운 */
-}
-
-.reviews .reviews-budget-ticks .tick-label {
-    color: #8b5e34;                        /* 글자도 통일 */
-    font-weight: 700;
-}
-
-/* =========================
-Reviews - 게시글 리스트 (완성본)
-목표:
-[섬네일] [타이틀]
-[섬네일] [태그...]
-[섬네일] [내용...]
-========================= */
-
-.reviews .post-list {
+.reviews .post-list{
     margin-top: 18px;
     display: grid;
     gap: 12px;
 }
 
-/* 카드: 왼쪽 모서리까지 섬네일이 붙어야 하므로
-   padding은 카드가 아니라 링크(post-link)에 준다 */
-.reviews .post-card {
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+.reviews .post-card{
+    border: 1px solid var(--rv-border);
+    border-radius: var(--rv-radius-lg);
     background: #fff;
-    overflow: hidden; /* 섬네일이 카드 모서리와 딱 맞게 */
-    height: 150px;          /* 🔑 전체 카드 높이 */
+    overflow: hidden;
+    height: 150px;
 }
 
-/* 링크(카드 전체 클릭): 가로 레이아웃 */
-.reviews .post-link {
-    display: flex;              /* ✅ block -> flex (충돌 해결) */
-    align-items: stretch;       /* 섬네일 세로 꽉 채움 */
+.reviews .post-link{
+    display: flex;
+    align-items: stretch;
     gap: 14px;
     color: inherit;
     text-decoration: none;
 }
 
-/* 왼쪽 섬네일 */
-.reviews .post-thumb {
+.reviews .post-thumb{
     width: 180px;
-    height: 100%;
     flex: 0 0 180px;
+    height: 100%;
     background: #f3f4f6;
     display: flex;
     align-items: center;
     justify-content: center;
 }
-
-/* 섬네일 이미지: 박스 꽉 채우기 */
-.reviews .post-thumb img {
+.reviews .post-thumb img{
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
 }
-
-/* 이미지 없을 때 */
-.reviews .post-thumb--placeholder {
+.reviews .post-thumb--placeholder{
     font-size: 13px;
     font-weight: 800;
     color: #9ca3af;
 }
 
-/* 오른쪽 콘텐츠 영역 */
-.reviews .post-body {
-    padding: 14px;              /* ✅ 기존 post-card padding을 여기로 이동 */
+.reviews .post-body{
+    padding: 14px;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -710,113 +637,218 @@ Reviews - 게시글 리스트 (완성본)
     min-width: 0;
 }
 
-/* 제목 */
-.reviews .post-title {
+.reviews .post-title{
     margin: 0;
     font-size: 18px;
-    font-weight: 900;           /* 기존 톤 유지 */
+    font-weight: 900;
     line-height: 1.25;
 }
 
-/* =========================
-   ✅ 게시글 카드 태그(뱃지) = 태그 미리보기 칩과 동일 톤
-   - 기존 .reviews .badge 를 이걸로 교체
-========================= */
 .reviews .post-meta{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-    margin:0;
-    align-items:center;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 0;
+    align-items: center;
 }
 
-/* 기존 회색 badge → 살구톤 칩으로 통일 */
+/* badges (same tone as summary chips) */
 .reviews .badge{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
     font-size: 0.82rem;
     font-weight: 750;
     line-height: 1;
 
     padding: 6px 10px;
-    border-radius: 999px;
+    border-radius: var(--rv-pill);
 
-    background: #ffe1bf;     /* tag-summary-mini 칩과 동일 */
+    background: #ffe1bf;
     border: 1px solid #e6b17a;
     color: #3b2f22;
 
     box-shadow: 0 2px 0 rgba(0,0,0,0.06);
     white-space: nowrap;
 }
-
-/* 사용 총액 강조 */
-.badge.total{
+.reviews .badge.total{
     background: #fff7ed;
     border-color: #f0c38d;
     color: #4b3a2a;
 }
 
-/* 요약 */
-.reviews .post-desc {
+.reviews .post-desc{
     margin: 0;
     color: #555;
     line-height: 1.45;
     display: -webkit-box;
-    -webkit-line-clamp: 2;  /* 2줄 제한 */
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-/* 카드 hover (게시판 느낌) */
-.reviews .post-card:hover {
+.reviews .post-card:hover{
     border-color: #d1d5db;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    box-shadow: var(--rv-shadow-card);
     transform: translateY(-1px);
     transition: all 0.15s ease;
 }
 
-/* 빈 결과 */
-.reviews .empty {
-    margin-top: 0px;
-    color: #6b7280;
+.reviews .empty{
+    margin-top: 0;
+    color: var(--rv-subtext);
     font-weight: 700;
 }
 
-/* (선택) 모바일: 섬네일 위/본문 아래로 전환 */
-@media (max-width: 768px) {
-    .reviews .post-link {
-        flex-direction: column;
-        gap: 0;
-    }
 
-    .reviews .post-thumb {
-        width: 100%;
-        flex: 0 0 auto;
-        height: 180px;
-    }
+/* =========================
+   6) Pagination (BOTTOM)
+========================= */
 
-    .reviews .post-body {
-        padding: 14px;
-    }
+/* anchor offset (so header doesn't cover list) */
+.reviews #postList{
+    scroll-margin-top: var(--rv-anchor-offset);
+}
+
+.reviews .reviews-pagination{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    width: 100%;
+    margin: 18px 0 10px;
+    padding: 10px 12px;
+
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: var(--rv-radius-lg);
+    background: #fff;
+}
+
+.reviews .reviews-page-numbers{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.reviews .reviews-page-btn{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+
+    border-radius: var(--rv-radius-md);
+    border: 1px solid rgba(0,0,0,0.10);
+    background: #fff;
+    color: #222;
+
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
+
+    transition: transform 120ms ease,
+    box-shadow 120ms ease,
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+.reviews a.reviews-page-btn:hover{
+    transform: translateY(-1px);
+    border-color: rgba(0,0,0,0.18);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
+
+.reviews .reviews-page-btn.active{
+    background: #f4b168;
+    border-color: #f4b168;
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(244, 177, 104, 0.30);
+    cursor: default;
+    transform: none;
+}
+
+.reviews .reviews-page-btn.disabled{
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: #fafafa;
+    box-shadow: none;
+    transform: none;
+}
+
+/* focus accessibility */
+.reviews a.reviews-page-btn:focus-visible{
+    outline: 2px solid rgba(244, 177, 104, 0.65);
+    outline-offset: 2px;
 }
 
 
-/* ✅ 화면 작아지면 자연스럽게 줄바꿈 */
+/* =========================
+   7) Responsive
+========================= */
+
+/* filter/search toolbar wrap */
 @media (max-width: 900px){
-    .reviews.search-toolbar{
-        flex-wrap: wrap;
-    }
+    .reviews.search-toolbar{ flex-wrap: wrap; }
+
     .reviews .q-input{
         flex: 1;
         width: auto;
         min-width: 220px;
     }
-    .reviews .q-field{
-        width: 160px;
+    .reviews .q-field{ width: 160px; }
+    .reviews .tag-summary-mini{ flex-basis: 100%; }
+}
+
+/* pagination wrap + anchor offset */
+@media (max-width: 700px){
+    .reviews{
+        --rv-anchor-offset: 80px;
     }
-    .reviews .tag-summary-mini{
-        flex-basis: 100%;
+
+    .reviews .reviews-pagination{
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 10px;
     }
+    .reviews .reviews-page-btn{
+        min-width: 32px;
+        height: 32px;
+        font-size: 13px;
+        border-radius: 10px;
+    }
+    .reviews .reviews-page-numbers{
+        flex-wrap: wrap;
+        justify-content: center;
+        width: 100%;
+    }
+
+    /* budget: reduce min width pressure */
+    .reviews .reviews-budget-slider{ min-width: 220px; }
+    .reviews .budget-unlock-btn{
+        padding: 7px 10px;
+        font-size: 12px;
+    }
+}
+
+/* post list: stack image on top */
+@media (max-width: 768px){
+    .reviews .post-link{
+        flex-direction: column;
+        gap: 0;
+    }
+    .reviews .post-card{ height: auto; }
+    .reviews .post-thumb{
+        width: 100%;
+        flex: 0 0 auto;
+        height: 180px;
+    }
+    .reviews .post-body{ padding: 14px; }
 }
