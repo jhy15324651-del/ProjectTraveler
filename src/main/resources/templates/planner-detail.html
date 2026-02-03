@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>도쿄 3박 4일 벚꽃 여행 - 日本 Travel LMS</title>
+    <title>여행 플래너 - 日本 Travel LMS</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="stylesheet" th:href="@{/css/planner.css}">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body>
     <!-- 헤더 -->
@@ -68,6 +70,16 @@
 
                 <!-- 액션 버튼 -->
                 <div class="planner-detail-actions">
+                    <!-- 공개 설정 토글 -->
+                    <div class="visibility-toggle" id="visibilityToggle">
+                        <span class="visibility-toggle-label">공개 설정</span>
+                        <label class="visibility-toggle-switch">
+                            <input type="checkbox" id="visibilitySwitch" onchange="toggleVisibility()">
+                            <span class="visibility-toggle-slider"></span>
+                        </label>
+                        <span class="visibility-toggle-status" id="visibilityStatus">비공개</span>
+                    </div>
+
                     <button type="button" class="btn-planner-action primary" onclick="savePlanner()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
@@ -76,7 +88,7 @@
                         </svg>
                         저장
                     </button>
-                    <button type="button" class="btn-planner-action secondary">
+                    <button type="button" class="btn-planner-action secondary" onclick="openShareModal()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="18" cy="5" r="3"/>
                             <circle cx="6" cy="12" r="3"/>
@@ -471,10 +483,61 @@
         </div>
     </main>
 
-    <script>
-        let selectedDay = 0;
+    <!-- 공유 모달 -->
+    <div id="shareModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>플래너 공유하기</h2>
+                <button type="button" class="btn-modal-close" onclick="closeShareModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="share-settings">
+                    <div class="share-settings-header">
+                        <h4>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            공유된 사용자
+                        </h4>
+                    </div>
 
-        // 헤더 네비게이션 활성화
+                    <div class="share-add-form">
+                        <input type="text" id="shareUsername" placeholder="사용자 아이디 입력">
+                        <select id="sharePermission">
+                            <option value="VIEW">보기만</option>
+                            <option value="EDIT">편집 가능</option>
+                        </select>
+                        <button type="button" onclick="addShare()">추가</button>
+                    </div>
+
+                    <div class="share-list" id="shareList">
+                        <div class="share-empty">공유된 사용자가 없습니다.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" onclick="closeShareModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const plannerId = [[${plannerId}]];
+        const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+        let selectedDay = 0;
+        let plannerData = null;
+
+        // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', function() {
             const navLinks = document.querySelectorAll('.header-nav a');
             navLinks.forEach(link => {
@@ -482,6 +545,9 @@
                     link.classList.add('active');
                 }
             });
+
+            // 플래너 데이터 로드
+            loadPlannerData();
         });
 
         // Day 탭 선택
@@ -632,11 +698,170 @@
             console.log('Budget updated');
         }
 
-        // 플래너 저장
-        function savePlanner() {
-            // TODO: 서버 API 호출
-            alert('플래너가 저장되었습니다!');
+        // 플래너 데이터 로드
+        async function loadPlannerData() {
+            // 실제 구현 시 API에서 데이터 로드
+            // 여기서는 기본값으로 설정
+            const visibilitySwitch = document.getElementById('visibilitySwitch');
+            const visibilityStatus = document.getElementById('visibilityStatus');
+
+            // 현재 공개 상태 (기본값: 비공개)
+            visibilitySwitch.checked = false;
+            visibilityStatus.textContent = '비공개';
+            visibilityStatus.classList.remove('public');
         }
+
+        // 공개 설정 토글
+        async function toggleVisibility() {
+            const visibilitySwitch = document.getElementById('visibilitySwitch');
+            const visibilityStatus = document.getElementById('visibilityStatus');
+            const isPublic = visibilitySwitch.checked;
+
+            try {
+                const response = await fetch(`/api/planner/${plannerId}/visibility`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeader]: csrfToken
+                    },
+                    body: JSON.stringify({
+                        visibility: isPublic ? 'PUBLIC' : 'PRIVATE'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    visibilityStatus.textContent = isPublic ? '공개' : '비공개';
+                    if (isPublic) {
+                        visibilityStatus.classList.add('public');
+                    } else {
+                        visibilityStatus.classList.remove('public');
+                    }
+                } else {
+                    // 실패 시 원복
+                    visibilitySwitch.checked = !isPublic;
+                    alert('공개 설정 변경에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Error toggling visibility:', error);
+                visibilitySwitch.checked = !isPublic;
+                alert('공개 설정 변경 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 공유 모달 열기
+        function openShareModal() {
+            document.getElementById('shareModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            loadShares();
+        }
+
+        // 공유 모달 닫기
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // 공유 목록 로드
+        async function loadShares() {
+            const shareList = document.getElementById('shareList');
+
+            // 실제 구현 시 API에서 공유 목록 로드
+            // 현재는 빈 목록 표시
+            shareList.innerHTML = '<div class="share-empty">공유된 사용자가 없습니다.</div>';
+        }
+
+        // 공유 추가
+        async function addShare() {
+            const username = document.getElementById('shareUsername').value.trim();
+            const permission = document.getElementById('sharePermission').value;
+
+            if (!username) {
+                alert('사용자 아이디를 입력해주세요.');
+                return;
+            }
+
+            try {
+                // 실제 구현 시 사용자 ID로 변환 필요
+                const response = await fetch(`/api/planner/${plannerId}/share`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeader]: csrfToken
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        permission: permission
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('shareUsername').value = '';
+                    loadShares();
+                    alert('공유가 추가되었습니다.');
+                } else {
+                    alert('공유 추가에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
+                }
+            } catch (error) {
+                console.error('Error adding share:', error);
+                alert('공유 추가 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 공유 삭제
+        async function removeShare(userId) {
+            if (!confirm('이 사용자의 공유를 취소하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/planner/${plannerId}/share/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    loadShares();
+                } else {
+                    alert('공유 취소에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Error removing share:', error);
+                alert('공유 취소 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 플래너 저장
+        async function savePlanner() {
+            try {
+                // 실제 구현 시 플래너 데이터 수집 및 저장
+                alert('플래너가 저장되었습니다!');
+            } catch (error) {
+                console.error('Error saving planner:', error);
+                alert('저장 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 모달 외부 클릭 시 닫기
+        document.getElementById('shareModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeShareModal();
+            }
+        });
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeShareModal();
+            }
+        });
     </script>
 </body>
 </html>

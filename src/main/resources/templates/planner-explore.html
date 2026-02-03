@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>플래너 둘러보기 - 日本 Travel LMS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/planner.css}">
+</head>
+<body>
+    <!-- 헤더 -->
+    <th:block th:replace="~{fragments/main-header :: mainHeader}"></th:block>
+
+    <main class="planner-explore-page">
+        <div class="planner-explore-container">
+            <!-- 헤더 -->
+            <div class="planner-explore-header">
+                <div>
+                    <h1>플래너 둘러보기</h1>
+                    <p>다른 여행자들의 플래너를 참고해보세요</p>
+                </div>
+            </div>
+
+            <!-- 필터 및 검색 -->
+            <div class="planner-explore-filters">
+                <div class="explore-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="여행지, 제목으로 검색..." onkeyup="handleSearch(event)">
+                </div>
+                <div class="explore-sort">
+                    <button type="button" class="sort-btn active" data-sort="latest" onclick="changeSort('latest')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        최신순
+                    </button>
+                    <button type="button" class="sort-btn" data-sort="popular" onclick="changeSort('popular')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                        인기순
+                    </button>
+                </div>
+            </div>
+
+            <!-- 플래너 그리드 -->
+            <div id="exploreGrid" class="planner-explore-grid">
+                <!-- 로딩 상태 -->
+                <div class="explore-loading" id="loadingState">
+                    <div class="loading-spinner"></div>
+                    <p>플래너를 불러오는 중...</p>
+                </div>
+            </div>
+
+            <!-- 빈 상태 -->
+            <div id="emptyState" class="planner-explore-empty" style="display: none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="m15 9-6 6"/>
+                    <path d="m9 9 6 6"/>
+                </svg>
+                <h3>공개된 플래너가 없습니다</h3>
+                <p>아직 공유된 플래너가 없습니다. 첫 번째로 플래너를 공유해보세요!</p>
+                <a th:href="@{/planner/list}" class="btn-create-planner">
+                    내 플래너 만들기
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script th:inline="javascript">
+        let currentSort = 'latest';
+        let searchKeyword = '';
+
+        // 페이지 로드 시 플래너 목록 불러오기
+        document.addEventListener('DOMContentLoaded', function() {
+            // 헤더 네비게이션 활성화
+            const navLinks = document.querySelectorAll('.header-nav a');
+            navLinks.forEach(link => {
+                if (link.getAttribute('href').includes('/planner')) {
+                    link.classList.add('active');
+                }
+            });
+
+            loadPublicPlanners();
+        });
+
+        // 공개 플래너 목록 불러오기
+        async function loadPublicPlanners() {
+            const grid = document.getElementById('exploreGrid');
+            const loadingState = document.getElementById('loadingState');
+            const emptyState = document.getElementById('emptyState');
+
+            loadingState.style.display = 'flex';
+            emptyState.style.display = 'none';
+
+            try {
+                let url = `/api/planner/public?sort=${currentSort}`;
+                if (searchKeyword) {
+                    url += `&keyword=${encodeURIComponent(searchKeyword)}`;
+                }
+
+                const response = await fetch(url);
+                const planners = await response.json();
+
+                loadingState.style.display = 'none';
+
+                if (planners.length === 0) {
+                    grid.innerHTML = '';
+                    emptyState.style.display = 'flex';
+                    return;
+                }
+
+                grid.innerHTML = planners.map(planner => createPlannerCard(planner)).join('');
+
+            } catch (error) {
+                console.error('Error loading planners:', error);
+                loadingState.style.display = 'none';
+                grid.innerHTML = '<div class="explore-error"><p>플래너를 불러오는 중 오류가 발생했습니다.</p></div>';
+            }
+        }
+
+        // 플래너 카드 HTML 생성
+        function createPlannerCard(planner) {
+            const coverImage = planner.coverImage || 'https://images.unsplash.com/photo-1493976040374-85cb44e25828?w=600&q=80';
+            const destination = planner.destination || '미정';
+            const dateRange = planner.startDate && planner.endDate
+                ? `${planner.startDate} ~ ${planner.endDate}`
+                : '날짜 미정';
+
+            return `
+                <a href="/planner/detail/${planner.id}" class="explore-card">
+                    <div class="explore-card-image">
+                        <img src="${coverImage}" alt="${planner.title}">
+                        <div class="explore-card-overlay">
+                            <span class="explore-card-days">${planner.days}일</span>
+                        </div>
+                    </div>
+                    <div class="explore-card-content">
+                        <h3 class="explore-card-title">${planner.title}</h3>
+                        <div class="explore-card-info">
+                            <div class="explore-card-info-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                    <circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                <span>${destination}</span>
+                            </div>
+                            <div class="explore-card-info-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                <span>${dateRange}</span>
+                            </div>
+                        </div>
+                        <div class="explore-card-footer">
+                            <div class="explore-card-author">
+                                <div class="explore-card-avatar">
+                                    ${planner.authorName ? planner.authorName.charAt(0) : '?'}
+                                </div>
+                                <span>${planner.authorName || '익명'}</span>
+                            </div>
+                            <div class="explore-card-stats">
+                                <span class="stat-item">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                    ${planner.viewCount || 0}
+                                </span>
+                                <span class="stat-item">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                    </svg>
+                                    ${planner.likeCount || 0}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            `;
+        }
+
+        // 정렬 변경
+        function changeSort(sort) {
+            currentSort = sort;
+
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.sort === sort) {
+                    btn.classList.add('active');
+                }
+            });
+
+            loadPublicPlanners();
+        }
+
+        // 검색 처리
+        function handleSearch(event) {
+            if (event.key === 'Enter') {
+                searchKeyword = event.target.value.trim();
+                loadPublicPlanners();
+            }
+        }
+    </script>
+</body>
+</html>

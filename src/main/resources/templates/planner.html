@@ -40,6 +40,13 @@
                                 <path d="M5 12h14M12 5l7 7-7 7"/>
                             </svg>
                         </a>
+                        <a th:href="@{/planner/explore}" class="btn-planner-secondary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                            </svg>
+                            플래너 둘러보기
+                        </a>
                     </div>
                 </div>
 
@@ -240,6 +247,7 @@
                         <ul>
                             <li><a th:href="@{/planner}">기능 소개</a></li>
                             <li><a th:href="@{/planner/list}">내 플래너</a></li>
+                            <li><a th:href="@{/planner/explore}">플래너 둘러보기</a></li>
                         </ul>
                     </div>
 
