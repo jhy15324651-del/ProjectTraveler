@@ -433,4 +433,73 @@ document.addEventListener("DOMContentLoaded", () => {
             resetPage();
         });
     }
+
+    // ==============================
+    // 전체 초기화 버튼 (검색 버튼 오른쪽)
+    // ==============================
+    const allResetBtn = document.getElementById("btnReset");
+
+    if (allResetBtn) {
+        allResetBtn.addEventListener("click", () => {
+            // 1) page 0
+            resetPage();
+
+            // 2) single 그룹: 전체로 + hidden 비우기
+            ["travelType", "theme"].forEach((key) => {
+                const group = document.querySelector(`.filter-chips[data-key="${key}"]`);
+                if (!group) return;
+
+                clearGroupActive(group);
+                setAllActive(group);
+
+                const hidden = document.getElementById("f_" + key);
+                if (hidden) hidden.value = "";
+            });
+
+            // 3) multi 그룹: 전체로 + hidden list 비우기
+            ["period", "level", "region"].forEach((key) => {
+                const group = document.querySelector(`.filter-chips[data-key="${key}"]`);
+                if (!group) return;
+
+                clearGroupActive(group);
+                setAllActive(group);
+
+                // hidden inputs 제거
+                syncMultiHiddenInputs(key, []);
+            });
+
+            // 4) budget: 잠금 상태로 되돌리고 (0~500만), 값도 초기화
+            setUnlocked(false);
+            applyMaxLimit(false, { clamp: false }); // max를 500만으로 돌리고 ticks 갱신
+
+            if (minInput && maxInput) {
+                minInput.value = String(DEFAULT_MIN);
+                maxInput.value = String(DEFAULT_MAX);
+            }
+
+            // hidden도 맞추고, 라벨/레인지바/요약까지 싱크
+            syncBudget({ reset: false });
+
+            // 5) 검색 타입/검색어 초기화
+            const qField = document.querySelector(".q-field");
+            const qInput = document.querySelector(".q-input");
+
+            if (qField) qField.value = "tc";
+            if (qInput) {
+                qInput.value = "";
+                qInput.textContent = "";
+            }
+
+            // 6) 요약 갱신
+            renderMiniSummary();
+
+            // 7) (선택) 초기화 즉시 서버에 GET 요청해서 URL도 깨끗하게 만들고 싶으면 submit
+            // - "초기상태로 되돌리는" 의미에 가장 충실함
+            filterForm.submit();
+        });
+    }
 });
+
+
+
+

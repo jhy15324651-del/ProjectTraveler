@@ -77,7 +77,6 @@
             <div class="filter-row">
                 <div class="filter-label budget-label">
                     예산
-                    <button type="button" id="budgetResetBtn" class="budget-reset-btn" title="예산 초기화">↺</button>
                 </div>
 
                 <div class="reviews-budget">
@@ -90,6 +89,7 @@
                         </div>
 
                         <div class="reviews-budget-slider">
+                            <button type="button" id="budgetResetBtn" class="budget-reset-btn" title="예산 초기화">↺</button>
                             <div class="reviews-budget-track">
                                 <div class="reviews-budget-range" id="budgetRange"></div>
                             </div>
@@ -212,6 +212,7 @@
                     <span class="empty">선택된 조건 없음</span>
                 </div>
 
+                <div class="q-stack">
                 <select class="q-field">
                     <option value="tc">제목 + 내용</option>
                     <option value="t">제목</option>
@@ -223,6 +224,9 @@
                           th:text="${search != null ? search.q : ''}"></textarea>
 
                 <button type="submit" class="q-btn">검색</button>
+
+                <!-- 추가: 초기화 버튼 (검색 버튼 오른쪽) -->
+                <button type="button" id="btnReset" class="btn-reset">초기화</button>
             </div>
 
         </section>
