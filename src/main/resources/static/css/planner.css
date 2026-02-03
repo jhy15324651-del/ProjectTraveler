@@ -1,0 +1,1625 @@
+/* ========================================
+   여행 플래너 랜딩 페이지 스타일
+   ======================================== */
+
+/* Hero 섹션 */
+.planner-hero {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(to bottom, #FDF2F2, var(--white));
+    padding: 80px 24px 100px;
+}
+
+.planner-hero-container {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.planner-hero-content {
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.planner-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(193, 39, 45, 0.1);
+    color: var(--primary-red);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 24px;
+}
+
+.planner-badge svg {
+    width: 16px;
+    height: 16px;
+}
+
+.planner-hero h1 {
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 24px;
+    color: var(--dark-gray);
+}
+
+.planner-hero h1 span {
+    color: var(--primary-red);
+}
+
+.planner-hero-desc {
+    font-size: 18px;
+    color: #666;
+    line-height: 1.7;
+    margin-bottom: 40px;
+}
+
+.planner-hero-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+
+.btn-planner-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--primary-red);
+    color: var(--white);
+    padding: 16px 32px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-planner-primary:hover {
+    background: #A11F24;
+    transform: translateY(-2px);
+}
+
+.btn-planner-primary svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s;
+}
+
+.btn-planner-primary:hover svg {
+    transform: translateX(4px);
+}
+
+.btn-planner-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--white);
+    color: var(--dark-gray);
+    padding: 16px 32px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--border-gray);
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.btn-planner-secondary:hover {
+    background: var(--light-gray);
+}
+
+.planner-hero-image {
+    margin-top: 64px;
+    border-radius: 16px;
+    border: 1px solid var(--border-gray);
+    background: var(--white);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.planner-hero-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Features 섹션 */
+.planner-features {
+    background: var(--white);
+    padding: 100px 24px;
+}
+
+.planner-features-container {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.planner-section-header {
+    max-width: 700px;
+    margin: 0 auto 64px;
+    text-align: center;
+}
+
+.planner-section-header h2 {
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    color: var(--dark-gray);
+}
+
+.planner-section-header p {
+    font-size: 18px;
+    color: #666;
+}
+
+.planner-features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.planner-feature-card {
+    background: var(--white);
+    border: 1px solid var(--border-gray);
+    border-radius: 16px;
+    padding: 32px;
+    transition: all 0.3s;
+}
+
+.planner-feature-card:hover {
+    border-color: rgba(193, 39, 45, 0.3);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+}
+
+.planner-feature-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: rgba(193, 39, 45, 0.1);
+    color: var(--primary-red);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    transition: all 0.3s;
+}
+
+.planner-feature-card:hover .planner-feature-icon {
+    background: var(--primary-red);
+    color: var(--white);
+}
+
+.planner-feature-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.planner-feature-card h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--dark-gray);
+}
+
+.planner-feature-card p {
+    font-size: 15px;
+    color: #666;
+    line-height: 1.6;
+}
+
+/* How It Works 섹션 */
+.planner-how-it-works {
+    background: var(--white);
+    padding: 100px 24px;
+    border-top: 1px solid var(--border-gray);
+}
+
+.planner-how-container {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.planner-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 48px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.planner-step {
+    position: relative;
+    text-align: center;
+}
+
+.planner-step-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.planner-step-icon-inner {
+    position: relative;
+}
+
+.planner-step-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: var(--primary-red);
+    color: var(--white);
+    border-radius: 50%;
+}
+
+.planner-step-icon svg {
+    width: 40px;
+    height: 40px;
+}
+
+.planner-step-number {
+    position: absolute;
+    top: -8px;
+    right: -16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: rgba(193, 39, 45, 0.1);
+    color: var(--primary-red);
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.planner-step h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--dark-gray);
+}
+
+.planner-step p {
+    font-size: 15px;
+    color: #666;
+    line-height: 1.6;
+}
+
+/* 연결선 (데스크톱만) */
+.planner-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 40px;
+    left: calc(50% + 50px);
+    width: calc(100% - 60px);
+    height: 2px;
+    background: linear-gradient(to right, rgba(193, 39, 45, 0.2), transparent);
+}
+
+.planner-how-cta {
+    text-align: center;
+    margin-top: 64px;
+}
+
+/* Footer 섹션 */
+.planner-footer {
+    background: var(--white);
+    border-top: 1px solid var(--border-gray);
+    padding: 48px 24px;
+}
+
+.planner-footer-container {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.planner-footer-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 32px;
+}
+
+.planner-footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.planner-footer-brand svg {
+    width: 24px;
+    height: 24px;
+    color: var(--primary-red);
+}
+
+.planner-footer-brand span {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--dark-gray);
+}
+
+.planner-footer-desc {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+}
+
+.planner-footer-section h4 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--dark-gray);
+}
+
+.planner-footer-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.planner-footer-section li {
+    margin-bottom: 8px;
+}
+
+.planner-footer-section a {
+    font-size: 14px;
+    color: #666;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.planner-footer-section a:hover {
+    color: var(--primary-red);
+}
+
+.planner-footer-bottom {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border-gray);
+    text-align: center;
+}
+
+.planner-footer-bottom p {
+    font-size: 14px;
+    color: #666;
+}
+
+/* ========================================
+   반응형 디자인
+   ======================================== */
+
+@media (min-width: 640px) {
+    .planner-hero-buttons {
+        flex-direction: row;
+    }
+}
+
+@media (max-width: 1024px) {
+    .planner-hero h1 {
+        font-size: 40px;
+    }
+
+    .planner-section-header h2 {
+        font-size: 32px;
+    }
+
+    .planner-features-grid,
+    .planner-steps {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .planner-step:not(:last-child)::after {
+        display: none;
+    }
+
+    .planner-footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .planner-hero {
+        padding: 60px 20px 80px;
+    }
+
+    .planner-hero h1 {
+        font-size: 32px;
+    }
+
+    .planner-hero-desc {
+        font-size: 16px;
+    }
+
+    .planner-section-header h2 {
+        font-size: 28px;
+    }
+
+    .planner-features,
+    .planner-how-it-works {
+        padding: 60px 20px;
+    }
+
+    .planner-features-grid,
+    .planner-steps {
+        grid-template-columns: 1fr;
+    }
+
+    .planner-footer-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .planner-footer-brand {
+        justify-content: center;
+    }
+}
+
+/* ========================================
+   플래너 목록 페이지 (PlannerList)
+   ======================================== */
+
+.planner-list-page {
+    min-height: 100vh;
+    background: var(--light-gray);
+}
+
+.planner-list-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 48px 24px;
+}
+
+.planner-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 48px;
+}
+
+.planner-list-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--dark-gray);
+    margin-bottom: 8px;
+}
+
+.planner-list-header p {
+    color: #666;
+    font-size: 16px;
+}
+
+.btn-new-planner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+    color: var(--white);
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(193, 39, 45, 0.3);
+    transition: all 0.3s;
+}
+
+.btn-new-planner:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(193, 39, 45, 0.4);
+}
+
+.btn-new-planner svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* 플래너 카드 그리드 */
+.planner-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.planner-card {
+    background: var(--white);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.planner-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.planner-card-image {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+}
+
+.planner-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.planner-card:hover .planner-card-image img {
+    transform: scale(1.1);
+}
+
+.planner-card-content {
+    padding: 24px;
+}
+
+.planner-card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--dark-gray);
+    margin-bottom: 12px;
+    transition: color 0.3s;
+}
+
+.planner-card:hover .planner-card-title {
+    color: var(--primary-red);
+}
+
+.planner-card-info {
+    margin-bottom: 16px;
+}
+
+.planner-card-info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.planner-card-info-item svg {
+    width: 16px;
+    height: 16px;
+    color: var(--primary-red);
+}
+
+.planner-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.planner-card-days {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+    color: var(--white);
+    padding: 4px 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.btn-delete-planner {
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    color: #999;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-delete-planner:hover {
+    background: #F8D7DA;
+    color: var(--primary-red);
+}
+
+.btn-delete-planner svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* 빈 상태 */
+.planner-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    background: var(--white);
+    border: 2px dashed var(--border-gray);
+    border-radius: 20px;
+    text-align: center;
+    padding: 48px;
+}
+
+.planner-empty svg {
+    width: 64px;
+    height: 64px;
+    color: #ddd;
+    margin-bottom: 16px;
+}
+
+.planner-empty h3 {
+    font-size: 18px;
+    color: #999;
+    margin-bottom: 8px;
+}
+
+.planner-empty p {
+    color: #999;
+    margin-bottom: 24px;
+}
+
+.btn-empty-create {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--white);
+    color: var(--primary-red);
+    padding: 12px 24px;
+    border: 2px solid var(--primary-red);
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-empty-create:hover {
+    background: var(--primary-red);
+    color: var(--white);
+}
+
+/* ========================================
+   플래너 생성 모달
+   ======================================== */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: var(--white);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 640px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    transform: scale(0.9);
+    transition: transform 0.3s;
+}
+
+.modal-overlay.active .modal-content {
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px;
+    border-bottom: 1px solid var(--border-gray);
+}
+
+.modal-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--dark-gray);
+}
+
+.btn-modal-close {
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-modal-close:hover {
+    background: var(--light-gray);
+}
+
+.btn-modal-close svg {
+    width: 20px;
+    height: 20px;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: var(--dark-gray);
+    margin-bottom: 8px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    font-size: 15px;
+    transition: all 0.3s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 3px rgba(193, 39, 45, 0.1);
+}
+
+.form-input-icon {
+    position: relative;
+}
+
+.form-input-icon svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: #999;
+}
+
+.form-input-icon .form-input {
+    padding-left: 44px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* 템플릿 선택 */
+.template-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.template-option {
+    padding: 16px;
+    border: 2px solid var(--border-gray);
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: var(--white);
+}
+
+.template-option:hover {
+    border-color: rgba(193, 39, 45, 0.5);
+}
+
+.template-option.selected {
+    border-color: var(--primary-red);
+    background: rgba(193, 39, 45, 0.05);
+}
+
+.template-option-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.template-option-name {
+    font-size: 14px;
+    color: var(--dark-gray);
+}
+
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    padding: 24px;
+    border-top: 1px solid var(--border-gray);
+}
+
+.btn-modal-cancel {
+    flex: 1;
+    padding: 12px;
+    background: var(--white);
+    border: 2px solid var(--border-gray);
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-modal-cancel:hover {
+    background: var(--light-gray);
+}
+
+.btn-modal-submit {
+    flex: 1;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-modal-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(193, 39, 45, 0.4);
+}
+
+/* ========================================
+   플래너 상세 페이지 (PlannerDetail)
+   ======================================== */
+
+.planner-detail-page {
+    min-height: 100vh;
+    background: var(--light-gray);
+}
+
+/* 플래너 헤더 */
+.planner-detail-header {
+    position: relative;
+    background: var(--white);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.planner-detail-header-bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0.3;
+}
+
+.planner-detail-header-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.planner-detail-header-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, white, rgba(255,255,255,0.95), rgba(255,255,255,0.8));
+}
+
+.planner-detail-header-content {
+    position: relative;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 48px 24px;
+}
+
+.planner-detail-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--dark-gray);
+    margin-bottom: 16px;
+}
+
+.planner-detail-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-bottom: 16px;
+}
+
+.planner-detail-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 15px;
+}
+
+.planner-detail-meta-item svg {
+    width: 20px;
+    height: 20px;
+    color: var(--primary-red);
+}
+
+.planner-detail-desc {
+    color: #666;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+/* 플래너 본문 */
+.planner-detail-body {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+.planner-detail-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.planner-detail-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-planner-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-planner-action.primary {
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+    color: var(--white);
+    border: none;
+}
+
+.btn-planner-action.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(193, 39, 45, 0.3);
+}
+
+.btn-planner-action.secondary {
+    background: var(--white);
+    color: var(--dark-gray);
+    border: 2px solid var(--border-gray);
+}
+
+.btn-planner-action.secondary:hover {
+    border-color: var(--primary-red);
+}
+
+.btn-planner-action svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Day 탭 */
+.day-tabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+}
+
+.day-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 100px;
+    padding: 12px 16px;
+    border: 2px solid var(--border-gray);
+    border-radius: 8px;
+    background: var(--white);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.day-tab:hover {
+    border-color: rgba(193, 39, 45, 0.5);
+}
+
+.day-tab.active {
+    border-color: var(--primary-red);
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+    color: var(--white);
+    box-shadow: 0 4px 15px rgba(193, 39, 45, 0.3);
+}
+
+.day-tab-label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.day-tab-date {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* 플래너 레이아웃 */
+.planner-detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 24px;
+}
+
+/* 일정 목록 */
+.itinerary-section {
+    background: var(--white);
+    border-radius: 15px;
+    padding: 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.itinerary-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.itinerary-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--dark-gray);
+}
+
+.btn-add-itinerary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-add-itinerary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(193, 39, 45, 0.3);
+}
+
+.btn-add-itinerary svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* 일정 카드 */
+.itinerary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.itinerary-card {
+    background: var(--white);
+    border: 1px solid var(--border-gray);
+    border-radius: 15px;
+    padding: 16px;
+    transition: all 0.3s;
+}
+
+.itinerary-card:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+}
+
+.itinerary-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.itinerary-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.itinerary-checkbox.checked {
+    background: #28A745;
+    border-color: #28A745;
+}
+
+.itinerary-checkbox.checked svg {
+    color: white;
+}
+
+.itinerary-checkbox:hover {
+    border-color: var(--primary-red);
+}
+
+.itinerary-card-main {
+    flex: 1;
+}
+
+.itinerary-time-category {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.itinerary-time {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    color: var(--dark-gray);
+}
+
+.itinerary-time svg {
+    width: 16px;
+    height: 16px;
+    color: var(--primary-red);
+}
+
+.itinerary-category {
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.itinerary-category.attraction { background: #E3F2FD; color: #1976D2; }
+.itinerary-category.restaurant { background: #FFF3E0; color: #F57C00; }
+.itinerary-category.accommodation { background: #F3E5F5; color: #7B1FA2; }
+.itinerary-category.transport { background: #E8F5E9; color: #388E3C; }
+.itinerary-category.shopping { background: #FCE4EC; color: #C2185B; }
+.itinerary-category.other { background: #F5F5F5; color: #616161; }
+
+.itinerary-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--dark-gray);
+    margin-bottom: 8px;
+}
+
+.itinerary-location {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.itinerary-location svg {
+    width: 16px;
+    height: 16px;
+}
+
+.itinerary-notes {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.itinerary-cost {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    color: var(--dark-gray);
+}
+
+.itinerary-cost svg {
+    width: 16px;
+    height: 16px;
+    color: var(--primary-red);
+}
+
+.btn-delete-itinerary {
+    background: none;
+    border: none;
+    padding: 8px;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.3s;
+    opacity: 0;
+}
+
+.itinerary-card:hover .btn-delete-itinerary {
+    opacity: 1;
+}
+
+.btn-delete-itinerary:hover {
+    color: var(--primary-red);
+}
+
+/* 빈 일정 */
+.itinerary-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    border: 2px dashed var(--border-gray);
+    border-radius: 15px;
+    text-align: center;
+}
+
+.itinerary-empty p {
+    color: #999;
+    margin-bottom: 16px;
+}
+
+.btn-empty-itinerary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--white);
+    color: var(--primary-red);
+    border: 2px solid var(--primary-red);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-empty-itinerary:hover {
+    background: var(--primary-red);
+    color: var(--white);
+}
+
+/* 사이드바 */
+.planner-sidebar {
+    position: sticky;
+    top: 100px;
+}
+
+.sidebar-card {
+    background: var(--white);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.sidebar-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-gray);
+}
+
+.sidebar-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    background: none;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.sidebar-tab:hover {
+    background: var(--light-gray);
+}
+
+.sidebar-tab.active {
+    color: var(--primary-red);
+    background: rgba(193, 39, 45, 0.05);
+    border-bottom: 2px solid var(--primary-red);
+}
+
+.sidebar-tab svg {
+    width: 16px;
+    height: 16px;
+}
+
+.sidebar-content {
+    padding: 16px;
+}
+
+/* 체크리스트 */
+.checklist-progress {
+    margin-bottom: 16px;
+}
+
+.checklist-progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.checklist-progress-header span:first-child {
+    color: #666;
+}
+
+.checklist-progress-header span:last-child {
+    font-weight: 600;
+    color: var(--primary-red);
+}
+
+.checklist-progress-bar {
+    height: 8px;
+    background: #eee;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.checklist-progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+    border-radius: 999px;
+    transition: width 0.3s;
+}
+
+.checklist-items {
+    margin-bottom: 16px;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.checklist-item:hover {
+    background: var(--light-gray);
+}
+
+.checklist-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    accent-color: var(--primary-red);
+    cursor: pointer;
+}
+
+.checklist-item-content {
+    flex: 1;
+}
+
+.checklist-item-category {
+    font-size: 12px;
+    color: #999;
+}
+
+.checklist-item-text {
+    font-size: 14px;
+    color: var(--dark-gray);
+}
+
+.checklist-item-text.completed {
+    color: #999;
+    text-decoration: line-through;
+}
+
+.checklist-add {
+    display: flex;
+    gap: 8px;
+}
+
+.checklist-add input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.checklist-add input:focus {
+    outline: none;
+    border-color: var(--primary-red);
+}
+
+.checklist-add button {
+    padding: 8px;
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.checklist-add button:hover {
+    box-shadow: 0 2px 10px rgba(193, 39, 45, 0.3);
+}
+
+/* 예산 */
+.budget-summary {
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+    color: var(--white);
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.budget-summary-label {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 4px;
+}
+
+.budget-summary-total {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.budget-summary-detail {
+    font-size: 14px;
+}
+
+.budget-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.budget-item {
+    border: 1px solid var(--border-gray);
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.budget-item-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.budget-item-name {
+    font-weight: 600;
+    color: var(--dark-gray);
+}
+
+.budget-item-percent {
+    font-size: 14px;
+    color: #666;
+}
+
+.budget-item-bar {
+    height: 8px;
+    background: #eee;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.budget-item-fill {
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+    border-radius: 999px;
+    transition: width 0.3s;
+}
+
+.budget-item-fill.over {
+    background: #E74C3C;
+}
+
+.budget-item-detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.budget-item-planned {
+    color: #666;
+}
+
+.budget-item-actual input {
+    width: 80px;
+    padding: 4px 8px;
+    border: 1px solid var(--border-gray);
+    border-radius: 4px;
+    font-size: 12px;
+    text-align: right;
+}
+
+.budget-item-actual input:focus {
+    outline: none;
+    border-color: var(--primary-red);
+}
+
+/* 반응형 - 플래너 목록 */
+@media (max-width: 1024px) {
+    .planner-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .planner-detail-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .planner-sidebar {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .planner-list-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .planner-cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .template-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .planner-detail-toolbar {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .day-tabs {
+        width: 100%;
+    }
+
+    .planner-detail-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}

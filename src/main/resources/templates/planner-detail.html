@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>도쿄 3박 4일 벚꽃 여행 - 日本 Travel LMS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/planner.css}">
+</head>
+<body>
+    <!-- 헤더 -->
+    <th:block th:replace="~{fragments/main-header :: mainHeader}"></th:block>
+
+    <main class="planner-detail-page">
+        <!-- 플래너 헤더 -->
+        <div class="planner-detail-header">
+            <div class="planner-detail-header-bg">
+                <img src="https://images.unsplash.com/photo-1589085947432-382469c8bdab?w=1200&q=80"
+                     alt="도쿄 3박 4일 벚꽃 여행">
+            </div>
+            <div class="planner-detail-header-content">
+                <h1 class="planner-detail-title">도쿄 3박 4일 벚꽃 여행</h1>
+                <div class="planner-detail-meta">
+                    <div class="planner-detail-meta-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        <span>도쿄, 일본</span>
+                    </div>
+                    <div class="planner-detail-meta-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <span>2026-03-20 ~ 2026-03-23</span>
+                    </div>
+                </div>
+                <p class="planner-detail-desc">봄날의 도쿄에서 벚꽃을 감상하며 일본 문화를 체험하는 여행</p>
+            </div>
+        </div>
+
+        <!-- 플래너 본문 -->
+        <div class="planner-detail-body">
+            <!-- 툴바 -->
+            <div class="planner-detail-toolbar">
+                <!-- Day 탭 -->
+                <div class="day-tabs" id="dayTabs">
+                    <button type="button" class="day-tab active" data-day="0" onclick="selectDay(0)">
+                        <span class="day-tab-label">Day 1</span>
+                        <span class="day-tab-date">3/20</span>
+                    </button>
+                    <button type="button" class="day-tab" data-day="1" onclick="selectDay(1)">
+                        <span class="day-tab-label">Day 2</span>
+                        <span class="day-tab-date">3/21</span>
+                    </button>
+                    <button type="button" class="day-tab" data-day="2" onclick="selectDay(2)">
+                        <span class="day-tab-label">Day 3</span>
+                        <span class="day-tab-date">3/22</span>
+                    </button>
+                    <button type="button" class="day-tab" data-day="3" onclick="selectDay(3)">
+                        <span class="day-tab-label">Day 4</span>
+                        <span class="day-tab-date">3/23</span>
+                    </button>
+                </div>
+
+                <!-- 액션 버튼 -->
+                <div class="planner-detail-actions">
+                    <button type="button" class="btn-planner-action primary" onclick="savePlanner()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                            <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        저장
+                    </button>
+                    <button type="button" class="btn-planner-action secondary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3"/>
+                            <circle cx="6" cy="12" r="3"/>
+                            <circle cx="18" cy="19" r="3"/>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                        </svg>
+                        공유
+                    </button>
+                    <button type="button" class="btn-planner-action secondary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- 레이아웃 -->
+            <div class="planner-detail-layout">
+                <!-- 일정 섹션 -->
+                <div class="itinerary-section">
+                    <div class="itinerary-header">
+                        <h3>일정</h3>
+                        <button type="button" class="btn-add-itinerary" onclick="addItinerary()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            일정 추가
+                        </button>
+                    </div>
+
+                    <!-- 일정 목록 -->
+                    <div class="itinerary-list" id="itineraryList">
+                        <!-- Day 1 일정 -->
+                        <div class="itinerary-card" data-day="0" data-id="1">
+                            <div class="itinerary-card-header">
+                                <div class="itinerary-checkbox" onclick="toggleComplete(this)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:none;">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                                <div class="itinerary-card-main">
+                                    <div class="itinerary-time-category">
+                                        <div class="itinerary-time">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <polyline points="12 6 12 12 16 14"/>
+                                            </svg>
+                                            <span>09:00</span>
+                                        </div>
+                                        <span class="itinerary-category attraction">관광지</span>
+                                    </div>
+                                    <div class="itinerary-title">센소지 (浅草寺)</div>
+                                    <div class="itinerary-location">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                            <circle cx="12" cy="10" r="3"/>
+                                        </svg>
+                                        <span>도쿄 다이토구 아사쿠사</span>
+                                    </div>
+                                    <div class="itinerary-notes">도쿄에서 가장 오래된 절, 아침 일찍 방문하면 한산함</div>
+                                    <div class="itinerary-cost">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="12" y1="1" x2="12" y2="23"/>
+                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                        <span>0원</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-delete-itinerary" onclick="deleteItinerary(1)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="itinerary-card" data-day="0" data-id="2">
+                            <div class="itinerary-card-header">
+                                <div class="itinerary-checkbox" onclick="toggleComplete(this)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:none;">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                                <div class="itinerary-card-main">
+                                    <div class="itinerary-time-category">
+                                        <div class="itinerary-time">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <polyline points="12 6 12 12 16 14"/>
+                                            </svg>
+                                            <span>12:00</span>
+                                        </div>
+                                        <span class="itinerary-category restaurant">식당</span>
+                                    </div>
+                                    <div class="itinerary-title">이치란 라멘 아사쿠사점</div>
+                                    <div class="itinerary-location">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                            <circle cx="12" cy="10" r="3"/>
+                                        </svg>
+                                        <span>아사쿠사 1-7-1</span>
+                                    </div>
+                                    <div class="itinerary-notes">개인 칸막이가 있는 라멘 전문점</div>
+                                    <div class="itinerary-cost">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="12" y1="1" x2="12" y2="23"/>
+                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                        <span>1,500원</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-delete-itinerary" onclick="deleteItinerary(2)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="itinerary-card" data-day="0" data-id="3">
+                            <div class="itinerary-card-header">
+                                <div class="itinerary-checkbox" onclick="toggleComplete(this)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:none;">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                                <div class="itinerary-card-main">
+                                    <div class="itinerary-time-category">
+                                        <div class="itinerary-time">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <polyline points="12 6 12 12 16 14"/>
+                                            </svg>
+                                            <span>14:00</span>
+                                        </div>
+                                        <span class="itinerary-category attraction">관광지</span>
+                                    </div>
+                                    <div class="itinerary-title">우에노 공원 벚꽃 감상</div>
+                                    <div class="itinerary-location">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                            <circle cx="12" cy="10" r="3"/>
+                                        </svg>
+                                        <span>우에노 공원</span>
+                                    </div>
+                                    <div class="itinerary-notes">도쿄 최고의 벚꽃 명소, 피크닉 추천</div>
+                                    <div class="itinerary-cost">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="12" y1="1" x2="12" y2="23"/>
+                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                        <span>0원</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-delete-itinerary" onclick="deleteItinerary(3)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Day 2 일정 (숨김) -->
+                        <div class="itinerary-card" data-day="1" data-id="4" style="display:none;">
+                            <div class="itinerary-card-header">
+                                <div class="itinerary-checkbox" onclick="toggleComplete(this)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:none;">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                                <div class="itinerary-card-main">
+                                    <div class="itinerary-time-category">
+                                        <div class="itinerary-time">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"/>
+                                                <polyline points="12 6 12 12 16 14"/>
+                                            </svg>
+                                            <span>10:00</span>
+                                        </div>
+                                        <span class="itinerary-category restaurant">식당</span>
+                                    </div>
+                                    <div class="itinerary-title">츠키지 장외시장</div>
+                                    <div class="itinerary-location">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                            <circle cx="12" cy="10" r="3"/>
+                                        </svg>
+                                        <span>츠키지</span>
+                                    </div>
+                                    <div class="itinerary-notes">신선한 해산물과 길거리 음식</div>
+                                    <div class="itinerary-cost">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="12" y1="1" x2="12" y2="23"/>
+                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                        <span>3,000원</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-delete-itinerary" onclick="deleteItinerary(4)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 사이드바 -->
+                <div class="planner-sidebar">
+                    <div class="sidebar-card">
+                        <div class="sidebar-tabs">
+                            <button type="button" class="sidebar-tab active" data-tab="checklist" onclick="switchSidebarTab('checklist')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 11 12 14 22 4"/>
+                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                                </svg>
+                                체크리스트
+                            </button>
+                            <button type="button" class="sidebar-tab" data-tab="budget" onclick="switchSidebarTab('budget')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                                    <line x1="1" y1="10" x2="23" y2="10"/>
+                                </svg>
+                                예산
+                            </button>
+                        </div>
+
+                        <!-- 체크리스트 탭 -->
+                        <div class="sidebar-content" id="checklistTab">
+                            <div class="checklist-progress">
+                                <div class="checklist-progress-header">
+                                    <span>진행률</span>
+                                    <span id="checklistCount">1/5</span>
+                                </div>
+                                <div class="checklist-progress-bar">
+                                    <div class="checklist-progress-fill" id="checklistProgressBar" style="width: 20%"></div>
+                                </div>
+                            </div>
+
+                            <div class="checklist-items" id="checklistItems">
+                                <label class="checklist-item">
+                                    <input type="checkbox" checked onchange="updateChecklistProgress()">
+                                    <div class="checklist-item-content">
+                                        <div class="checklist-item-category">서류</div>
+                                        <div class="checklist-item-text completed">여권</div>
+                                    </div>
+                                </label>
+                                <label class="checklist-item">
+                                    <input type="checkbox" onchange="updateChecklistProgress()">
+                                    <div class="checklist-item-content">
+                                        <div class="checklist-item-category">서류</div>
+                                        <div class="checklist-item-text">항공권 출력본</div>
+                                    </div>
+                                </label>
+                                <label class="checklist-item">
+                                    <input type="checkbox" onchange="updateChecklistProgress()">
+                                    <div class="checklist-item-content">
+                                        <div class="checklist-item-category">의류</div>
+                                        <div class="checklist-item-text">가벼운 외투</div>
+                                    </div>
+                                </label>
+                                <label class="checklist-item">
+                                    <input type="checkbox" onchange="updateChecklistProgress()">
+                                    <div class="checklist-item-content">
+                                        <div class="checklist-item-category">전자기기</div>
+                                        <div class="checklist-item-text">카메라 + 충전기</div>
+                                    </div>
+                                </label>
+                                <label class="checklist-item">
+                                    <input type="checkbox" onchange="updateChecklistProgress()">
+                                    <div class="checklist-item-content">
+                                        <div class="checklist-item-category">세면도구</div>
+                                        <div class="checklist-item-text">화장품 세트</div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div class="checklist-add">
+                                <input type="text" id="newChecklistItem" placeholder="새 항목 추가..." onkeydown="if(event.key==='Enter') addChecklistItem()">
+                                <button type="button" onclick="addChecklistItem()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;">
+                                        <line x1="12" y1="5" x2="12" y2="19"/>
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 예산 탭 -->
+                        <div class="sidebar-content" id="budgetTab" style="display: none;">
+                            <div class="budget-summary">
+                                <div class="budget-summary-label">총 예산</div>
+                                <div class="budget-summary-total">₩1,050,000</div>
+                                <div class="budget-summary-detail">사용: ₩825,000 | 남음: ₩225,000</div>
+                            </div>
+
+                            <div class="budget-items">
+                                <div class="budget-item">
+                                    <div class="budget-item-header">
+                                        <span class="budget-item-name">항공</span>
+                                        <span class="budget-item-percent">93%</span>
+                                    </div>
+                                    <div class="budget-item-bar">
+                                        <div class="budget-item-fill" style="width: 93%"></div>
+                                    </div>
+                                    <div class="budget-item-detail">
+                                        <span class="budget-item-planned">예산: ₩300,000</span>
+                                        <span class="budget-item-actual">
+                                            <input type="number" value="280000" onchange="updateBudget()">
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="budget-item">
+                                    <div class="budget-item-header">
+                                        <span class="budget-item-name">숙박</span>
+                                        <span class="budget-item-percent">88%</span>
+                                    </div>
+                                    <div class="budget-item-bar">
+                                        <div class="budget-item-fill" style="width: 88%"></div>
+                                    </div>
+                                    <div class="budget-item-detail">
+                                        <span class="budget-item-planned">예산: ₩400,000</span>
+                                        <span class="budget-item-actual">
+                                            <input type="number" value="350000" onchange="updateBudget()">
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="budget-item">
+                                    <div class="budget-item-header">
+                                        <span class="budget-item-name">식비</span>
+                                        <span class="budget-item-percent">60%</span>
+                                    </div>
+                                    <div class="budget-item-bar">
+                                        <div class="budget-item-fill" style="width: 60%"></div>
+                                    </div>
+                                    <div class="budget-item-detail">
+                                        <span class="budget-item-planned">예산: ₩200,000</span>
+                                        <span class="budget-item-actual">
+                                            <input type="number" value="120000" onchange="updateBudget()">
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="budget-item">
+                                    <div class="budget-item-header">
+                                        <span class="budget-item-name">교통</span>
+                                        <span class="budget-item-percent">60%</span>
+                                    </div>
+                                    <div class="budget-item-bar">
+                                        <div class="budget-item-fill" style="width: 60%"></div>
+                                    </div>
+                                    <div class="budget-item-detail">
+                                        <span class="budget-item-planned">예산: ₩50,000</span>
+                                        <span class="budget-item-actual">
+                                            <input type="number" value="30000" onchange="updateBudget()">
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="budget-item">
+                                    <div class="budget-item-header">
+                                        <span class="budget-item-name">관광</span>
+                                        <span class="budget-item-percent">45%</span>
+                                    </div>
+                                    <div class="budget-item-bar">
+                                        <div class="budget-item-fill" style="width: 45%"></div>
+                                    </div>
+                                    <div class="budget-item-detail">
+                                        <span class="budget-item-planned">예산: ₩100,000</span>
+                                        <span class="budget-item-actual">
+                                            <input type="number" value="45000" onchange="updateBudget()">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let selectedDay = 0;
+
+        // 헤더 네비게이션 활성화
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.header-nav a');
+            navLinks.forEach(link => {
+                if (link.getAttribute('href').includes('/planner')) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Day 탭 선택
+        function selectDay(day) {
+            selectedDay = day;
+
+            // 탭 활성화
+            document.querySelectorAll('.day-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (parseInt(tab.dataset.day) === day) {
+                    tab.classList.add('active');
+                }
+            });
+
+            // 일정 필터링
+            document.querySelectorAll('.itinerary-card').forEach(card => {
+                if (parseInt(card.dataset.day) === day) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // 사이드바 탭 전환
+        function switchSidebarTab(tab) {
+            document.querySelectorAll('.sidebar-tab').forEach(t => {
+                t.classList.remove('active');
+                if (t.dataset.tab === tab) {
+                    t.classList.add('active');
+                }
+            });
+
+            document.getElementById('checklistTab').style.display = tab === 'checklist' ? 'block' : 'none';
+            document.getElementById('budgetTab').style.display = tab === 'budget' ? 'block' : 'none';
+        }
+
+        // 완료 토글
+        function toggleComplete(checkbox) {
+            checkbox.classList.toggle('checked');
+            const svg = checkbox.querySelector('svg');
+            svg.style.display = checkbox.classList.contains('checked') ? 'block' : 'none';
+        }
+
+        // 일정 추가
+        function addItinerary() {
+            const newId = Date.now();
+            const html = `
+                <div class="itinerary-card" data-day="${selectedDay}" data-id="${newId}">
+                    <div class="itinerary-card-header">
+                        <div class="itinerary-checkbox" onclick="toggleComplete(this)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;display:none;">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                        </div>
+                        <div class="itinerary-card-main">
+                            <div class="itinerary-time-category">
+                                <div class="itinerary-time">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                    <span>09:00</span>
+                                </div>
+                                <span class="itinerary-category other">기타</span>
+                            </div>
+                            <div class="itinerary-title">새 일정</div>
+                            <div class="itinerary-location">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                    <circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                <span>주소 입력</span>
+                            </div>
+                            <div class="itinerary-notes">메모를 입력하세요</div>
+                            <div class="itinerary-cost">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="1" x2="12" y2="23"/>
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                                <span>0원</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-delete-itinerary" onclick="deleteItinerary(${newId})">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('itineraryList').insertAdjacentHTML('beforeend', html);
+        }
+
+        // 일정 삭제
+        function deleteItinerary(id) {
+            const card = document.querySelector(`.itinerary-card[data-id="${id}"]`);
+            if (card) {
+                card.remove();
+            }
+        }
+
+        // 체크리스트 항목 추가
+        function addChecklistItem() {
+            const input = document.getElementById('newChecklistItem');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const html = `
+                <label class="checklist-item">
+                    <input type="checkbox" onchange="updateChecklistProgress()">
+                    <div class="checklist-item-content">
+                        <div class="checklist-item-category">기타</div>
+                        <div class="checklist-item-text">${text}</div>
+                    </div>
+                </label>
+            `;
+            document.getElementById('checklistItems').insertAdjacentHTML('beforeend', html);
+            input.value = '';
+            updateChecklistProgress();
+        }
+
+        // 체크리스트 진행률 업데이트
+        function updateChecklistProgress() {
+            const checkboxes = document.querySelectorAll('#checklistItems input[type="checkbox"]');
+            const total = checkboxes.length;
+            const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const percent = (checked / total) * 100;
+
+            document.getElementById('checklistCount').textContent = `${checked}/${total}`;
+            document.getElementById('checklistProgressBar').style.width = `${percent}%`;
+
+            // 완료된 항목 스타일 업데이트
+            checkboxes.forEach(cb => {
+                const text = cb.closest('.checklist-item').querySelector('.checklist-item-text');
+                if (cb.checked) {
+                    text.classList.add('completed');
+                } else {
+                    text.classList.remove('completed');
+                }
+            });
+        }
+
+        // 예산 업데이트
+        function updateBudget() {
+            // TODO: 예산 계산 로직
+            console.log('Budget updated');
+        }
+
+        // 플래너 저장
+        function savePlanner() {
+            // TODO: 서버 API 호출
+            alert('플래너가 저장되었습니다!');
+        }
+    </script>
+</body>
+</html>

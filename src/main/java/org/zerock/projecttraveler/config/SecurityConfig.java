@@ -64,7 +64,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/dashboard/**").authenticated()
                 // 나머지 페이지는 로그인 필요
                 .requestMatchers("/main", "/learning", "/course-detail", "/my-classroom",
-                               "/attendance", "/online-learning", "/guide", "/select").authenticated()
+                               "/attendance", "/online-learning", "/guide", "/select", "/planner", "/planner/**").authenticated()
                 .anyRequest().authenticated()
 
             )

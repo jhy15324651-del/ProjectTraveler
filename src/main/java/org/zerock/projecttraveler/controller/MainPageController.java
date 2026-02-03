@@ -235,6 +235,57 @@ public class MainPageController {
         return "guide";
     }
 
+    /**
+     * 여행 플래너 랜딩 페이지
+     */
+    @GetMapping("/planner")
+    public String planner(Model model) {
+        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
+
+        model.addAttribute("activePage", "planner");
+        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
+        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
+
+        return "planner";
+    }
+
+    /**
+     * 여행 플래너 목록 페이지
+     */
+    @GetMapping("/planner/list")
+    public String plannerList(Model model) {
+        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
+
+        model.addAttribute("activePage", "planner");
+        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
+        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
+
+        return "planner-list";
+    }
+
+    /**
+     * 여행 플래너 생성 페이지 (목록으로 리다이렉트)
+     */
+    @GetMapping("/planner/create")
+    public String plannerCreate() {
+        return "redirect:/planner/list";
+    }
+
+    /**
+     * 여행 플래너 상세/편집 페이지
+     */
+    @GetMapping("/planner/detail/{id}")
+    public String plannerDetail(@org.springframework.web.bind.annotation.PathVariable Long id, Model model) {
+        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
+
+        model.addAttribute("activePage", "planner");
+        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
+        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
+        model.addAttribute("plannerId", id);
+
+        return "planner-detail";
+    }
+
 
     /**
      * 후기 페이지
