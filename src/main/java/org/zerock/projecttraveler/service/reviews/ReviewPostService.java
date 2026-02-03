@@ -4,10 +4,17 @@ import lombok.RequiredArgsConstructor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.zerock.projecttraveler.dto.reviews.ReviewPostCreateRequest;
+import org.zerock.projecttraveler.dto.reviews.ReviewPostSearchRequest;
+import org.zerock.projecttraveler.entity.User;
 import org.zerock.projecttraveler.entity.reviews.ReviewPost;
+import org.zerock.projecttraveler.repository.UserRepository;
 import org.zerock.projecttraveler.repository.reviews.ReviewPostRepository;
+import org.zerock.projecttraveler.repository.reviews.ReviewPostSpecs;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -17,14 +24,12 @@ import java.util.NoSuchElementException;
 public class ReviewPostService {
 
     private final ReviewPostRepository reviewPostRepository;
+    private final UserRepository userRepository;
 
     private void require(boolean cond, String msg) {
         if (!cond) throw new IllegalArgumentException(msg);
     }
 
-    /**
-     * 여행 후기 저장
-     */
     public Long create(ReviewPostCreateRequest request) {
 
         require(request.getTravelType() != null && !request.getTravelType().isBlank(), "여행 유형을 선택해주세요.");
@@ -33,8 +38,13 @@ public class ReviewPostService {
         require(request.getLevel() != null && !request.getLevel().isBlank(), "난이도를 선택해주세요.");
         require(request.getRegionTags() != null && !request.getRegionTags().isEmpty(), "지역을 1개 이상 선택해주세요.");
 
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User writer = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalStateException("로그인 사용자 정보를 찾을 수 없습니다: " + username));
+
         ReviewPost post = ReviewPost.builder()
-                .writer("testUser") // 로그인 연동 전 임시
+                .writer(writer)
                 .title(request.getTitle())
                 .content(request.getContent())
                 .travelType(request.getTravelType())
@@ -48,46 +58,69 @@ public class ReviewPostService {
                 .budgetExtra(request.getBudgetExtra())
                 .build();
 
-        ReviewPost saved = reviewPostRepository.save(post);
-        return saved.getId();
+        return reviewPostRepository.save(post).getId();
     }
 
-    /**
-     * 최신순 목록 조회 (+ 썸네일/요약 추출)
-     */
+
+    /** * 최신순 목록 조회 (+ 썸네일/요약 추출) */
     public List<ReviewPost> listLatest() {
         List<ReviewPost> posts = reviewPostRepository.findAllByOrderByCreatedAtDesc();
-
-        for (ReviewPost p : posts) {
-            p.setThumbnailUrl(extractFirstImageUrl(p.getContent()));
-            p.setSummary(extractTextOnly(p.getContent()));
-        }
-
+        posts.forEach(this::fillThumbAndSummary);
         return posts;
     }
 
-    private String extractTextOnly(String html) {
-        if (html == null || html.isBlank()) return "";
-        String text = Jsoup.parse(html).text();
-        text = text.replace("\u00A0", " ").trim(); // NBSP 처리
-        return text.length() > 120 ? text.substring(0, 120) + "..." : text;
+    /**
+     * ✅ 검색 + 페이징 (+ 썸네일/요약)
+     * - pageable은 컨트롤러에서 만들어서 전달
+     */
+    private Specification<ReviewPost> alwaysTrue() {
+        return (root, query, cb) -> cb.conjunction();
     }
 
-    /**
-     * 단건 조회 (+ 썸네일/요약 추출)
-     */
+    public Page<ReviewPost> search(ReviewPostSearchRequest req, Pageable pageable) {
+
+        Specification<ReviewPost> spec = alwaysTrue()
+                .and(ReviewPostSpecs.keyword(req.getQ()))
+                .and(ReviewPostSpecs.travelTypeEq(req.getTravelType()))
+                .and(ReviewPostSpecs.themeEq(req.getTheme()))
+                .and(ReviewPostSpecs.periodIn(req.getPeriods()))
+                .and(ReviewPostSpecs.levelIn(req.getLevels()))
+                .and(ReviewPostSpecs.regionTagsOr(req.getTags()))
+                .and(ReviewPostSpecs.budgetTotalBetween(req.getMinBudget(), req.getMaxBudget()));
+
+        Page<ReviewPost> result = reviewPostRepository.findAll(spec, pageable);
+        result.getContent().forEach(this::fillThumbAndSummary);
+        return result;
+    }
+
+
+    /** * 단건 조회 (+ 썸네일/요약 추출) */
     public ReviewPost findById(Long id) {
         ReviewPost post = reviewPostRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("ReviewPost not found: " + id));
 
-        post.setThumbnailUrl(extractFirstImageUrl(post.getContent()));
-        post.setSummary(extractTextOnly(post.getContent()));
+        fillThumbAndSummary(post);
         return post;
     }
 
-    /**
-     * 본문(HTML)에서 첫 번째 이미지 src 추출
-     */
+
+    /** * 공통: 썸네일/요약 채우기 */
+    private void fillThumbAndSummary(ReviewPost p) {
+        p.setThumbnailUrl(extractFirstImageUrl(p.getContent()));
+        p.setSummary(extractTextOnly(p.getContent()));
+    }
+
+
+    /** * HTML에서 텍스트만 추출 후 120자 요약 */
+    private String extractTextOnly(String html) {
+        if (html == null || html.isBlank()) return "";
+        String text = Jsoup.parse(html).text();
+        text = text.replace("\u00A0", " ").trim();
+        return text.length() > 120 ? text.substring(0, 120) + "..." : text;
+    }
+
+
+    /** * 본문(HTML)에서 첫 번째 이미지 src 추출 */
     private String extractFirstImageUrl(String html) {
         if (html == null || html.isBlank()) return null;
 

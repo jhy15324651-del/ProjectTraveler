@@ -1,0 +1,296 @@
+/* =========================
+   REVIEWS POST PAGE
+========================= */
+.reviews-post {
+    width: min(1100px, 92%);
+    margin: 0 auto;
+    padding: 24px 0;
+}
+
+.reviews-post .page-title {
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 20px;
+}
+
+/* ✅ 제목 + 오른쪽 버튼 한 줄 */
+.reviews-post .reviews-post-title-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px; /* 기존 page-title margin 역할 */
+}
+
+/* 기존 page-title margin 제거(줄 겹침 방지) */
+.reviews-post .reviews-post-title-row .page-title{
+    margin: 0;
+}
+
+/* ✅ 검색 버튼(q-btn)과 동일 톤의 pill 버튼 */
+.reviews-post .back-btn{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 999px;
+
+    font-size: 0.86rem;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+
+    border: 1px solid #d9a26a;
+    background: #eea95b; /* 검색 버튼 톤 */
+    color: #fff;
+
+    box-shadow: 0 2px 0 rgba(0,0,0,0.10);
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+
+.reviews-post .back-btn:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+    filter: brightness(0.98);
+}
+
+.reviews-post .back-btn:active{
+    transform: translateY(0);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.10);
+}
+
+
+.write-section {
+    margin-bottom: 30px;
+}
+
+.write-label {
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+/* 조회 페이지와 동일한 hint 스타일 */
+.filter-hint {
+    font-size: 11px;
+    font-weight: 600;
+    color: #9ca3af;
+    margin-bottom: 8px;
+}
+
+.filter-hint.single::before {
+    content: "* ";
+}
+
+.filter-hint.multi::before {
+    content: "* ";
+}
+
+.write-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    font-size: 0.95rem;
+}
+
+/* =========================
+   태그 UI (reviews.css 동일 크기)
+========================= */
+.filter-row {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.filter-label {
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* 🔥 조회 페이지와 동일한 chip 사이즈 */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 7px 12px;
+    border-radius: 999px;
+
+    font-size: 0.86rem;
+    font-weight: 700;
+    line-height: 1;
+
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #374151;
+
+    cursor: pointer;
+    transition: 0.12s ease;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.07);
+}
+
+.chip:hover {
+    transform: translateY(-1px);
+}
+
+.chip.active {
+    background: #f6c792;
+    border-color: #d9a26a;
+    color: #3b2f22;
+}
+
+/* =========================
+   예산 4항목 입력
+========================= */
+.budget-grid{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.budget-item{
+    display: grid;
+    grid-template-columns: 48px 1fr 42px; /* 라벨 / 입력 / 단위 */
+    align-items: center;
+    gap: 8px;
+
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.budget-item .b-label{
+    font-weight: 800;
+    color: #111827;
+}
+
+.budget-item .b-input{
+    height: 40px;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    font-weight: 800;
+}
+
+.budget-item .unit{
+    font-weight: 800;
+    white-space: nowrap;
+    color: #374151;
+}
+
+@media (max-width: 700px){
+    .budget-grid{ grid-template-columns: 1fr; }
+}
+
+
+.budget-write textarea {
+    flex: 1;
+    height: 44px;          /* 🔥 고정 높이 */
+    min-height: 44px;      /* 🔥 줄임 */
+    max-height: 44px;      /* 🔥 늘어나지 않게 */
+    max-width: 300px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    resize: none;          /* 🔥 크기 조절 비활성 */
+    line-height: 1.2;
+    font-size: 0.95rem;
+}
+
+.budget-write .unit {
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+/* =========================
+   Quill
+========================= */
+#editor {
+    height: 320px;
+    background: #fff;
+}
+
+/* =========================
+   제출 버튼
+========================= */
+.submit-btn {
+    width: 100%;
+    height: 52px;
+    border-radius: 14px;
+    border: none;
+    background: #3b82f6;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+/* ✅ 선택 요약 바 */
+.reviews-post .tag-summary-mini{
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.reviews-post .tag-summary-mini .empty{
+    color: #94a3b8;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+/* ✅ 요약칩(필터칩과 톤 맞춤) */
+.reviews-post .tag-summary-mini .chip{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 6px 10px;
+    border-radius: 999px;
+
+    font-size: 0.82rem;
+    font-weight: 750;
+    line-height: 1;
+
+    background: #ffe1bf;
+    border: 1px solid #e6b17a;
+    color: #3b2f22;
+
+    box-shadow: 0 2px 0 rgba(0,0,0,0.06);
+}
+
+/* ✅ 예산은 항상 아랫줄(예시 이미지처럼) */
+.reviews-post .tag-summary-mini .chip.budget{
+    flex-basis: 100%;
+    border-radius: 12px;
+    justify-content: flex-start;
+    white-space: normal;
+
+    padding: 8px 10px;
+    background: #fff7ed;
+    border-color: #f0c38d;
+    color: #4b3a2a;
+}
+
+.ql-editor img {
+    max-width: 100%;
+    height: auto;
+}
+

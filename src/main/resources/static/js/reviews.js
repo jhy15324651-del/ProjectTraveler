@@ -1,16 +1,23 @@
-// reviews.js
+// reviews.js (복붙용 최적화 완성본)
+// DTO 필드: q, travelType/theme, periods(List), levels(List), tags(List), minBudget/maxBudget, page/size
+
 document.addEventListener("DOMContentLoaded", () => {
-    const filterForm = document.getElementById("filterForm"); // (리스트 페이지)
+    const filterForm = document.getElementById("filterForm");
+    if (!filterForm) return; // ✅ 리스트 페이지 아닐 때는 즉시 종료
 
     // ==============================
-    // multi tag hidden input 생성 영역 매핑
+    // multi hidden input 생성 매핑
     // ==============================
     const multiWrap = {
-        period: { wrapId: "periodInputs", inputName: "periodTags" },
-        // budget은 슬라이더로 변경했으므로 budgetTags는 사용하지 않음
-        level:  { wrapId: "levelInputs",  inputName: "levelTags" },
-        region: { wrapId: "regionInputs", inputName: "regionTags" }
+        period: { wrapId: "periodInputs", inputName: "periods" },
+        level:  { wrapId: "levelInputs",  inputName: "levels"  },
+        region: { wrapId: "tagInputs",    inputName: "tags"    }
     };
+
+    // ==============================
+    // Utils
+    // ==============================
+    const params = new URLSearchParams(window.location.search);
 
     function clearGroupActive(group) {
         group.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
@@ -32,6 +39,11 @@ document.addEventListener("DOMContentLoaded", () => {
             .filter(v => v !== "");
     }
 
+    function resetPage() {
+        const pageInput = document.getElementById("f_page");
+        if (pageInput) pageInput.value = "0";
+    }
+
     function syncMultiHiddenInputs(key, values) {
         const cfg = multiWrap[key];
         if (!cfg) return;
@@ -50,170 +62,118 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==============================
-    // 미니 요약(태그 칩) 렌더링
+    // Mini Summary
     // ==============================
     function renderMiniSummary() {
         const box = document.getElementById("miniSummary");
         if (!box) return;
 
-        // 1) 기존 내용 비우기
         box.innerHTML = "";
 
-        // 2) 라벨 매핑 (single 값 -> 한글 표시)
-        const typeMap = {
-            solo: "혼자",
-            couple: "커플",
-            family: "가족",
-            friends: "친구",
-        };
+        const typeMap = { solo: "혼자", couple: "커플", family: "가족", friends: "친구" };
+        const themeMap = { freedom: "자유여행", healing: "힐링", food: "맛집", activity: "액티비티", nature: "자연" };
 
-        const themeMap = {
-            freedom : "자유여행",
-            healing: "힐링",
-            food: "맛집",
-            activity: "액티비티",
-            nature: "자연",
-        };
-
-        // 3) 칩 생성 유틸
         const addChip = (label, className = "") => {
             const text = (label ?? "").toString().trim();
-            if (!text) return; // ✅ 빈칩 생성 방지
-
+            if (!text) return;
             const span = document.createElement("span");
             span.className = `chip ${className}`.trim();
             span.textContent = text;
             box.appendChild(span);
         };
 
-
-        // 4) 선택값 모으기
         const chips = [];
 
-        // (A) 단일: 여행유형
-        const typeVal = document.getElementById("f_type")?.value || "";
+        // 단일: travelType/theme
+        const typeVal = document.getElementById("f_travelType")?.value || "";
         if (typeVal) chips.push(typeMap[typeVal] || typeVal);
 
-        // (B) 단일: 테마
         const themeVal = document.getElementById("f_theme")?.value || "";
         if (themeVal) chips.push(themeMap[themeVal] || themeVal);
 
-        // (C) 복수: 기간
-        document.querySelectorAll("#periodInputs input[type='hidden']").forEach((inp) => {
+        // 다중: periods/levels/tags
+        document.querySelectorAll("#periodInputs input[type='hidden']").forEach(inp => {
             const v = (inp.value || "").trim();
-            if (!v) return;
-            chips.push(v.includes("_") ? v.split("_").slice(1).join("_") : v); // d_2박3일 -> 2박3일
+            if (v) chips.push(v);
         });
 
-        // (D) 복수: 난이도
-        document.querySelectorAll("#levelInputs input[type='hidden']").forEach((inp) => {
+        document.querySelectorAll("#levelInputs input[type='hidden']").forEach(inp => {
             const v = (inp.value || "").trim();
-            if (!v) return;
-            chips.push(v.includes("_") ? v.split("_").slice(1).join("_") : v); // lv_초급 -> 초급
+            if (v) chips.push(v);
         });
 
-        // (E) 복수: 지역
-        document.querySelectorAll("#regionInputs input[type='hidden']").forEach((inp) => {
+        document.querySelectorAll("#tagInputs input[type='hidden']").forEach(inp => {
             const v = (inp.value || "").trim();
-            if (!v) return;
-            chips.push(v.includes("_") ? v.split("_").slice(1).join("_") : v); // r_도쿄 -> 도쿄
+            if (v) chips.push(v);
         });
 
-        // 5) 일반 칩들 먼저 출력
         if (chips.length === 0) {
             const empty = document.createElement("span");
             empty.className = "empty";
             empty.textContent = "선택된 조건 없음";
             box.appendChild(empty);
         } else {
-            chips.forEach((label) => addChip(label));
+            chips.forEach(label => addChip(label));
         }
 
-        // 6) 예산은 무조건 아래줄(항상 마지막에 추가)
-        const min = parseInt(document.getElementById("f_budgetMin")?.value || "0", 10);
-        const max = parseInt(document.getElementById("f_budgetMax")?.value || "5000000", 10);
-
-        const fmt = (n) => (isNaN(n) ? "0" : n).toLocaleString("ko-KR");
-        const budgetText = `예산 범위 : ${fmt(min)}원 ~ ${fmt(max)}원`;
-        addChip(budgetText, "budget");
+        // 예산
+        const min = parseInt(document.getElementById("f_minBudget")?.value || "0", 10);
+        const max = parseInt(document.getElementById("f_maxBudget")?.value || "5000000", 10);
+        const fmt = n => (isNaN(n) ? "0" : n).toLocaleString("ko-KR");
+        addChip(`예산 범위 : ${fmt(min)}원 ~ ${fmt(max)}원`, "budget");
     }
 
     // ==============================
-    // 칩 클릭 핸들러 (필터 선택)
+    // URL -> UI 복원 (핵심)
     // ==============================
-    document.querySelectorAll(".filter-chips").forEach(group => {
-        const key = group.dataset.key;     // type/theme/period/level/region
-        const mode = group.dataset.mode;   // single / multi-or / multi-toggle
+    function restoreSingle(key, paramName) {
+        const group = document.querySelector(`.filter-chips[data-key="${key}"]`);
+        if (!group) return;
 
-        group.addEventListener("click", (e) => {
-            const btn = e.target.closest(".chip");
-            if (!btn) return;
+        const val = params.get(paramName) || "";
 
-            const val = btn.dataset.value;
+        // hidden
+        const hidden = document.getElementById("f_" + key);
+        if (hidden) hidden.value = val;
 
-            // 1) "전체" 클릭
-            if (val === "") {
-                clearGroupActive(group);
-                btn.classList.add("active");
+        // chips
+        clearGroupActive(group);
+        const btn = group.querySelector(`.chip[data-value="${val}"]`) || group.querySelector(`.chip[data-value=""]`);
+        if (btn) btn.classList.add("active");
+    }
 
-                // single hidden 처리
-                if (mode === "single") {
-                    const hidden = document.getElementById("f_" + key);
-                    if (hidden) hidden.value = "";
-                }
+    function restoreMulti(key, paramName) {
+        const group = document.querySelector(`.filter-chips[data-key="${key}"]`);
+        if (!group) return;
 
-                // multi hidden 처리
-                if (mode.startsWith("multi")) {
-                    syncMultiHiddenInputs(key, []);
-                }
+        const values = params.getAll(paramName) || [];
 
-                renderMiniSummary();
-                return;
-            }
+        syncMultiHiddenInputs(key, values);
 
-            // 2) 단일 선택
-            if (mode === "single") {
-                clearGroupActive(group);
-                btn.classList.add("active");
-                const hidden = document.getElementById("f_" + key);
-                if (hidden) hidden.value = val;
+        clearGroupActive(group);
+        if (values.length === 0) {
+            setAllActive(group);
+            return;
+        }
 
-                renderMiniSummary();
-                return;
-            }
-
-            // 3) 다중 선택
-            unsetAllActive(group);
-            btn.classList.toggle("active");
-
-            const selected = getSelectedValues(group);
-
-            // 아무것도 선택 안 하면 전체로 복귀
-            if (selected.length === 0) {
-                clearGroupActive(group);
-                setAllActive(group);
-                syncMultiHiddenInputs(key, []);
-
-                renderMiniSummary();
-                return;
-            }
-
-            syncMultiHiddenInputs(key, selected);
-            renderMiniSummary();
+        unsetAllActive(group);
+        values.forEach(v => {
+            const btn = group.querySelector(`.chip[data-value="${v}"]`);
+            if (btn) btn.classList.add("active");
         });
-    });
+    }
 
     // ==============================
-    // 예산 슬라이더 (듀얼 range)
+    // Budget slider
     // ==============================
     const minInput  = document.getElementById("budgetMin");
     const maxInput  = document.getElementById("budgetMax");
     const minLabel  = document.getElementById("budgetMinLabel");
     const maxLabel  = document.getElementById("budgetMaxLabel");
-    const hiddenMin = document.getElementById("f_budgetMin");
-    const hiddenMax = document.getElementById("f_budgetMax");
 
-    // ✅ 50만원 단위 구분선(ticks) 컨테이너
+    const hiddenMin = document.getElementById("f_minBudget");
+    const hiddenMax = document.getElementById("f_maxBudget");
+
     const ticksWrap = document.getElementById("budgetTicks");
     const rangeBar  = document.getElementById("budgetRange");
 
@@ -221,7 +181,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return Number(n).toLocaleString("ko-KR") + "원";
     }
 
-    function syncBudget() {
+    // ✅ 초기 로드에는 resetPage를 하면 안 됨 (page 복원이 깨짐)
+    function syncBudget({ reset = false } = {}) {
         if (!minInput || !maxInput) return;
 
         let minVal = parseInt(minInput.value, 10);
@@ -238,30 +199,26 @@ document.addEventListener("DOMContentLoaded", () => {
         if (hiddenMin) hiddenMin.value = String(minVal);
         if (hiddenMax) hiddenMax.value = String(maxVal);
 
-        // ✅ 선택 구간 하이라이트 갱신
         if (rangeBar) {
             const min = parseInt(minInput.min, 10);
             const max = parseInt(minInput.max, 10);
-
             const left  = ((minVal - min) / (max - min)) * 100;
             const right = ((maxVal - min) / (max - min)) * 100;
-
             rangeBar.style.left  = left + "%";
             rangeBar.style.width = (right - left) + "%";
         }
 
-        // ✅ 예산 변경 시 요약도 즉시 갱신
+        if (reset) resetPage();
         renderMiniSummary();
     }
 
-    // ✅ 50만원 단위 구분선 + 100만원 단위 라벨
     function renderBudgetTicks() {
         if (!ticksWrap || !minInput) return;
 
-        const min = parseInt(minInput.min, 10);   // 0
-        const max = parseInt(minInput.max, 10);   // 5000000
-        const tickStep  = 500000;                 // 구분선 50만
-        const labelStep = 1000000;                // 라벨 100만
+        const min = parseInt(minInput.min, 10);
+        const max = parseInt(minInput.max, 10);
+        const tickStep  = 500000;   // 50만
+        const labelStep = 1000000;  // 100만
 
         ticksWrap.innerHTML = "";
 
@@ -284,28 +241,104 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         };
 
-        // ✅ 0도 라벨 포함
         addTick(min, true);
-
-        // ✅ 50만 단위 tick, 100만 단위 라벨(끝 500만 포함)
-        for (let v = tickStep; v <= max; v += tickStep) {
-            const withLabel = (v % labelStep === 0);
-            addTick(v, withLabel);
-        }
+        for (let v = tickStep; v <= max; v += tickStep) addTick(v, (v % labelStep === 0));
     }
+
+    // ==============================
+    // 1) URL 기반 복원 먼저
+    // ==============================
+    // single
+    restoreSingle("travelType", "travelType");
+    restoreSingle("theme", "theme");
+
+    // multi
+    restoreMulti("period", "periods");
+    restoreMulti("level", "levels");
+    restoreMulti("region", "tags");
+
+    // budget (URL 값 있으면 range에도 반영)
+    if (minInput && maxInput) {
+        const minQ = params.get("minBudget");
+        const maxQ = params.get("maxBudget");
+        if (minQ !== null) minInput.value = minQ;
+        if (maxQ !== null) maxInput.value = maxQ;
+    }
+    syncBudget({ reset: false });
+    renderBudgetTicks();
+
+    // page/size 복원 (있을 때만)
+    const pageHidden = document.getElementById("f_page");
+    const sizeHidden = document.getElementById("f_size");
+    if (pageHidden && params.get("page") !== null) pageHidden.value = params.get("page");
+    if (sizeHidden && params.get("size") !== null) sizeHidden.value = params.get("size");
+
+    // ==============================
+    // 2) 이벤트 바인딩 (사용자 조작 시 page=0)
+    // ==============================
+    document.querySelectorAll(".filter-chips").forEach(group => {
+        const key = group.dataset.key;
+        const mode = group.dataset.mode;
+
+        group.addEventListener("click", (e) => {
+            const btn = e.target.closest(".chip");
+            if (!btn) return;
+
+            const val = btn.dataset.value;
+
+            // (1) 전체
+            if (val === "") {
+                clearGroupActive(group);
+                btn.classList.add("active");
+
+                if (mode === "single") {
+                    const hidden = document.getElementById("f_" + key);
+                    if (hidden) hidden.value = "";
+                } else if (mode.startsWith("multi")) {
+                    syncMultiHiddenInputs(key, []);
+                }
+
+                resetPage();
+                renderMiniSummary();
+                return;
+            }
+
+            // (2) 단일
+            if (mode === "single") {
+                clearGroupActive(group);
+                btn.classList.add("active");
+
+                const hidden = document.getElementById("f_" + key);
+                if (hidden) hidden.value = val;
+
+                resetPage();
+                renderMiniSummary();
+                return;
+            }
+
+            // (3) 다중
+            unsetAllActive(group);
+            btn.classList.toggle("active");
+
+            const selected = getSelectedValues(group);
+
+            if (selected.length === 0) {
+                clearGroupActive(group);
+                setAllActive(group);
+                syncMultiHiddenInputs(key, []);
+                resetPage();
+                renderMiniSummary();
+                return;
+            }
+
+            syncMultiHiddenInputs(key, selected);
+            resetPage();
+            renderMiniSummary();
+        });
+    });
 
     if (minInput && maxInput) {
-        minInput.addEventListener("input", syncBudget);
-        maxInput.addEventListener("input", syncBudget);
-
-        syncBudget();         // 초기 표시 (+ 요약 갱신 포함)
-        renderBudgetTicks();  // 구분선 렌더링
+        minInput.addEventListener("input", () => syncBudget({ reset: true }));
+        maxInput.addEventListener("input", () => syncBudget({ reset: true }));
     }
-
-    // ==============================
-    // ✅ 최초 1회 렌더 (칩/예산 포함)
-    // ==============================
-    renderMiniSummary();
-
-    if (!document.getElementById("filterForm")) return; // 리스트 페이지 아니면 실행 안 함
 });

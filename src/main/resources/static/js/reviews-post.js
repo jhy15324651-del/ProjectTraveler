@@ -1,4 +1,4 @@
-// reviews-post.js
+// reviews-post.js (최종 완전본)
 document.addEventListener("DOMContentLoaded", () => {
 
     // =========================
@@ -19,16 +19,119 @@ document.addEventListener("DOMContentLoaded", () => {
         return v ? parseInt(v, 10) : 0;
     };
 
-    // ✅ 작성 폼 찾기(너 프로젝트에서 가장 안전한 방식)
+    // ✅ 작성 폼 찾기(안전)
     const postForm =
         qs("#postForm") ||
         qs("#reviewPostForm") ||
         qs("form[method='post'][action*='reviews']") ||
         qs("form");
 
-    // 작성 페이지가 아니라면 그냥 종료
-    // (작성 페이지에만 miniSummary/칩이 존재할 것이므로)
-    if (!qs("#miniSummary") || !postForm) return;
+    // 작성 페이지 아니면 종료
+    if (!postForm || !qs("#miniSummary")) return;
+
+    // =========================
+    // ✅ CSRF 유틸 (meta는 web/unity 껍데기에 존재)
+    // =========================
+    function getCsrfHeaders() {
+        const tokenMeta = qs('meta[name="_csrf"]');
+        const headerMeta = qs('meta[name="_csrf_header"]');
+        if (!tokenMeta || !headerMeta) return {};
+        return { [headerMeta.content]: tokenMeta.content };
+    }
+
+    // =========================
+    // ✅ Quill 초기화 + 이미지 업로드
+    // =========================
+    let quill = null;
+
+    const editorEl = qs("#editor");
+    const contentHidden = qs("#content");
+
+    // Quill 라이브러리가 로드되어 있고 editor가 있으면 초기화
+    if (editorEl && window.Quill) {
+        const toolbarOptions = [
+            [{ header: [1, 2, 3, false] }],
+            ["bold", "italic", "underline", "strike"],
+            [{ color: [] }, { background: [] }],
+            [{ list: "ordered" }, { list: "bullet" }],
+            [{ align: [] }],
+            ["blockquote", "code-block"],
+            ["link", "image"],
+            ["clean"]
+        ];
+
+        function imageHandler() {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = "image/*";
+            input.click();
+
+            input.onchange = async () => {
+                const file = input.files && input.files[0];
+                if (!file) return;
+
+                // 1차 용량 제한(5MB)
+                const maxSize = 5 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    alert("이미지는 최대 5MB까지 업로드할 수 있어요.");
+                    return;
+                }
+
+                try {
+                    const formData = new FormData();
+                    formData.append("image", file);
+
+                    const res = await fetch("/reviews/upload-image", {
+                        method: "POST",
+                        headers: { ...getCsrfHeaders() },
+                        body: formData
+                    });
+
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        alert(err.error || "이미지 업로드에 실패했습니다.");
+                        return;
+                    }
+
+                    const data = await res.json();
+                    const imageUrl = data.url;
+
+                    if (!imageUrl) {
+                        alert("서버 응답에 url이 없습니다.");
+                        return;
+                    }
+
+                    // 커서 위치에 삽입
+                    const range = quill.getSelection(true);
+                    const index = range ? range.index : quill.getLength();
+
+                    quill.insertEmbed(index, "image", imageUrl, "user");
+                    quill.insertText(index + 1, "\n", "user");
+                    quill.setSelection(index + 2, 0);
+
+                } catch (e) {
+                    console.error(e);
+                    alert("업로드 중 오류가 발생했습니다.");
+                }
+            };
+        }
+
+        quill = new Quill("#editor", {
+            theme: "snow",
+            placeholder: "여행 중 느낀 점, 팁, 추천 코스를 자유롭게 작성해 주세요",
+            modules: {
+                toolbar: {
+                    container: toolbarOptions,
+                    handlers: { image: imageHandler }
+                }
+            }
+        });
+
+        // 서버 validation 실패로 다시 돌아왔을 때 contentHidden 값이 있으면 복원
+        if (contentHidden && contentHidden.value && contentHidden.value.trim().length > 0) {
+            quill.root.innerHTML = contentHidden.value;
+        }
+    }
 
     // =========================
     // ✅ 필수 태그 검증
@@ -62,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 미리보기(요약 바)
     // =========================
     function renderMiniSummary() {
-        const box = document.getElementById("miniSummary");
+        const box = qs("#miniSummary");
         if (!box) return;
 
         box.innerHTML = "";
@@ -72,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const addChip = (label, className = "") => {
             const text = (label ?? "").toString().trim();
-            if (!text) return; // ✅ 빈칩 방지
+            if (!text) return;
             const span = document.createElement("span");
             span.className = `chip ${className}`.trim();
             span.textContent = text;
@@ -108,18 +211,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const flight = readBudget("budgetFlight");
-
-        // ✅ 숙박: budgetLodging(서비스) or budgetStay(기존)
         const lodging = readBudget("budgetLodging") || readBudget("budgetStay");
-
-        // ✅ 식비
         const food = readBudget("budgetFood");
-
-        // ✅ 기타: budgetExtra(서비스) or budgetEtc(기존)
         const extra = readBudget("budgetExtra") || readBudget("budgetEtc");
 
         const total = flight + lodging + food + extra;
-
 
         addChip(`항공 ${fmt(flight)}만`);
         addChip(`숙박 ${fmt(lodging)}만`);
@@ -127,8 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
         addChip(`기타 ${fmt(extra)}만`);
         addChip(`총액 ${fmt(total)}만 원`, "budget");
 
-
-        const totalHidden = document.getElementById("budgetTotal");
+        const totalHidden = qs("#budgetTotal");
         if (totalHidden) totalHidden.value = String(total);
     }
 
@@ -139,7 +234,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const key = group.dataset.key;               // travelType/theme/period/level/region
         const mode = group.dataset.mode || "single"; // single | multi
 
-        // 단일 hidden은 "같은 row 안"에서 찾되, 없으면 전체에서 fallback
         const row = group.closest(".filter-row");
         const singleHidden =
             row?.querySelector(`input[name="${key}"]`) || qs(`input[name="${key}"]`);
@@ -160,14 +254,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // ✅ 다중(region 등)
+            // ✅ 다중(region)
             if (mode === "multi") {
                 btn.classList.toggle("active");
 
-                // regionTags hidden input들을 갱신: wrapper가 있으면 거기, 없으면 form 안에서 관리
                 const wrap =
                     row?.querySelector(".region-inputs") ||
-                    qs("#regionInputs") ||
                     qs(".region-inputs") ||
                     postForm;
 
@@ -204,12 +296,20 @@ document.addEventListener("DOMContentLoaded", () => {
     renderMiniSummary();
 
     // =========================
-    // ✅ submit 차단 (작성 페이지 전용)
+    // ✅ submit 처리
+    // - 태그 검증
+    // - Quill 내용 HTML -> hidden(content)
     // =========================
     postForm.addEventListener("submit", (e) => {
         if (!validateRequiredTags()) {
             e.preventDefault();
             e.stopPropagation();
+            return;
+        }
+
+        // ✅ quill이 있으면 content에 저장
+        if (quill && contentHidden) {
+            contentHidden.value = quill.root.innerHTML;
         }
     });
 });

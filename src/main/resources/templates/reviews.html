@@ -1,49 +1,46 @@
-<!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>여행 후기 게시판 - 일본 여행 LMS</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
-</head>
-<body class="main-page">
-
-<!-- ✅ fetch 없이 Thymeleaf로 헤더 삽입 -->
-<div th:replace="fragments/main-header :: mainHeader"></div>
-
-<main class="container reviews">
+<!-- templates/reviews.html -->
+<div th:fragment="reviewsContent" class="container reviews">
 
     <div class="reviews-title-row">
         <h1 class="page-title">여행 후기</h1>
 
-        <a class="write-btn" th:href="@{/reviews-post}" href="/reviews-post">
+        <!-- ✅ post 아직 분리 전: 임시로 둘 다 /reviews-post (다음 단계에서 -unity-post로 분리) -->
+        <a class="write-btn"
+           th:href="${isUnity == true} ? @{/reviews-unity-post} : @{/reviews-post}">
             후기 작성하기
         </a>
     </div>
 
     <!-- =========================
-         필터 패널 (이미지 스타일 모방)
+         필터 패널
     ========================== -->
-    <form id="filterForm" method="get" th:action="@{/reviews}">
+    <!-- ✅ action 제거: 현재 URL(/reviews 또는 /reviews-unity)로 GET 재요청 -->
+    <form id="filterForm" method="get">
+
+        <!-- ✅ 페이징 상태 (JS에서 resetPage()로 제어) -->
+        <input type="hidden" id="f_page" name="page" value="0">
+        <input type="hidden" id="f_size" name="size" value="12">
+
         <section class="filter-panel">
 
-            <!-- 여행 유형 (택1) -->
+            <!-- 여행 유형 (택1) : 현재 SearchRequest에 없으므로 서버 전송 X -->
             <div class="filter-row">
                 <div class="filter-label">
                     여행유형
                     <div class="filter-hint single">* 한 개만 선택</div>
                 </div>
-                <div class="filter-chips" data-key="type" data-mode="single">
+                <div class="filter-chips" data-key="travelType" data-mode="single">
                     <button type="button" class="chip active" data-value="">전체</button>
                     <button type="button" class="chip" data-value="solo">혼자</button>
                     <button type="button" class="chip" data-value="couple">커플</button>
                     <button type="button" class="chip" data-value="family">가족</button>
                     <button type="button" class="chip" data-value="friends">친구</button>
                 </div>
-                <input type="hidden" name="type" id="f_type" value="">
+                <!-- ✅ 서버 전송 안 함 (name 제거) -->
+                <input type="hidden" id="f_travelType" name="travelType" value="">
             </div>
 
-            <!-- 테마 (택1) -->
+            <!-- 테마 (택1) : 현재 SearchRequest에 없으므로 서버 전송 X -->
             <div class="filter-row">
                 <div class="filter-label">
                     테마
@@ -56,12 +53,12 @@
                     <button type="button" class="chip" data-value="food">맛집</button>
                     <button type="button" class="chip" data-value="activity">액티비티</button>
                     <button type="button" class="chip" data-value="nature">자연</button>
-
                 </div>
-                <input type="hidden" name="theme" id="f_theme" value="">
+                <!-- ✅ 서버 전송 안 함 (name 제거) -->
+                <input type="hidden" id="f_theme" name="theme" value="">
             </div>
 
-            <!-- 예산 (슬라이더: 5만원 ~ 500만원 / 100원 단위) -->
+            <!-- 예산: ✅ DTO에 맞게 minBudget / maxBudget 로 전송 -->
             <div class="filter-row">
                 <div class="filter-label">예산</div>
 
@@ -76,36 +73,23 @@
                         <div class="reviews-budget-track">
                             <div class="reviews-budget-range" id="budgetRange"></div>
                         </div>
-                        <!-- 최소 -->
-                        <input
-                                type="range"
-                                id="budgetMin"
-                                min="0"
-                                max="5000000"
-                                step="100"
-                                value="0"
-                        />
 
-                        <!-- 최대 -->
-                        <input
-                                type="range"
-                                id="budgetMax"
-                                min="0"
-                                max="5000000"
-                                step="100"
-                                value="5000000"
-                        />
+                        <input type="range" id="budgetMin"
+                               min="0" max="5000000" step="100" value="0"/>
+
+                        <input type="range" id="budgetMax"
+                               min="0" max="5000000" step="100" value="5000000"/>
                     </div>
 
                     <div class="reviews-budget-ticks" id="budgetTicks"></div>
 
-                    <!-- 서버로 전달될 값 -->
-                    <input type="hidden" name="budgetMin" id="f_budgetMin" value="50000">
-                    <input type="hidden" name="budgetMax" id="f_budgetMax" value="5000000">
+                    <!-- ✅ 서버로 전달될 값 -->
+                    <input type="hidden" name="minBudget" id="f_minBudget" value="0">
+                    <input type="hidden" name="maxBudget" id="f_maxBudget" value="5000000">
                 </div>
             </div>
 
-            <!-- 기간 (복수 OR 고정 / prefix d_) -->
+            <!-- 기간 : 현재 SearchRequest에 없으므로 서버 전송 X -->
             <div class="filter-row">
                 <div class="filter-label">
                     기간
@@ -114,16 +98,16 @@
 
                 <div class="filter-chips" data-key="period" data-mode="multi-or">
                     <button type="button" class="chip active" data-value="">전체</button>
-                    <button type="button" class="chip" data-value="d_당일치기">당일</button>
-                    <button type="button" class="chip" data-value="d_1박2일">1박2일</button>
-                    <button type="button" class="chip" data-value="d_2박3일">2박3일</button>
-                    <button type="button" class="chip" data-value="d_3박4일">3박4일</button>
+                    <button type="button" class="chip" data-value="당일치기">당일</button>
+                    <button type="button" class="chip" data-value="1박2일">1박2일</button>
+                    <button type="button" class="chip" data-value="2박3일">2박3일</button>
+                    <button type="button" class="chip" data-value="3박4일">3박4일</button>
+
                 </div>
-                <!-- JS가 periodTags hidden input들을 여기에 생성 -->
                 <div id="periodInputs"></div>
             </div>
 
-            <!-- 난이도 (복수 OR) -->
+            <!-- 난이도 : 현재 SearchRequest에 없으므로 서버 전송 X -->
             <div class="filter-row">
                 <div class="filter-label">
                     난이도
@@ -132,65 +116,59 @@
 
                 <div class="filter-chips" data-key="level" data-mode="multi-or">
                     <button type="button" class="chip active" data-value="">전체</button>
-                    <button type="button" class="chip" data-value="lv_초급">초급</button>
-                    <button type="button" class="chip" data-value="lv_중급">중급</button>
-                    <button type="button" class="chip" data-value="lv_상급">상급</button>
+                    <button type="button" class="chip" data-value="초급">초급</button>
+                    <button type="button" class="chip" data-value="중급">중급</button>
+                    <button type="button" class="chip" data-value="상급">상급</button>
+
                 </div>
                 <div id="levelInputs"></div>
             </div>
 
-            <!-- 지역  -->
+            <!-- ✅ 지역: DTO의 tags(List<String>)로 OR 검색 -->
             <div class="filter-row region-row">
-
-                <!-- ✅ 왼쪽: 라벨 전용 -->
                 <div class="filter-label">
                     지역
                     <div class="filter-hint multi">* 중복 선택 가능</div>
                 </div>
 
-                <!-- ✅ 오른쪽: 실제 UI -->
                 <div class="region-inline">
                     <div class="filter-chips" data-key="region" data-mode="multi-toggle">
                         <button type="button" class="chip active" data-value="">전체</button>
-                        <button type="button" class="chip" data-value="r_도쿄">도쿄</button>
-                        <button type="button" class="chip" data-value="r_오사카">오사카</button>
-                        <button type="button" class="chip" data-value="r_교토">교토</button>
-                        <button type="button" class="chip" data-value="r_후쿠오카">후쿠오카</button>
-                        <button type="button" class="chip" data-value="r_삿포로">삿포로</button>
+                        <button type="button" class="chip" data-value="도쿄">도쿄</button>
+                        <button type="button" class="chip" data-value="오사카">오사카</button>
+                        <button type="button" class="chip" data-value="교토">교토</button>
+                        <button type="button" class="chip" data-value="후쿠오카">후쿠오카</button>
+                        <button type="button" class="chip" data-value="삿포로">삿포로</button>
                     </div>
                 </div>
 
-                <!-- ✅ (3) 설명문: 아래로 내려서 "2열 span" 처리할 대상 -->
                 <div class="filter-hint sub one-line region-desc">
                     * 지역 중복 선택 시 선택한 지역이 모두 포함된 게시글이 먼저 보입니다.
                 </div>
 
-                <div id="regionInputs"></div>
+                <!-- ✅ JS가 name="tags" hidden input들을 여기에 생성 -->
+                <div id="tagInputs"></div>
             </div>
 
             <!-- ✅ 하단 검색 툴바 -->
             <div class="reviews search-toolbar">
 
-                <!-- (2) 사용자 태그 요약 UI (칩들 들어갈 자리) -->
                 <div class="tag-summary-mini" id="miniSummary">
                     <span class="empty">선택된 조건 없음</span>
-                    <!-- JS로 chip 넣을 자리 -->
                 </div>
 
-                <!-- (3-1) 드롭다운 -->
-                <select name="qField" class="q-field">
+                <!-- ✅ SearchRequest에는 qField가 없으므로 UI 유지하되 서버로는 보내지 않음 -->
+                <select class="q-field">
                     <option value="tc">제목 + 내용</option>
                     <option value="t">제목</option>
                     <option value="c">내용</option>
                 </select>
 
-                <!-- (3-2) 검색 textarea (1줄 input처럼) -->
+                <!-- ✅ DTO: q -->
                 <textarea name="q" class="q-input" rows="1" placeholder="검색어를 입력하세요"></textarea>
 
-                <!-- (3-3) 검색 버튼 (작게, 오른쪽 끝) -->
                 <button type="submit" class="q-btn">검색</button>
             </div>
-
 
         </section>
     </form>
@@ -201,9 +179,11 @@
     <section class="post-list">
 
         <article class="post-card" th:each="post : ${posts}">
-            <a class="post-link" th:href="@{/reviews/{id}(id=${post.id})}">
+            <a class="post-link"
+               th:href="${isUnity == true}
+                     ? @{/reviews-unity/{id}(id=${post.id})}
+                     : @{/reviews/{id}(id=${post.id})}">
 
-                <!-- 왼쪽: 섬네일 -->
                 <div class="post-thumb">
                     <img th:if="${post.thumbnailUrl != null}"
                          th:src="${post.thumbnailUrl}"
@@ -215,30 +195,27 @@
                     </div>
                 </div>
 
-                <!-- 오른쪽: 콘텐츠 -->
                 <div class="post-body">
 
                     <h3 class="post-title" th:text="${post.title}">제목</h3>
 
                     <div class="post-meta">
-                        <!-- 여행유형: 코드 -> 한글 -->
                         <span class="badge"
                               th:if="${post.travelType != null}"
                               th:text="${post.travelType == 'solo' ? '혼자' :
-                                         post.travelType == 'couple' ? '커플' :
-                                         post.travelType == 'family' ? '가족' :
-                                         post.travelType == 'friends' ? '친구' :
-                                         post.travelType}">유형</span>
+                                       post.travelType == 'couple' ? '커플' :
+                                       post.travelType == 'family' ? '가족' :
+                                       post.travelType == 'friends' ? '친구' :
+                                       post.travelType}">유형</span>
 
-                        <!-- 테마: 코드 -> 한글 -->
                         <span class="badge"
                               th:if="${post.theme != null}"
                               th:text="${post.theme == 'freedom' ? '자유여행' :
-                                         post.theme == 'healing' ? '힐링' :
-                                         post.theme == 'food' ? '맛집' :
-                                         post.theme == 'activity' ? '액티비티' :
-                                         post.theme == 'nature' ? '자연' :
-                                         post.theme}">테마</span>
+                                       post.theme == 'healing' ? '힐링' :
+                                       post.theme == 'food' ? '맛집' :
+                                       post.theme == 'activity' ? '액티비티' :
+                                       post.theme == 'nature' ? '자연' :
+                                       post.theme}">테마</span>
 
                         <span class="badge"
                               th:if="${post.period != null}"
@@ -252,15 +229,14 @@
                               th:each="tag : ${post.regionTags}"
                               th:text="${tag}">지역</span>
 
-                        <!-- ✅ 총액 칩 (만 원 단위) -->
                         <span class="badge total"
                               th:text="|총액: ${#numbers.formatInteger(
-        (post.budgetFlight  ?: 0)
-      + (post.budgetLodging ?: 0)
-      + (post.budgetFood   ?: 0)
-      + (post.budgetExtra  ?: 0)
-      , 0, 'COMMA')}만|">
-</span>
+                                    (post.budgetFlight  ?: 0)
+                                  + (post.budgetLodging ?: 0)
+                                  + (post.budgetFood   ?: 0)
+                                  + (post.budgetExtra  ?: 0)
+                                  , 0, 'COMMA')}만|">
+                        </span>
                     </div>
 
                     <p class="post-desc"
@@ -272,846 +248,10 @@
             </a>
         </article>
 
-
-        <!-- 데이터 없을 때 -->
         <div class="empty" th:if="${posts == null || #lists.isEmpty(posts)}">
             조건에 맞는 게시글이 없습니다.
         </div>
 
     </section>
 
-</main>
-
-<!-- JS 분리 로딩 -->
-<script th:src="@{/js/main.js}" src="/js/main.js"></script>
-<script th:src="@{/js/reviews.js}" src="/js/reviews.js"></script>
-
-<style>
-    /* ===============================
-       REVIEWS PAGE ONLY (namespaced)
-    ================================ */
-
-    /* 레이아웃 */
-    .reviews {
-        width: min(1100px, 92%);
-        margin: 0 auto;
-        padding: 24px 0 24px;
-    }
-
-    .reviews .page-title {
-        font-size: 28px;
-        font-weight: 800;
-        margin: 10px 0 18px;
-    }
-
-    /* ✅ 제목 + 오른쪽 버튼 한 줄 */
-    .reviews .reviews-title-row{
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin: 10px 0 18px; /* 기존 page-title margin 역할 */
-    }
-
-    /* 기존 page-title margin 제거(줄 겹침 방지) */
-    .reviews .reviews-title-row .page-title{
-        margin: 0;
-    }
-
-    /* ✅ 검색 버튼(q-btn)과 같은 느낌의 '후기 작성하기' */
-    .reviews .write-btn{
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-
-        height: 38px;
-        padding: 0 14px;
-        border-radius: 999px;
-
-        font-size: 0.86rem;
-        font-weight: 800;
-        line-height: 1;
-        text-decoration: none;
-        white-space: nowrap;
-
-        border: 1px solid var(--chip-border);
-        background: var(--chip-bg-active);
-        color: #fff;
-
-        box-shadow: 0 2px 0 rgba(0,0,0,0.10);
-        transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
-    }
-
-    .reviews .write-btn:hover{
-        transform: translateY(-1px);
-        box-shadow: 0 4px 0 rgba(0,0,0,0.12);
-        filter: brightness(0.98);
-    }
-
-    .reviews .write-btn:active{
-        transform: translateY(0);
-        box-shadow: 0 1px 0 rgba(0,0,0,0.10);
-    }
-
-
-    /* 필터 패널 */
-    .reviews .filter-panel {
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 18px;
-        background: #fff;
-    }
-
-    .reviews .filter-row {
-        display: grid;
-        grid-template-columns: 90px 1fr;
-        gap: 14px;
-        align-items: center;
-        margin-bottom: 14px;
-    }
-
-    .reviews .filter-label {
-        font-weight: 800;
-        color: #111827;
-        padding-top: 0px;
-        line-height: 1.2;
-    }
-
-    /* 칩 랩: (중요) 가로 wrap 안정화 */
-    .reviews .filter-chips {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 10px !important;
-        align-items: center;
-    }
-
-    /* 칩 버튼 */
-    .reviews .chip {
-        display: inline-flex;          /* ✅ 버튼이 세로로 100% 늘어나는 전역CSS 방어 */
-        width: auto;                   /* ✅ 전역 button { width:100% } 방어 */
-        border: 1px solid #e5e7eb;
-        background: #fff;
-        padding: 10px 14px;
-        border-radius: 10px;
-        cursor: pointer;
-        font-weight: 700;
-        color: #374151;
-        transition: 0.15s ease;
-    }
-
-    .reviews .chip:hover {
-        transform: translateY(-1px);
-    }
-
-    .reviews .chip.active {
-        background: #ef4444;
-        border-color: #ef4444;
-        color: #fff;
-    }
-
-    /* 검색 버튼 */
-    .reviews .search-btn {
-        width: 100%;
-        margin-top: 14px;
-        height: 54px;
-        border-radius: 12px;
-        border: none;
-        background: #3b82f6;
-        color: #fff;
-        font-size: 18px;
-        font-weight: 900;
-        cursor: pointer;
-    }
-
-    /* =========================
-       예산 슬라이더
-    ========================= */
-    .reviews .reviews-budget {
-        display: grid;
-        gap: 0px;
-    }
-
-    .reviews .reviews-budget-values {
-        font-weight: 800;
-        color: #111827;
-        margin-bottom: 2px;
-    }
-
-    .reviews .reviews-budget-slider {
-        position: relative;  /* ✅ 필수 */
-        height: 36px;        /* ✅ 필수 (input 높이랑 맞춤) */
-        margin-bottom: 0px;
-    }
-
-    /* 트랙 레이어(전체는 흰색 + 테두리) */
-    .reviews .reviews-budget-track {
-        position: absolute;
-        left: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 100%;
-        height: 8px;
-        border-radius: 999px;
-        background: #ffffff;
-        border: 1px solid rgba(17,24,39,0.18);
-        overflow: hidden;
-    }
-
-    /* 선택 구간(파란색) */
-    .reviews .reviews-budget-range {
-        position: absolute;
-        top: 0;
-        height: 100%;
-        border-radius: 999px;
-        background: rgba(37, 99, 235, 0.95);
-        left: 0%;
-        width: 100%;
-    }
-
-    /* 두 range 겹치기 */
-    .reviews .reviews-budget-slider input[type="range"] {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 36px;
-        background: transparent;
-        pointer-events: none; /* 트랙 클릭 막고 thumb만 잡히게 */
-        appearance: none;
-        -webkit-appearance: none;
-    }
-
-    /* webkit 트랙은 투명(우리가 track 레이어를 별도로 깔았으므로) */
-    .reviews .reviews-budget-slider input[type="range"]::-webkit-slider-runnable-track {
-        height: 8px;
-        border-radius: 999px;
-        background: transparent;
-    }
-
-    /* webkit thumb */
-    .reviews .reviews-budget-slider input[type="range"]::-webkit-slider-thumb {
-        pointer-events: auto;
-        -webkit-appearance: none;
-        width: 18px;
-        height: 18px;
-        border-radius: 999px;
-        background: #ffffff;
-        border: 2px solid rgba(37, 99, 235, 0.95);
-        box-shadow: 0 2px 10px rgba(0,0,0,0.18);
-        margin-top: -5px;
-        cursor: grab;
-    }
-
-    .reviews .reviews-budget-slider input[type="range"]:active::-webkit-slider-thumb {
-        cursor: grabbing;
-    }
-
-    .reviews .reviews-budget-slider input[type="range"]:hover::-webkit-slider-thumb {
-        background: #f8fafc;
-        border-color: rgba(29, 78, 216, 1);
-    }
-
-    /* Firefox 트랙/썸도 투명 트랙 */
-    .reviews .reviews-budget-slider input[type="range"]::-moz-range-track {
-        height: 8px;
-        border-radius: 999px;
-        background: transparent;
-    }
-
-    .reviews .reviews-budget-slider input[type="range"]::-moz-range-thumb {
-        pointer-events: auto;
-        width: 18px;
-        height: 18px;
-        border-radius: 999px;
-        background: #ffffff;
-        border: 2px solid rgba(37, 99, 235, 0.95);
-        box-shadow: 0 2px 10px rgba(0,0,0,0.18);
-        cursor: grab;
-    }
-
-    .reviews .reviews-budget-slider input[type="range"]:hover::-moz-range-thumb {
-        background: #f8fafc;
-        border-color: rgba(29, 78, 216, 1);
-    }
-
-    /* ====== ticks + label ====== */
-    .reviews .reviews-budget-ticks {
-        position: relative;
-        height: 22px;
-        margin-top: 2px;
-        user-select: none;
-    }
-
-    .reviews .reviews-budget-ticks .tick {
-        position: absolute;
-        top: 0;
-        width: 1px;
-        height: 8px;
-        background: rgba(17, 24, 39, 0.22);
-    }
-
-    .reviews .reviews-budget-ticks .tick-label {
-        position: absolute;
-        top: 10px;
-        transform: translateX(-50%);
-        font-size: 11px;
-        font-weight: 800;
-        color: rgba(17, 24, 39, 0.55);
-        white-space: nowrap;
-    }
-
-    /* =========================
-       지역 행(가로 안정화)
-    ========================= */
-    .reviews .region-row .region-inline {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        width: 100%;
-    }
-
-    /* region-inline 안에서 chips가 공간을 먹도록 */
-    .reviews .region-row .region-inline .filter-chips {
-        flex: 1;
-        min-width: 0;
-    }
-
-    /* =========================
-       필터 힌트(안내문구)
-    ========================= */
-    .reviews .filter-hint {
-        margin-top: 4px;
-        font-size: 11px;
-        font-weight: 600;
-        line-height: 1.2;
-        color: #9ca3af;
-    }
-
-    .reviews .filter-hint.single {
-        color: #9ca3af; /* 단일도 그레이 통일 */
-    }
-
-    .reviews .filter-hint.multi {
-        color: #9ca3af;
-    }
-
-    .reviews .filter-hint.sub {
-        font-weight: 500;
-    }
-
-    .reviews .filter-hint.one-line {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    /* ✅ 지역 설명문: 아래 줄에서 2열을 가로로 차지 */
-    .reviews .region-row .region-desc{
-        grid-column: 1 / -1;          /* 왼쪽~오른쪽 전체 span */
-        padding-left: 0;              /* 시작점 고정(필요시 아래처럼 조절 가능) */
-        margin-top: -6px;             /* 칩과 간격 조금 붙이기(원하면 조절) */
-
-        white-space: nowrap;          /* 한 줄 고정 */
-        overflow: visible;            /* ... 자르지 않음 */
-        text-overflow: clip;          /* ellipsis 제거 */
-    }
-
-    /* ✅ 하단 검색 툴바 */
-    .reviews.search-toolbar{
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 0px;
-    }
-
-    /* (2) 사용자 태그 요약 */
-    .reviews .tag-summary-mini{
-        flex: 1;                  /* 왼쪽 영역 넓게 */
-        min-width: 260px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 10px 12px;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        background: #fff;
-    }
-
-    .reviews .tag-summary-mini .empty{
-        color: #94a3b8;
-        font-size: 0.95rem;
-    }
-
-    /* (3-1) 드롭다운 */
-    .reviews .q-field{
-        width: 150px;
-        height: 42px;
-        padding: 0 10px;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        background: #fff;
-    }
-
-    /* (3-2) 검색 textarea를 input처럼 */
-    .reviews .q-input{
-        width: 320px;
-        height: 42px;
-        padding: 10px 12px;
-        resize: none;
-        overflow: hidden;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        line-height: 1.2;
-    }
-
-    /* (3-3) 검색 버튼 작게 + 오른쪽 */
-    .reviews .q-btn{
-        height: 42px;
-        padding: 0 18px;
-        border: none;
-        border-radius: 10px;
-        background: #3b82f6;
-        color: #fff;
-        font-weight: 700;
-        cursor: pointer;
-        white-space: nowrap;
-    }
-
-    /* ✅ 태그 칩 공통 (있으면 패스, 없으면 추가) */
-    .reviews .tag-summary-mini .chip{
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-
-        white-space: nowrap;
-
-        font-size: 0.85rem;          /* ✅ 글씨 조금 작게 */
-        font-weight: 700;
-        padding: 5px 9px;            /* ✅ 칩 높이 살짝 줄이기 */
-        border-radius: 999px;
-
-        background: #eef2ff;         /* ✅ 은은한 라벤더/블루 톤 */
-        border: 1px solid #c7d2fe;   /* ✅ 배경과 어울리는 테두리 */
-        color: #1f2a37;
-
-        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08); /* ✅ 살짝만 띄우기 */
-    }
-
-    /* ✅ 예산 칩은 무조건 다음 줄(아랫줄)로 */
-    .reviews .tag-summary-mini .chip.budget{
-        flex-basis: 100%;      /* 이 한 줄을 통째로 차지 → 자동 줄바꿈 */
-        border-radius: 12px;   /* 예산은 pill 말고 박스 느낌 원하면 */
-        justify-content: flex-start;
-        white-space: normal;
-
-        font-size: 0.84rem;
-
-        background: #ecfeff;         /* ✅ 민트 계열로 구분감 */
-        border-color: #a5f3fc;
-        color: #0f172a;
-
-    }
-
-    /* =========================
-   ✅ 버튼/칩 UI 통일 (이미지 느낌)
-   - 필터칩(.chip)
-   - 요약칩(.tag-summary-mini .chip)
-   - 검색버튼(.q-btn)
-   - 드롭다운/입력도 살짝 톤 맞춤
-========================= */
-
-    /* 톤 변수 (원하면 여기만 바꾸면 전체 바뀜) */
-    .reviews{
-        --chip-bg: #f6c792;          /* 살구/베이지 */
-        --chip-bg-hover: #f3bc7f;
-        --chip-bg-active: #eea95b;   /* 활성 더 진하게 */
-        --chip-border: #d9a26a;
-        --chip-text: #3b2f22;
-
-        --chip-bg-off: #ffffff;      /* 비활성(선택안됨) */
-        --chip-border-off: #e5e7eb;
-        --chip-text-off: #374151;
-    }
-
-    /* 칩 랩 간격/정렬 (버튼 뭉침 느낌으로 조금 줄임) */
-    .reviews .filter-chips{
-        gap: 8px !important;
-    }
-
-    /* ✅ 필터칩 버튼 기본 */
-    .reviews .chip{
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-
-        width: auto;
-        border-radius: 999px;
-
-        /* 글자/크기: “버튼이 통통하지 않게” */
-        font-size: 0.86rem;          /* 전체적으로 살짝 다운 */
-        font-weight: 700;
-        line-height: 1;
-
-        padding: 7px 12px;           /* ✅ 여백 줄임 */
-        border: 1px solid var(--chip-border-off);
-        background: var(--chip-bg-off);
-        color: var(--chip-text-off);
-
-        cursor: pointer;
-        transition: transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
-        box-shadow: 0 2px 0 rgba(0,0,0,0.07);  /* 이미지 느낌: 살짝 눌린 그림자 */
-    }
-
-    .reviews .chip:hover{
-        transform: translateY(-1px);
-        box-shadow: 0 4px 0 rgba(0,0,0,0.08);
-    }
-
-    .reviews .chip:active{
-        transform: translateY(0);
-        box-shadow: 0 1px 0 rgba(0,0,0,0.08);
-    }
-
-    /* ✅ 활성(선택됨) */
-    .reviews .chip.active{
-        background: var(--chip-bg);
-        border-color: var(--chip-border);
-        color: var(--chip-text);
-    }
-
-    /* 활성 hover는 조금 더 진하게 */
-    .reviews .chip.active:hover{
-        background: var(--chip-bg-hover);
-    }
-
-    /* =========================
-       ✅ 검색 버튼도 칩 느낌으로 통일
-    ========================= */
-    .reviews .q-btn{
-        height: 38px;                /* 42 -> 38로 줄여서 컴팩트 */
-        padding: 0 14px;
-        border-radius: 999px;
-
-        font-size: 0.86rem;
-        font-weight: 800;
-        line-height: 1;
-
-        border: 1px solid var(--chip-border);
-        background: var(--chip-bg-active);
-        color: #fff;
-
-        cursor: pointer;
-        box-shadow: 0 2px 0 rgba(0,0,0,0.10);
-        transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
-        white-space: nowrap;
-    }
-
-    .reviews .q-btn:hover{
-        transform: translateY(-1px);
-        box-shadow: 0 4px 0 rgba(0,0,0,0.12);
-        filter: brightness(0.98);
-    }
-
-    .reviews .q-btn:active{
-        transform: translateY(0);
-        box-shadow: 0 1px 0 rgba(0,0,0,0.10);
-    }
-
-    /* =========================
-       ✅ 요약칩(미리보기 UI)도 동일 톤
-    ========================= */
-    .reviews .tag-summary-mini{
-        padding: 10px 12px;
-        border-radius: 12px;
-    }
-
-    .reviews .tag-summary-mini .chip{
-        /* 필터칩과 동일하게 보이게 */
-        font-size: 0.82rem;
-        font-weight: 750;
-        padding: 6px 10px;
-        border-radius: 999px;
-
-        background: #ffe1bf;          /* 요약칩은 조금 더 밝게 */
-        border: 1px solid #e6b17a;
-        color: #3b2f22;
-
-        box-shadow: 0 2px 0 rgba(0,0,0,0.06);
-    }
-
-    /* ✅ 예산은 아랫줄 + 정보 라인 느낌 */
-    .reviews .tag-summary-mini .chip.budget{
-        flex-basis: 100%;
-        border-radius: 12px;
-        white-space: normal;
-        justify-content: flex-start;
-
-        font-size: 0.82rem;
-        padding: 8px 10px;
-
-        background: #fff7ed;          /* 조금 더 옅은 베이지 */
-        border-color: #f0c38d;
-        color: #4b3a2a;
-    }
-
-    /* =========================
-       (선택) 드롭다운/입력도 버튼과 톤 맞추기
-    ========================= */
-    .reviews .q-field,
-    .reviews .q-input{
-        height: 38px;                 /* 42 -> 38 */
-        font-size: 0.86rem;
-    }
-
-    .reviews .q-field{
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        background: #fff;
-        padding: 0 10px;
-    }
-
-    .reviews .q-input{
-        border-radius: 12px;
-        padding: 9px 12px;
-    }
-
-    /* =========================
-   ✅ 예산 슬라이더 컬러 통일
-   (칩/버튼 살구 톤과 맞춤)
-========================= */
-
-    /* 트랙 전체(배경) */
-    .reviews .reviews-budget-track {
-        background: #fffaf3;                 /* 아주 연한 베이지 */
-        border: 1px solid #e6b17a;            /* 칩 테두리 톤 */
-    }
-
-    /* 선택된 구간(range bar) */
-    .reviews .reviews-budget-range {
-        background: linear-gradient(
-                90deg,
-                #f6c792 0%,
-                #eea95b 100%
-        );                                    /* 살구 → 진살구 */
-    }
-
-    /* ====== thumb (동그란 손잡이) ====== */
-
-    /* Webkit (Chrome, Edge, Safari) */
-    .reviews .reviews-budget-slider
-    input[type="range"]::-webkit-slider-thumb {
-        background: #fffaf3;                  /* 흰베이지 */
-        border: 2px solid #eea95b;             /* 활성 칩 색 */
-        box-shadow: 0 2px 6px rgba(0,0,0,0.18);
-    }
-
-    /* hover */
-    .reviews .reviews-budget-slider
-    input[type="range"]:hover::-webkit-slider-thumb {
-        background: #fff1dc;
-        border-color: #e59642;
-    }
-
-    /* Firefox */
-    .reviews .reviews-budget-slider
-    input[type="range"]::-moz-range-thumb {
-        background: #fffaf3;
-        border: 2px solid #eea95b;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.18);
-    }
-
-    /* ====== 눈금(ticks) ====== */
-    .reviews .reviews-budget-ticks .tick {
-        background: rgba(217, 162, 106, 0.6);  /* 베이지 브라운 */
-    }
-
-    .reviews .reviews-budget-ticks .tick-label {
-        color: #8b5e34;                        /* 글자도 통일 */
-        font-weight: 700;
-    }
-
-    /* =========================
-   Reviews - 게시글 리스트 (완성본)
-   목표:
-   [섬네일] [타이틀]
-   [섬네일] [태그...]
-   [섬네일] [내용...]
-========================= */
-
-    .reviews .post-list {
-        margin-top: 18px;
-        display: grid;
-        gap: 12px;
-    }
-
-    /* 카드: 왼쪽 모서리까지 섬네일이 붙어야 하므로
-       padding은 카드가 아니라 링크(post-link)에 준다 */
-    .reviews .post-card {
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        background: #fff;
-        overflow: hidden; /* 섬네일이 카드 모서리와 딱 맞게 */
-        height: 150px;          /* 🔑 전체 카드 높이 */
-    }
-
-    /* 링크(카드 전체 클릭): 가로 레이아웃 */
-    .reviews .post-link {
-        display: flex;              /* ✅ block -> flex (충돌 해결) */
-        align-items: stretch;       /* 섬네일 세로 꽉 채움 */
-        gap: 14px;
-        color: inherit;
-        text-decoration: none;
-    }
-
-    /* 왼쪽 섬네일 */
-    .reviews .post-thumb {
-        width: 180px;
-        height: 100%;
-        flex: 0 0 180px;
-        background: #f3f4f6;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* 섬네일 이미지: 박스 꽉 채우기 */
-    .reviews .post-thumb img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-    }
-
-    /* 이미지 없을 때 */
-    .reviews .post-thumb--placeholder {
-        font-size: 13px;
-        font-weight: 800;
-        color: #9ca3af;
-    }
-
-    /* 오른쪽 콘텐츠 영역 */
-    .reviews .post-body {
-        padding: 14px;              /* ✅ 기존 post-card padding을 여기로 이동 */
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        flex: 1;
-        min-width: 0;
-    }
-
-    /* 제목 */
-    .reviews .post-title {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 900;           /* 기존 톤 유지 */
-        line-height: 1.25;
-    }
-
-    /* =========================
-       ✅ 게시글 카드 태그(뱃지) = 태그 미리보기 칩과 동일 톤
-       - 기존 .reviews .badge 를 이걸로 교체
-    ========================= */
-    .reviews .post-meta{
-        display:flex;
-        gap:8px;
-        flex-wrap:wrap;
-        margin:0;
-        align-items:center;
-    }
-
-    /* 기존 회색 badge → 살구톤 칩으로 통일 */
-    .reviews .badge{
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-
-        font-size: 0.82rem;
-        font-weight: 750;
-        line-height: 1;
-
-        padding: 6px 10px;
-        border-radius: 999px;
-
-        background: #ffe1bf;     /* tag-summary-mini 칩과 동일 */
-        border: 1px solid #e6b17a;
-        color: #3b2f22;
-
-        box-shadow: 0 2px 0 rgba(0,0,0,0.06);
-        white-space: nowrap;
-    }
-
-    /* 사용 총액 강조 */
-    .badge.total{
-        background: #fff7ed;
-        border-color: #f0c38d;
-        color: #4b3a2a;
-    }
-
-    /* 요약 */
-    .reviews .post-desc {
-        margin: 0;
-        color: #555;
-        line-height: 1.45;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;  /* 2줄 제한 */
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    /* 카드 hover (게시판 느낌) */
-    .reviews .post-card:hover {
-        border-color: #d1d5db;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-        transform: translateY(-1px);
-        transition: all 0.15s ease;
-    }
-
-    /* 빈 결과 */
-    .reviews .empty {
-        margin-top: 0px;
-        color: #6b7280;
-        font-weight: 700;
-    }
-
-    /* (선택) 모바일: 섬네일 위/본문 아래로 전환 */
-    @media (max-width: 768px) {
-        .reviews .post-link {
-            flex-direction: column;
-            gap: 0;
-        }
-
-        .reviews .post-thumb {
-            width: 100%;
-            flex: 0 0 auto;
-            height: 180px;
-        }
-
-        .reviews .post-body {
-            padding: 14px;
-        }
-    }
-
-
-    /* ✅ 화면 작아지면 자연스럽게 줄바꿈 */
-    @media (max-width: 900px){
-        .reviews.search-toolbar{
-            flex-wrap: wrap;
-        }
-        .reviews .q-input{
-            flex: 1;
-            width: auto;
-            min-width: 220px;
-        }
-        .reviews .q-field{
-            width: 160px;
-        }
-        .reviews .tag-summary-mini{
-            flex-basis: 100%;
-        }
-    }
-
-</style>
-
-
-</body>
-</html>
+</div>

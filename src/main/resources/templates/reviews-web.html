@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>여행 후기</title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <link rel="stylesheet" th:href="@{/css/reviews.css}" href="/css/reviews.css">
+</head>
+<body class="main-page">
+
+<div th:replace="fragments/main-header :: mainHeader"></div>
+
+<main th:replace="reviews :: reviewsContent"></main>
+
+<script th:src="@{/js/main.js}" src="/js/main.js"></script>
+<script th:src="@{/js/reviews.js}" src="/js/reviews.js"></script>
+</body>
+</html>
