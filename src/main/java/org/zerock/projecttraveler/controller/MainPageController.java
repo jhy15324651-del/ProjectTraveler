@@ -15,7 +15,6 @@ import org.zerock.projecttraveler.entity.TravelPlanner;
 import org.zerock.projecttraveler.security.CustomUserDetails;
 import org.zerock.projecttraveler.security.SecurityUtils;
 import org.zerock.projecttraveler.service.*;
-import org.zerock.projecttraveler.service.reviews.ReviewPostService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -247,7 +246,7 @@ public class MainPageController {
         model.addAttribute("username", user != null ? user.getFullName() : "사용자");
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
 
-        return "planner";
+        return "planner/planner";
     }
 
     /**
@@ -261,7 +260,7 @@ public class MainPageController {
         model.addAttribute("username", user != null ? user.getFullName() : "사용자");
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
 
-        return "planner-list";
+        return "planner/planner-list";
     }
 
     /**
@@ -328,7 +327,7 @@ public class MainPageController {
         model.addAttribute("totalChecklist", totalChecklist);
         model.addAttribute("completedChecklist", completedChecklist);
 
-        return "planner-detail";
+        return "planner/planner-detail";
     }
 
     /**
@@ -342,7 +341,7 @@ public class MainPageController {
         model.addAttribute("username", user != null ? user.getFullName() : "사용자");
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
 
-        return "planner-explore";
+        return "planner/planner-explore";
     }
 
 
