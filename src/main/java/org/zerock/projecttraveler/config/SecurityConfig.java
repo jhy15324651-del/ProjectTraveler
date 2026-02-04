@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.zerock.projecttraveler.security.CustomUserDetailsService;
 
 @Configuration
@@ -18,6 +19,7 @@ import org.zerock.projecttraveler.security.CustomUserDetailsService;
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -27,6 +29,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // ✅ CORS 설정 (Unity WebGL CORS 에러 해결)
+                // 설정 상세: CorsConfig.java 참조
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
 
                 // ✅ [추가] iframe/embed 허용 설정 (X-Frame-Options DENY 해결)
                 .headers(headers -> headers
