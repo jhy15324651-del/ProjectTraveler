@@ -1,34 +1,31 @@
-<!-- templates/reviews.html -->
+<!-- templates/reviews/reviews.html -->
 <div th:fragment="reviewsContent" class="container reviews">
 
+    <!-- =========================
+         Title Row
+    ========================== -->
     <div class="reviews-title-row">
         <h1 class="page-title">여행 후기</h1>
 
-        <!-- ✅ post 아직 분리 전: 임시로 둘 다 /reviews-post (다음 단계에서 -unity-post로 분리) -->
         <a class="write-btn"
            th:href="${isUnity == true} ? @{/reviews-unity-post} : @{/reviews-post}">
             후기 작성하기
         </a>
     </div>
 
+
     <!-- =========================
-         필터 패널
+         Filter Panel (GET)
     ========================== -->
-    <!-- ✅ action 제거: 현재 URL(/reviews 또는 /reviews-unity)로 GET 재요청 -->
     <form id="filterForm" method="get">
 
-        <!-- ✅ 페이징 상태 -->
+        <!-- paging -->
         <input type="hidden" id="f_page" name="page"
                th:value="${search != null && search.page != null ? search.page : 0}" value="0"/>
 
-        <!-- ✅ size도 고정이면 같이 보내두는게 안전 (컨트롤러에서 5 고정이라면 생략 가능) -->
-        <!-- <input type="hidden" name="size" th:value="${search != null && search.size != null ? search.size : 5}" value="5"/> -->
-
         <section class="filter-panel">
 
-            <!-- =========================
-                 travelType (서버 전송 O)
-            ========================== -->
+            <!-- travelType (single) -->
             <div class="filter-row">
                 <div class="filter-label">
                     여행유형
@@ -43,15 +40,11 @@
                     <button type="button" class="chip" data-value="friends">친구</button>
                 </div>
 
-                <!-- ✅ 핵심: value를 search에서 복원 -->
                 <input type="hidden" id="f_travelType" name="travelType"
                        th:value="${search != null ? search.travelType : ''}" value=""/>
             </div>
 
-
-            <!-- =========================
-                 theme (서버 전송 O)
-            ========================== -->
+            <!-- theme (single) -->
             <div class="filter-row">
                 <div class="filter-label">
                     테마
@@ -67,20 +60,15 @@
                     <button type="button" class="chip" data-value="nature">자연</button>
                 </div>
 
-                <!-- ✅ 핵심: value를 search에서 복원 -->
                 <input type="hidden" id="f_theme" name="theme"
                        th:value="${search != null ? search.theme : ''}" value=""/>
             </div>
 
-
-            <!-- 예산 -->
+            <!-- budget -->
             <div class="filter-row">
-                <div class="filter-label budget-label">
-                    예산
-                </div>
+                <div class="filter-label budget-label">예산</div>
 
                 <div class="reviews-budget">
-
                     <div class="reviews-budget-line">
                         <div class="reviews-budget-values">
                             <span id="budgetMinLabel">0원</span>
@@ -90,6 +78,7 @@
 
                         <div class="reviews-budget-slider">
                             <button type="button" id="budgetResetBtn" class="budget-reset-btn" title="예산 초기화">↺</button>
+
                             <div class="reviews-budget-track">
                                 <div class="reviews-budget-range" id="budgetRange"></div>
                             </div>
@@ -114,24 +103,18 @@
                     <input type="hidden" name="minBudget" id="f_minBudget"
                            th:value="${search != null and search.minBudget != null ? search.minBudget : 0}"
                            value="0">
+
                     <input type="hidden" name="maxBudget" id="f_maxBudget"
                            th:value="${search != null and search.maxBudget != null ? search.maxBudget : 5000000}"
                            value="5000000">
 
-                    <!-- ✅ 제한해제 상태 -->
+                    <!-- unlock 상태 -->
                     <input type="hidden" name="budgetUnlimit" id="f_budgetUnlimit"
                            th:value="${param.budgetUnlimit}" value="0">
                 </div>
             </div>
 
-            <!-- =========================
-                 기간(periods) / 난이도(levels) / 지역(tags)
-                 - 여기서 “서버 렌더링”으로 hidden을 미리 박아두면
-                   페이지 이동 시에도 값이 URL로 유지됨 (초기화 방지 1차)
-                 - 칩 active 복원은 JS에서 따로 해줘야 완벽함
-            ========================== -->
-
-            <!-- 기간 -->
+            <!-- period (multi) -->
             <div class="filter-row">
                 <div class="filter-label">
                     기간
@@ -146,14 +129,13 @@
                     <button type="button" class="chip" data-value="3박4일">3박4일</button>
                 </div>
 
-                <!-- ✅ 서버가 받은 periods를 hidden으로 미리 렌더링 -->
                 <div id="periodInputs">
                     <input th:each="p : ${search != null ? search.periods : null}"
                            type="hidden" name="periods" th:value="${p}"/>
                 </div>
             </div>
 
-            <!-- 난이도 -->
+            <!-- level (multi) -->
             <div class="filter-row">
                 <div class="filter-label">
                     난이도
@@ -173,7 +155,7 @@
                 </div>
             </div>
 
-            <!-- 지역 -->
+            <!-- region(tags) (multi) -->
             <div class="filter-row region-row">
                 <div class="filter-label">
                     지역
@@ -195,38 +177,31 @@
                     * 지역 중복 선택 시 선택한 지역이 모두 포함된 게시글이 먼저 보입니다.
                 </div>
 
-                <!-- ✅ 서버가 받은 tags를 hidden으로 미리 렌더링 -->
                 <div id="tagInputs">
                     <input th:each="t : ${search != null ? search.tags : null}"
                            type="hidden" name="tags" th:value="${t}"/>
                 </div>
             </div>
 
-
-            <!-- =========================
-                 검색어 q 복원
-            ========================== -->
+            <!-- search toolbar -->
             <div class="reviews search-toolbar">
-
                 <div class="tag-summary-mini" id="miniSummary">
                     <span class="empty">선택된 조건 없음</span>
                 </div>
 
                 <div class="q-stack">
-                <select class="q-field">
-                    <option value="tc">제목 + 내용</option>
-                    <option value="t">제목</option>
-                    <option value="c">내용</option>
-                </select>
+                    <select class="q-field">
+                        <option value="tc">제목 + 내용</option>
+                        <option value="t">제목</option>
+                        <option value="c">내용</option>
+                    </select>
 
-                <!-- ✅ 핵심: q 복원 -->
-                <textarea name="q" class="q-input" rows="1" placeholder="검색어를 입력하세요"
-                          th:text="${search != null ? search.q : ''}"></textarea>
+                    <textarea name="q" class="q-input" rows="1" placeholder="검색어를 입력하세요"
+                              th:text="${search != null ? search.q : ''}"></textarea>
 
-                <button type="submit" class="q-btn">검색</button>
-
-                <!-- 추가: 초기화 버튼 (검색 버튼 오른쪽) -->
-                <button type="button" id="btnReset" class="btn-reset">초기화</button>
+                    <button type="submit" class="q-btn">검색</button>
+                    <button type="button" id="btnReset" class="btn-reset">초기화</button>
+                </div>
             </div>
 
         </section>
@@ -234,7 +209,7 @@
 
 
     <!-- =========================
-         게시글 리스트
+         Post List
     ========================== -->
     <section id="postList" class="post-list">
         <h1 class="page-title">후기 리스트</h1>
@@ -257,7 +232,6 @@
                 </div>
 
                 <div class="post-body">
-
                     <h3 class="post-title" th:text="${post.title}">제목</h3>
 
                     <div class="post-meta">
@@ -300,11 +274,7 @@
                         </span>
                     </div>
 
-                    <p class="post-desc"
-                       th:text="${#strings.abbreviate(post.summary, 80)}">
-                        요약
-                    </p>
-
+                    <p class="post-desc" th:text="${#strings.abbreviate(post.summary, 80)}">요약</p>
                 </div>
             </a>
         </article>
@@ -312,224 +282,200 @@
         <div class="empty" th:if="${posts == null || #lists.isEmpty(posts)}">
             조건에 맞는 게시글이 없습니다.
         </div>
-
     </section>
+
 
     <!-- =========================
          Pagination (BOTTOM)
-    ========================= -->
+    ========================== -->
     <div class="reviews-pagination bottom"
          th:if="${pageResult != null and pageResult.totalPages > 1}"
          th:with="
-        current=${pageResult.number},
-        total=${pageResult.totalPages},
-        blockSize=${10},
-        blockStart=${(current / blockSize) * blockSize},
-        blockEnd=${(blockStart + blockSize - 1) < (total - 1) ? (blockStart + blockSize - 1) : (total - 1)},
-        minB=${(search != null and search.minBudget != null) ? search.minBudget : 0},
-        maxB=${(search != null and search.maxBudget != null) ? search.maxBudget : 5000000}
-     ">
+            current=${pageResult.number},
+            total=${pageResult.totalPages},
+            blockSize=${10},
+            blockStart=${(current / blockSize) * blockSize},
+            blockEnd=${(blockStart + blockSize - 1) < (total - 1) ? (blockStart + blockSize - 1) : (total - 1)},
+            minB=${(search != null and search.minBudget != null) ? search.minBudget : 0},
+            maxB=${(search != null and search.maxBudget != null) ? search.maxBudget : 5000000},
+            unlimit=${param.budgetUnlimit}
+         ">
 
-        <!-- «« 맨앞 -->
+        <!-- «« first -->
         <a class="reviews-page-btn"
            th:if="${current > 0 and !isUnity}"
            th:href="@{/reviews(
-            page=0,
-            q=${search.q},
-            travelType=${search.travelType},
-            theme=${search.theme},
-            minBudget=${minB},
-            maxBudget=${maxB},
-            periods=${search.periods},
-            levels=${search.levels},
-            tags=${search.tags}
-       )} + '#postList'">
-            &laquo;&laquo;
-        </a>
+                page=0,
+                q=${search.q},
+                travelType=${search.travelType},
+                theme=${search.theme},
+                minBudget=${minB},
+                maxBudget=${maxB},
+                periods=${search.periods},
+                levels=${search.levels},
+                tags=${search.tags},
+                budgetUnlimit=${unlimit}
+           )} + '#postList'">&laquo;&laquo;</a>
 
         <a class="reviews-page-btn"
            th:if="${current > 0 and isUnity}"
            th:href="@{/reviews-unity(
-            page=0,
-            q=${search.q},
-            travelType=${search.travelType},
-            theme=${search.theme},
-            minBudget=${minB},
-            maxBudget=${maxB},
-            periods=${search.periods},
-            levels=${search.levels},
-            tags=${search.tags}
-       )} + '#postList'">
-            &laquo;&laquo;
-        </a>
+                page=0,
+                q=${search.q},
+                travelType=${search.travelType},
+                theme=${search.theme},
+                minBudget=${minB},
+                maxBudget=${maxB},
+                periods=${search.periods},
+                levels=${search.levels},
+                tags=${search.tags},
+                budgetUnlimit=${unlimit}
+           )} + '#postList'">&laquo;&laquo;</a>
 
-        <span class="reviews-page-btn disabled" th:if="${current == 0}">
-        &laquo;&laquo;
-    </span>
+        <span class="reviews-page-btn disabled" th:if="${current == 0}">&laquo;&laquo;</span>
 
-
-        <!-- « 블록 이전 -->
+        <!-- « prev block -->
         <a class="reviews-page-btn"
            th:if="${blockStart > 0 and !isUnity}"
            th:href="@{/reviews(
-            page=${blockStart - 1},
-            q=${search.q},
-            travelType=${search.travelType},
-            theme=${search.theme},
-            minBudget=${minB},
-            maxBudget=${maxB},
-            periods=${search.periods},
-            levels=${search.levels},
-            tags=${search.tags}
-       )} + '#postList'">
-            &laquo;
-        </a>
+                page=${blockStart - 1},
+                q=${search.q},
+                travelType=${search.travelType},
+                theme=${search.theme},
+                minBudget=${minB},
+                maxBudget=${maxB},
+                periods=${search.periods},
+                levels=${search.levels},
+                tags=${search.tags},
+                budgetUnlimit=${unlimit}
+           )} + '#postList'">&laquo;</a>
 
         <a class="reviews-page-btn"
            th:if="${blockStart > 0 and isUnity}"
            th:href="@{/reviews-unity(
-            page=${blockStart - 1},
-            q=${search.q},
-            travelType=${search.travelType},
-            theme=${search.theme},
-            minBudget=${minB},
-            maxBudget=${maxB},
-            periods=${search.periods},
-            levels=${search.levels},
-            tags=${search.tags}
-       )} + '#postList'">
-            &laquo;
-        </a>
+                page=${blockStart - 1},
+                q=${search.q},
+                travelType=${search.travelType},
+                theme=${search.theme},
+                minBudget=${minB},
+                maxBudget=${maxB},
+                periods=${search.periods},
+                levels=${search.levels},
+                tags=${search.tags},
+                budgetUnlimit=${unlimit}
+           )} + '#postList'">&laquo;</a>
 
-        <span class="reviews-page-btn disabled" th:if="${blockStart == 0}">
-        &laquo;
-    </span>
+        <span class="reviews-page-btn disabled" th:if="${blockStart == 0}">&laquo;</span>
 
-
-        <!-- 페이지 번호 -->
+        <!-- numbers -->
         <span class="reviews-page-numbers">
-        <span th:each="p : ${#numbers.sequence(blockStart, blockEnd)}">
+            <span th:each="p : ${#numbers.sequence(blockStart, blockEnd)}">
 
-            <!-- 현재 페이지 -->
-            <span class="reviews-page-btn active"
-                  th:if="${p == current}"
-                  th:text="${p + 1}">1</span>
+                <span class="reviews-page-btn active"
+                      th:if="${p == current}"
+                      th:text="${p + 1}">1</span>
 
-            <!-- 웹 -->
-            <a class="reviews-page-btn"
-               th:if="${p != current and !isUnity}"
-               th:text="${p + 1}"
-               th:href="@{/reviews(
-                    page=${p},
-                    q=${search.q},
-                    travelType=${search.travelType},
-                    theme=${search.theme},
-                    minBudget=${minB},
-                    maxBudget=${maxB},
-                    periods=${search.periods},
-                    levels=${search.levels},
-                    tags=${search.tags}
-               )} + '#postList'">1</a>
+                <a class="reviews-page-btn"
+                   th:if="${p != current and !isUnity}"
+                   th:text="${p + 1}"
+                   th:href="@{/reviews(
+                        page=${p},
+                        q=${search.q},
+                        travelType=${search.travelType},
+                        theme=${search.theme},
+                        minBudget=${minB},
+                        maxBudget=${maxB},
+                        periods=${search.periods},
+                        levels=${search.levels},
+                        tags=${search.tags},
+                        budgetUnlimit=${unlimit}
+                   )} + '#postList'">1</a>
 
-            <!-- 유니티 -->
-            <a class="reviews-page-btn"
-               th:if="${p != current and isUnity}"
-               th:text="${p + 1}"
-               th:href="@{/reviews-unity(
-                    page=${p},
-                    q=${search.q},
-                    travelType=${search.travelType},
-                    theme=${search.theme},
-                    minBudget=${minB},
-                    maxBudget=${maxB},
-                    periods=${search.periods},
-                    levels=${search.levels},
-                    tags=${search.tags}
-               )} + '#postList'">1</a>
+                <a class="reviews-page-btn"
+                   th:if="${p != current and isUnity}"
+                   th:text="${p + 1}"
+                   th:href="@{/reviews-unity(
+                        page=${p},
+                        q=${search.q},
+                        travelType=${search.travelType},
+                        theme=${search.theme},
+                        minBudget=${minB},
+                        maxBudget=${maxB},
+                        periods=${search.periods},
+                        levels=${search.levels},
+                        tags=${search.tags},
+                        budgetUnlimit=${unlimit}
+                   )} + '#postList'">1</a>
 
+            </span>
         </span>
-    </span>
 
-
-        <!-- 블록 다음 » -->
+        <!-- next block » -->
         <a class="reviews-page-btn"
            th:if="${blockEnd < (total - 1) and !isUnity}"
            th:href="@{/reviews(
-            page=${blockEnd + 1},
-            q=${search.q},
-            travelType=${search.travelType},
-            theme=${search.theme},
-            minBudget=${minB},
-            maxBudget=${maxB},
-            periods=${search.periods},
-            levels=${search.levels},
-            tags=${search.tags}
-       )} + '#postList'">
-            &raquo;
-        </a>
+                page=${blockEnd + 1},
+                q=${search.q},
+                travelType=${search.travelType},
+                theme=${search.theme},
+                minBudget=${minB},
+                maxBudget=${maxB},
+                periods=${search.periods},
+                levels=${search.levels},
+                tags=${search.tags},
+                budgetUnlimit=${unlimit}
+           )} + '#postList'">&raquo;</a>
 
         <a class="reviews-page-btn"
            th:if="${blockEnd < (total - 1) and isUnity}"
            th:href="@{/reviews-unity(
-            page=${blockEnd + 1},
-            q=${search.q},
-            travelType=${search.travelType},
-            theme=${search.theme},
-            minBudget=${minB},
-            maxBudget=${maxB},
-            periods=${search.periods},
-            levels=${search.levels},
-            tags=${search.tags}
-       )} + '#postList'">
-            &raquo;
-        </a>
+                page=${blockEnd + 1},
+                q=${search.q},
+                travelType=${search.travelType},
+                theme=${search.theme},
+                minBudget=${minB},
+                maxBudget=${maxB},
+                periods=${search.periods},
+                levels=${search.levels},
+                tags=${search.tags},
+                budgetUnlimit=${unlimit}
+           )} + '#postList'">&raquo;</a>
 
-        <span class="reviews-page-btn disabled" th:if="${blockEnd >= (total - 1)}">
-        &raquo;
-    </span>
+        <span class="reviews-page-btn disabled" th:if="${blockEnd >= (total - 1)}">&raquo;</span>
 
-
-        <!-- 맨끝 »» -->
+        <!-- last »» -->
         <a class="reviews-page-btn"
            th:if="${current < (total - 1) and !isUnity}"
            th:href="@{/reviews(
-            page=${total - 1},
-            q=${search.q},
-            travelType=${search.travelType},
-            theme=${search.theme},
-            minBudget=${minB},
-            maxBudget=${maxB},
-            periods=${search.periods},
-            levels=${search.levels},
-            tags=${search.tags}
-       )} + '#postList'">
-            &raquo;&raquo;
-        </a>
+                page=${total - 1},
+                q=${search.q},
+                travelType=${search.travelType},
+                theme=${search.theme},
+                minBudget=${minB},
+                maxBudget=${maxB},
+                periods=${search.periods},
+                levels=${search.levels},
+                tags=${search.tags},
+                budgetUnlimit=${unlimit}
+           )} + '#postList'">&raquo;&raquo;</a>
 
         <a class="reviews-page-btn"
            th:if="${current < (total - 1) and isUnity}"
            th:href="@{/reviews-unity(
-            page=${total - 1},
-            q=${search.q},
-            travelType=${search.travelType},
-            theme=${search.theme},
-            minBudget=${minB},
-            maxBudget=${maxB},
-            periods=${search.periods},
-            levels=${search.levels},
-            tags=${search.tags}
-       )} + '#postList'">
-            &raquo;&raquo;
-        </a>
+                page=${total - 1},
+                q=${search.q},
+                travelType=${search.travelType},
+                theme=${search.theme},
+                minBudget=${minB},
+                maxBudget=${maxB},
+                periods=${search.periods},
+                levels=${search.levels},
+                tags=${search.tags},
+                budgetUnlimit=${unlimit}
+           )} + '#postList'">&raquo;&raquo;</a>
 
-        <span class="reviews-page-btn disabled" th:if="${current >= (total - 1)}">
-        &raquo;&raquo;
-    </span>
+        <span class="reviews-page-btn disabled" th:if="${current >= (total - 1)}">&raquo;&raquo;</span>
 
     </div>
-
-
-
-
 
 </div>

@@ -18,13 +18,14 @@
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 </head>
 
-<body class="main-page">
+<body class="main-page reviews-page">
 
-<!-- ✅ 헤더 없음(유니티) -->
+<!-- ✅ 헤더 포함(웹) -->
+<div th:replace="fragments/main-header :: mainHeader"></div>
 
 <!-- ✅ 작성 폼 본문(fragment) -->
 <main>
-    <div th:replace="reviews-post :: postContent"></div>
+    <div th:replace="reviews/reviews-post :: postContent"></div>
 </main>
 
 <!-- ✅ Quill JS -->

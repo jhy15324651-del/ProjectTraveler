@@ -42,7 +42,8 @@ public class ReviewsController {
         model.addAttribute("pageResult", pageResult);
         model.addAttribute("posts", pageResult.getContent());
 
-        return "reviews-web";
+        // ✅ templates/reviews/reviews-web.html
+        return "reviews/reviews-web";
     }
 
     @GetMapping("/reviews-unity")
@@ -54,7 +55,8 @@ public class ReviewsController {
         model.addAttribute("pageResult", pageResult);
         model.addAttribute("posts", pageResult.getContent());
 
-        return "reviews-unity";
+        // ✅ templates/reviews/reviews-unity.html
+        return "reviews/reviews-unity";
     }
 
     @GetMapping("/reviews-post")
@@ -62,7 +64,9 @@ public class ReviewsController {
                                  @ModelAttribute("request") ReviewPostCreateRequest request) {
         applyCommonModel(model);
         model.addAttribute("isUnity", false);
-        return "reviews-post-web";
+
+        // ✅ templates/reviews/reviews-post-web.html
+        return "reviews/reviews-post-web";
     }
 
     @GetMapping("/reviews-unity-post")
@@ -70,7 +74,9 @@ public class ReviewsController {
                                    @ModelAttribute("request") ReviewPostCreateRequest request) {
         applyCommonModel(model);
         model.addAttribute("isUnity", true);
-        return "reviews-post-unity";
+
+        // ✅ templates/reviews/reviews-post-unity.html
+        return "reviews/reviews-post-unity";
     }
 
     @PostMapping("/reviews")
@@ -84,7 +90,9 @@ public class ReviewsController {
         if (bindingResult.hasErrors()) {
             applyCommonModel(model);
             model.addAttribute("isUnity", isUnity);
-            return isUnity ? "reviews-post-unity" : "reviews-post-web";
+
+            // ✅ templates/reviews/reviews-post-*.html 로 돌아가야 함
+            return isUnity ? "reviews/reviews-post-unity" : "reviews/reviews-post-web";
         }
 
         reviewPostService.create(request);
@@ -96,7 +104,9 @@ public class ReviewsController {
         applyCommonModel(model);
         model.addAttribute("isUnity", false);
         model.addAttribute("post", reviewPostService.findById(id));
-        return "reviews-read-web";
+
+        // ✅ templates/reviews/reviews-read-web.html
+        return "reviews/reviews-read-web";
     }
 
     @GetMapping("/reviews-unity/{id}")
@@ -104,7 +114,8 @@ public class ReviewsController {
         applyCommonModel(model);
         model.addAttribute("isUnity", true);
         model.addAttribute("post", reviewPostService.findById(id));
-        return "reviews-read-unity";
+
+        // ✅ templates/reviews/reviews-read-unity.html
+        return "reviews/reviews-read-unity";
     }
 }
-
