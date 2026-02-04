@@ -1,4 +1,46 @@
 /* ========================================
+   여행 플래너 - 전역 스타일
+   ======================================== */
+
+/* 전역 box-sizing 적용 (플래너 페이지 전용) */
+.planner-detail-page *,
+.planner-detail-page *::before,
+.planner-detail-page *::after,
+.planner-list-page *,
+.planner-list-page *::before,
+.planner-list-page *::after,
+.planner-explore-page *,
+.planner-explore-page *::before,
+.planner-explore-page *::after {
+    box-sizing: border-box;
+}
+
+/* 공통 카드 스타일 */
+.card-box,
+.itinerary-card,
+.sidebar-card,
+.budget-item {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+/* 텍스트 overflow 방지 */
+.planner-detail-page .itinerary-title,
+.planner-detail-page .checklist-item-text,
+.planner-detail-page .budget-item-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 긴 텍스트 줄바꿈 허용 */
+.planner-detail-page .itinerary-notes,
+.planner-detail-page .planner-detail-desc {
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* ========================================
    여행 플래너 랜딩 페이지 스타일
    ======================================== */
 
@@ -989,18 +1031,59 @@
     max-width: 1280px;
     margin: 0 auto;
     padding: 32px 24px;
+    box-sizing: border-box;
 }
 
+/* ========================================
+   툴바 영역 (Day 탭 + 액션 버튼 분리)
+   ======================================== */
 .planner-detail-toolbar {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
+    gap: 16px;
     margin-bottom: 24px;
 }
 
+/* Day 탭 컨테이너 - 가로 스크롤 처리 */
+.planner-detail-toolbar .day-tabs {
+    flex: 1 1 auto;
+    min-width: 0; /* flex 아이템에서 overflow 작동 필수 */
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    padding-bottom: 8px;
+    margin-bottom: -8px; /* 스크롤바 영역 보정 */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: rgba(193, 39, 45, 0.3) transparent;
+}
+
+/* 스크롤바 스타일 (Webkit 브라우저) */
+.planner-detail-toolbar .day-tabs::-webkit-scrollbar {
+    height: 6px;
+}
+
+.planner-detail-toolbar .day-tabs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.planner-detail-toolbar .day-tabs::-webkit-scrollbar-thumb {
+    background: rgba(193, 39, 45, 0.3);
+    border-radius: 3px;
+}
+
+.planner-detail-toolbar .day-tabs::-webkit-scrollbar-thumb:hover {
+    background: rgba(193, 39, 45, 0.5);
+}
+
+/* 액션 버튼 컨테이너 - 고정 너비, 줄바꿈 허용 */
 .planner-detail-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
+    flex-shrink: 0; /* 탭 영역에 밀리지 않음 */
+    align-items: center;
+    justify-content: flex-end;
 }
 
 .btn-planner-action {
@@ -1058,6 +1141,7 @@
     gap: 8px;
     overflow-x: auto;
     padding-bottom: 8px;
+    /* 기본 스타일 - 툴바 외부에서 사용 시 */
 }
 
 .day-tab {
@@ -1065,13 +1149,16 @@
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    min-width: 100px;
-    padding: 12px 16px;
+    min-width: 90px;
+    max-width: 110px;
+    padding: 10px 14px;
     border: 2px solid var(--border-gray);
     border-radius: 8px;
     background: var(--white);
     cursor: pointer;
     transition: all 0.3s;
+    flex-shrink: 0; /* 탭이 축소되지 않도록 */
+    white-space: nowrap;
 }
 
 .day-tab:hover {
@@ -1095,19 +1182,24 @@
     opacity: 0.8;
 }
 
-/* 플래너 레이아웃 */
+/* ========================================
+   본문 2컬럼 레이아웃 (안정화)
+   ======================================== */
 .planner-detail-layout {
     display: grid;
-    grid-template-columns: 1fr 350px;
+    grid-template-columns: minmax(0, 1fr) 350px; /* minmax로 overflow 방지 */
     gap: 24px;
+    align-items: start;
 }
 
-/* 일정 목록 */
+/* 일정 목록 (좌측 메인 영역) */
 .itinerary-section {
     background: var(--white);
     border-radius: 15px;
     padding: 24px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    min-width: 0; /* grid 아이템에서 overflow 방지 */
+    overflow: hidden;
 }
 
 .itinerary-header {
@@ -1337,10 +1429,15 @@
     color: var(--white);
 }
 
-/* 사이드바 */
+/* ========================================
+   사이드바 (우측 영역 - 체크리스트/예산)
+   ======================================== */
 .planner-sidebar {
     position: sticky;
     top: 100px;
+    min-width: 0; /* grid 아이템에서 overflow 방지 */
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .sidebar-card {
@@ -1348,6 +1445,7 @@
     border-radius: 15px;
     overflow: hidden;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    max-width: 100%;
 }
 
 .sidebar-tabs {
@@ -2251,22 +2349,52 @@
     font-size: 14px;
 }
 
-/* 반응형 - 플래너 목록 */
+/* ========================================
+   반응형 디자인 - 플래너 상세 페이지
+   Desktop: 1025px 이상
+   Tablet: 769px ~ 1024px
+   Mobile: 768px 이하
+   ======================================== */
+
+/* Tablet (1024px 이하) */
 @media (max-width: 1024px) {
     .planner-cards-grid,
     .planner-explore-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 
+    /* 본문 2컬럼 → 1컬럼 (세로 스택) */
     .planner-detail-layout {
         grid-template-columns: 1fr;
     }
 
     .planner-sidebar {
         position: static;
+        max-width: 100%;
+    }
+
+    /* 툴바: 탭과 버튼 영역 분리 유지 */
+    .planner-detail-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .planner-detail-toolbar .day-tabs {
+        flex: 1 1 60%; /* tablet에서 60% 차지 */
+        min-width: 280px;
+    }
+
+    .planner-detail-actions {
+        flex: 0 0 auto;
+        max-width: 100%;
+    }
+
+    /* 공개 설정 토글 - 줄바꿈 시 전체 너비 */
+    .visibility-toggle {
+        flex: 0 0 auto;
     }
 }
 
+/* Mobile (768px 이하) */
 @media (max-width: 768px) {
     .planner-list-header {
         flex-direction: column;
@@ -2311,18 +2439,57 @@
         grid-template-columns: 1fr;
     }
 
+    /* 툴바: 세로 스택 */
     .planner-detail-toolbar {
         flex-direction: column;
-        gap: 16px;
+        gap: 12px;
+        align-items: stretch;
     }
 
-    .day-tabs {
+    /* Day 탭: 전체 너비, 가로 스크롤 유지 */
+    .planner-detail-toolbar .day-tabs {
+        flex: none;
         width: 100%;
+        min-width: 0;
     }
 
+    /* 액션 버튼: 전체 너비, 가운데 정렬 */
     .planner-detail-actions {
         width: 100%;
-        justify-content: flex-end;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* 공개 설정 토글: 전체 너비 */
+    .visibility-toggle {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* 버튼 크기 조정 */
+    .btn-planner-action {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .btn-planner-action svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    /* Day 탭 크기 조정 */
+    .day-tab {
+        min-width: 80px;
+        max-width: 100px;
+        padding: 8px 12px;
+    }
+
+    .day-tab-label {
+        font-size: 13px;
+    }
+
+    .day-tab-date {
+        font-size: 11px;
     }
 
     .share-add-form {
@@ -2333,6 +2500,40 @@
     .share-add-form select,
     .share-add-form button {
         width: 100%;
+    }
+
+    /* 본문 패딩 조정 */
+    .planner-detail-body {
+        padding: 16px;
+    }
+
+    .itinerary-section {
+        padding: 16px;
+    }
+
+    .sidebar-content {
+        padding: 12px;
+    }
+}
+
+/* 아주 작은 화면 (480px 이하) */
+@media (max-width: 480px) {
+    /* 버튼 텍스트 숨기고 아이콘만 표시 (선택적) */
+    .btn-planner-action.secondary span,
+    .btn-planner-action.danger span {
+        /* display: none; */ /* 필요시 활성화 */
+    }
+
+    /* 공개 설정 토글 세로 배치 */
+    .visibility-toggle {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .visibility-toggle-label {
+        flex: 0 0 100%;
+        text-align: center;
     }
 }
 
