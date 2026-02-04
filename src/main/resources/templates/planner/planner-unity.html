@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>여행 플래너 - 日本 Travel LMS</title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <link rel="stylesheet" th:href="@{/css/planner.css}" href="/css/planner.css">
+</head>
+<body>
+
+<!-- 헤더 없음 (유니티) -->
+
+<!-- 플래너 랜딩 콘텐츠 -->
+<div th:replace="planner/planner :: plannerContent"></div>
+
+<script th:src="@{/js/main.js}" src="/js/main.js"></script>
+</body>
+</html>

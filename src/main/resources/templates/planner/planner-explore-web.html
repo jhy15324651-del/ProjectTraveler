@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>플래너 둘러보기 - 日本 Travel LMS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <link rel="stylesheet" th:href="@{/css/planner.css}" href="/css/planner.css">
+</head>
+<body>
+
+<!-- 헤더 포함 (웹) -->
+<div th:replace="fragments/main-header :: mainHeader"></div>
+
+<!-- 플래너 둘러보기 콘텐츠 -->
+<div th:replace="planner/planner-explore :: plannerExploreContent"></div>
+
+<script th:src="@{/js/main.js}" src="/js/main.js"></script>
+<script th:inline="javascript">
+    const isUnity = [[${isUnity}]];
+    const detailBasePath = isUnity ? '/planner-unity/detail/' : '/planner/detail/';
+    let currentSort = 'latest';
+    let searchKeyword = '';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPublicPlanners();
+    });
+
+    async function loadPublicPlanners() {
+        const grid = document.getElementById('exploreGrid');
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+
+        loadingState.style.display = 'flex';
+        emptyState.style.display = 'none';
+
+        try {
+            let url = `/api/planner/public?sort=${currentSort}`;
+            if (searchKeyword) {
+                url += `&keyword=${encodeURIComponent(searchKeyword)}`;
+            }
+
+            const response = await fetch(url);
+            const planners = await response.json();
+
+            loadingState.style.display = 'none';
+
+            if (planners.length === 0) {
+                grid.innerHTML = '';
+                emptyState.style.display = 'flex';
+                return;
+            }
+
+            grid.innerHTML = planners.map(planner => createPlannerCard(planner)).join('');
+
+        } catch (error) {
+            console.error('Error loading planners:', error);
+            loadingState.style.display = 'none';
+            grid.innerHTML = '<div class="explore-error"><p>플래너를 불러오는 중 오류가 발생했습니다.</p></div>';
+        }
+    }
+
+    function createPlannerCard(planner) {
+        const coverImage = planner.coverImage || 'https://images.unsplash.com/photo-1493976040374-85cb44e25828?w=600&q=80';
+        const destination = planner.destination || '미정';
+        const dateRange = planner.startDate && planner.endDate
+            ? `${planner.startDate} ~ ${planner.endDate}`
+            : '날짜 미정';
+
+        return `
+            <a href="${detailBasePath}${planner.id}" class="explore-card">
+                <div class="explore-card-image">
+                    <img src="${coverImage}" alt="${planner.title}">
+                    <div class="explore-card-overlay">
+                        <span class="explore-card-days">${planner.days}일</span>
+                    </div>
+                </div>
+                <div class="explore-card-content">
+                    <h3 class="explore-card-title">${planner.title}</h3>
+                    <div class="explore-card-info">
+                        <div class="explore-card-info-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            <span>${destination}</span>
+                        </div>
+                        <div class="explore-card-info-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            <span>${dateRange}</span>
+                        </div>
+                    </div>
+                    <div class="explore-card-footer">
+                        <div class="explore-card-author">
+                            <div class="explore-card-avatar">
+                                ${planner.authorName ? planner.authorName.charAt(0) : '?'}
+                            </div>
+                            <span>${planner.authorName || '익명'}</span>
+                        </div>
+                        <div class="explore-card-stats">
+                            <span class="stat-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                ${planner.viewCount || 0}
+                            </span>
+                            <span class="stat-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                </svg>
+                                ${planner.likeCount || 0}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        `;
+    }
+
+    function changeSort(sort) {
+        currentSort = sort;
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.sort === sort) {
+                btn.classList.add('active');
+            }
+        });
+        loadPublicPlanners();
+    }
+
+    function handleSearch(event) {
+        if (event.key === 'Enter') {
+            searchKeyword = event.target.value.trim();
+            loadPublicPlanners();
+        }
+    }
+</script>
+</body>
+</html>

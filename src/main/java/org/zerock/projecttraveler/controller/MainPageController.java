@@ -235,49 +235,103 @@ public class MainPageController {
         return "guide";
     }
 
+    // ==================== 플래너 공통 메서드 ====================
+
+    private void applyPlannerCommonModel(Model model) {
+        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
+        model.addAttribute("activePage", "planner");
+        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
+        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
+    }
+
+    // ==================== 플래너 랜딩 페이지 ====================
+
     /**
-     * 여행 플래너 랜딩 페이지
+     * 여행 플래너 랜딩 페이지 (웹)
      */
     @GetMapping("/planner")
-    public String planner(Model model) {
-        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
-
-        model.addAttribute("activePage", "planner");
-        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
-        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
-
-        return "planner/planner";
+    public String plannerWeb(Model model) {
+        applyPlannerCommonModel(model);
+        model.addAttribute("isUnity", false);
+        return "planner/planner-web";
     }
 
     /**
-     * 여행 플래너 목록 페이지
+     * 여행 플래너 랜딩 페이지 (유니티)
+     */
+    @GetMapping("/planner-unity")
+    public String plannerUnity(Model model) {
+        applyPlannerCommonModel(model);
+        model.addAttribute("isUnity", true);
+        return "planner/planner-unity";
+    }
+
+    // ==================== 플래너 목록 페이지 ====================
+
+    /**
+     * 여행 플래너 목록 페이지 (웹)
      */
     @GetMapping("/planner/list")
-    public String plannerList(Model model) {
-        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
-
-        model.addAttribute("activePage", "planner");
-        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
-        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
-
-        return "planner/planner-list";
+    public String plannerListWeb(Model model) {
+        applyPlannerCommonModel(model);
+        model.addAttribute("isUnity", false);
+        return "planner/planner-list-web";
     }
 
     /**
-     * 여행 플래너 생성 페이지 (목록으로 리다이렉트)
+     * 여행 플래너 목록 페이지 (유니티)
+     */
+    @GetMapping("/planner-unity/list")
+    public String plannerListUnity(Model model) {
+        applyPlannerCommonModel(model);
+        model.addAttribute("isUnity", true);
+        return "planner/planner-list-unity";
+    }
+
+    /**
+     * 여행 플래너 생성 페이지 (웹 - 목록으로 리다이렉트)
      */
     @GetMapping("/planner/create")
-    public String plannerCreate() {
+    public String plannerCreateWeb() {
         return "redirect:/planner/list";
     }
 
     /**
-     * 여행 플래너 상세/편집 페이지
+     * 여행 플래너 생성 페이지 (유니티 - 목록으로 리다이렉트)
+     */
+    @GetMapping("/planner-unity/create")
+    public String plannerCreateUnity() {
+        return "redirect:/planner-unity/list";
+    }
+
+    // ==================== 플래너 상세 페이지 ====================
+
+    /**
+     * 여행 플래너 상세/편집 페이지 (웹)
      */
     @GetMapping("/planner/detail/{id}")
-    public String plannerDetail(@org.springframework.web.bind.annotation.PathVariable Long id, Model model) {
+    public String plannerDetailWeb(@org.springframework.web.bind.annotation.PathVariable Long id, Model model) {
+        applyPlannerDetailModel(id, model);
+        model.addAttribute("isUnity", false);
+        return "planner/planner-detail-web";
+    }
+
+    /**
+     * 여행 플래너 상세/편집 페이지 (유니티)
+     */
+    @GetMapping("/planner-unity/detail/{id}")
+    public String plannerDetailUnity(@org.springframework.web.bind.annotation.PathVariable Long id, Model model) {
+        applyPlannerDetailModel(id, model);
+        model.addAttribute("isUnity", true);
+        return "planner/planner-detail-unity";
+    }
+
+    /**
+     * 플래너 상세 공통 모델 설정
+     */
+    private void applyPlannerDetailModel(Long id, Model model) {
         Long userId = SecurityUtils.getCurrentUserIdOrThrow();
-        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
+        applyPlannerCommonModel(model);
 
         // 플래너 조회 (사용자 정보 포함)
         TravelPlanner planner = plannerService.findByIdWithUser(id)
@@ -311,9 +365,6 @@ public class MainPageController {
             plannerService.incrementViewCount(id);
         }
 
-        model.addAttribute("activePage", "planner");
-        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
-        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
         model.addAttribute("plannerId", id);
         model.addAttribute("planner", planner);
         model.addAttribute("itineraries", itineraries);
@@ -326,22 +377,28 @@ public class MainPageController {
         model.addAttribute("totalRemaining", totalPlanned - totalActual);
         model.addAttribute("totalChecklist", totalChecklist);
         model.addAttribute("completedChecklist", completedChecklist);
+    }
 
-        return "planner/planner-detail";
+    // ==================== 플래너 둘러보기 페이지 ====================
+
+    /**
+     * 여행 플래너 둘러보기 (웹)
+     */
+    @GetMapping("/planner/explore")
+    public String plannerExploreWeb(Model model) {
+        applyPlannerCommonModel(model);
+        model.addAttribute("isUnity", false);
+        return "planner/planner-explore-web";
     }
 
     /**
-     * 여행 플래너 둘러보기 (공개된 플래너 목록)
+     * 여행 플래너 둘러보기 (유니티)
      */
-    @GetMapping("/planner/explore")
-    public String plannerExplore(Model model) {
-        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
-
-        model.addAttribute("activePage", "planner");
-        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
-        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
-
-        return "planner/planner-explore";
+    @GetMapping("/planner-unity/explore")
+    public String plannerExploreUnity(Model model) {
+        applyPlannerCommonModel(model);
+        model.addAttribute("isUnity", true);
+        return "planner/planner-explore-unity";
     }
 
 
