@@ -109,7 +109,7 @@ function goToLesson(lessonId) {
     console.log('Go to lesson:', lessonId);
 
     // 임시: 알림 표시
-    showComingSoonMessage('레슨 플레이어');
+    // showComingSoonMessage('레슨 플레이어');
 }
 
 /**
@@ -123,9 +123,9 @@ function showLockedMessage() {
  * 준비 중 메시지 표시
  * @param {string} featureName - 기능 이름
  */
-function showComingSoonMessage(featureName) {
-    alert(`${featureName} 기능은 준비 중입니다.`);
-}
+// function showComingSoonMessage(featureName) {
+//     alert(`${featureName} 기능은 준비 중입니다.`);
+// }
 
 /**
  * 학습 시작/이어하기 버튼 초기화

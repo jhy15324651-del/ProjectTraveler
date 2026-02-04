@@ -1,1001 +1,440 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${planner.title} + ' - 日本 Travel LMS'">여행 플래너 - 日本 Travel LMS</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-    <link rel="stylesheet" th:href="@{/css/planner.css}">
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-</head>
-<body>
-    <!-- 헤더 -->
-    <th:block th:replace="~{fragments/main-header :: mainHeader}"></th:block>
-
-    <main class="planner-detail-page">
-        <!-- 플래너 헤더 -->
-        <div class="planner-detail-header">
-            <div class="planner-detail-header-bg">
-                <img th:if="${planner.coverImage != null and !planner.coverImage.isEmpty()}"
-                     th:src="${planner.coverImage}"
-                     th:alt="${planner.title}">
-                <img th:unless="${planner.coverImage != null and !planner.coverImage.isEmpty()}"
-                     src="https://images.unsplash.com/photo-1480796927426-f609979314bd?w=1200&q=80"
-                     th:alt="${planner.title}">
+<!-- templates/planner/planner-detail.html - 플래너 상세 콘텐츠 (fragment) -->
+<main th:fragment="plannerDetailContent" class="planner-detail-page">
+    <!-- 플래너 헤더 -->
+    <div class="planner-detail-header">
+        <div class="planner-detail-header-bg">
+            <img th:if="${planner.coverImage != null and !planner.coverImage.isEmpty()}"
+                 th:src="${planner.coverImage}"
+                 th:alt="${planner.title}">
+            <img th:unless="${planner.coverImage != null and !planner.coverImage.isEmpty()}"
+                 src="https://images.unsplash.com/photo-1480796927426-f609979314bd?w=1200&q=80"
+                 th:alt="${planner.title}">
+        </div>
+        <div class="planner-detail-header-content">
+            <h1 class="planner-detail-title" th:text="${planner.title}">플래너 제목</h1>
+            <div class="planner-detail-meta">
+                <div class="planner-detail-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    <span th:text="${planner.destination != null ? planner.destination : '목적지 미설정'}">목적지</span>
+                </div>
+                <div class="planner-detail-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span th:if="${planner.startDate != null and planner.endDate != null}"
+                          th:text="${#temporals.format(planner.startDate, 'yyyy-MM-dd')} + ' ~ ' + ${#temporals.format(planner.endDate, 'yyyy-MM-dd')}">
+                        날짜
+                    </span>
+                    <span th:unless="${planner.startDate != null and planner.endDate != null}">날짜 미설정</span>
+                </div>
             </div>
-            <div class="planner-detail-header-content">
-                <h1 class="planner-detail-title" th:text="${planner.title}">플래너 제목</h1>
-                <div class="planner-detail-meta">
-                    <div class="planner-detail-meta-item">
+            <p class="planner-detail-desc" th:if="${planner.description != null and !planner.description.isEmpty()}"
+               th:text="${planner.description}"></p>
+        </div>
+    </div>
+
+    <!-- 플래너 본문 -->
+    <div class="planner-detail-body">
+        <!-- 툴바 -->
+        <div class="planner-detail-toolbar">
+            <!-- Day 탭 -->
+            <div class="day-tabs" id="dayTabs">
+                <th:block th:if="${planner.days > 0}">
+                    <button type="button" th:each="day, stat : ${#numbers.sequence(1, planner.days)}"
+                            th:class="'day-tab' + (${stat.index == 0} ? ' active' : '')"
+                            th:data-day="${stat.index}"
+                            th:onclick="'selectDay(' + ${stat.index} + ')'">
+                        <span class="day-tab-label" th:text="'Day ' + ${day}">Day 1</span>
+                        <span class="day-tab-date"
+                              th:text="${#temporals.format(planner.startDate.plusDays(stat.index), 'M/d')}">3/20</span>
+                    </button>
+                </th:block>
+                <th:block th:unless="${planner.days > 0}">
+                    <button type="button" class="day-tab active" data-day="0" onclick="selectDay(0)">
+                        <span class="day-tab-label">Day 1</span>
+                        <span class="day-tab-date">-</span>
+                    </button>
+                </th:block>
+            </div>
+
+            <!-- 액션 버튼 -->
+            <div class="planner-detail-actions" th:if="${canEdit}">
+                <!-- 공개 설정 토글 (소유자만) -->
+                <div class="visibility-toggle" id="visibilityToggle" th:if="${isOwner}">
+                    <span class="visibility-toggle-label">공개 설정</span>
+                    <label class="visibility-toggle-switch">
+                        <input type="checkbox" id="visibilitySwitch"
+                               th:checked="${planner.visibility.name() == 'PUBLIC'}"
+                               onchange="toggleVisibility()">
+                        <span class="visibility-toggle-slider"></span>
+                    </label>
+                    <span class="visibility-toggle-status" id="visibilityStatus"
+                          th:text="${planner.visibility.name() == 'PUBLIC' ? '공개' : '비공개'}"
+                          th:class="'visibility-toggle-status' + (${planner.visibility.name() == 'PUBLIC'} ? ' public' : '')">비공개</span>
+                </div>
+
+                <button type="button" class="btn-planner-action primary" onclick="savePlanner()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    저장
+                </button>
+                <button type="button" class="btn-planner-action secondary" onclick="openShareModal()" th:if="${isOwner}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"/>
+                        <circle cx="6" cy="12" r="3"/>
+                        <circle cx="18" cy="19" r="3"/>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                    공유
+                </button>
+                <button type="button" class="btn-planner-action secondary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    PDF
+                </button>
+                <button type="button" class="btn-planner-action danger" onclick="deletePlanner()" th:if="${isOwner}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        <line x1="10" y1="11" x2="10" y2="17"/>
+                        <line x1="14" y1="11" x2="14" y2="17"/>
+                    </svg>
+                    삭제
+                </button>
+            </div>
+            <!-- 읽기 전용 안내 -->
+            <div class="planner-detail-readonly" th:unless="${canEdit}">
+                <span class="readonly-badge">읽기 전용</span>
+            </div>
+        </div>
+
+        <!-- 레이아웃 -->
+        <div class="planner-detail-layout">
+            <!-- 일정 섹션 -->
+            <div class="itinerary-section">
+                <div class="itinerary-header">
+                    <h3>일정</h3>
+                    <button type="button" class="btn-add-itinerary" onclick="openAddItineraryModal()" th:if="${canEdit}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                            <circle cx="12" cy="10" r="3"/>
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
                         </svg>
-                        <span th:text="${planner.destination != null ? planner.destination : '목적지 미설정'}">목적지</span>
-                    </div>
-                    <div class="planner-detail-meta-item">
+                        일정 추가
+                    </button>
+                </div>
+
+                <!-- 일정 목록 -->
+                <div class="itinerary-list" id="itineraryList">
+                    <!-- 일정이 없는 경우 -->
+                    <div class="itinerary-empty" id="itineraryEmpty" th:if="${#lists.isEmpty(itineraries)}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                             <line x1="16" y1="2" x2="16" y2="6"/>
                             <line x1="8" y1="2" x2="8" y2="6"/>
                             <line x1="3" y1="10" x2="21" y2="10"/>
                         </svg>
-                        <span th:if="${planner.startDate != null and planner.endDate != null}"
-                              th:text="${#temporals.format(planner.startDate, 'yyyy-MM-dd')} + ' ~ ' + ${#temporals.format(planner.endDate, 'yyyy-MM-dd')}">
-                            날짜
-                        </span>
-                        <span th:unless="${planner.startDate != null and planner.endDate != null}">날짜 미설정</span>
-                    </div>
-                </div>
-                <p class="planner-detail-desc" th:if="${planner.description != null and !planner.description.isEmpty()}"
-                   th:text="${planner.description}"></p>
-            </div>
-        </div>
-
-        <!-- 플래너 본문 -->
-        <div class="planner-detail-body">
-            <!-- 툴바 -->
-            <div class="planner-detail-toolbar">
-                <!-- Day 탭 -->
-                <div class="day-tabs" id="dayTabs">
-                    <th:block th:if="${planner.days > 0}">
-                        <button type="button" th:each="day, stat : ${#numbers.sequence(1, planner.days)}"
-                                th:class="'day-tab' + (${stat.index == 0} ? ' active' : '')"
-                                th:data-day="${stat.index}"
-                                th:onclick="'selectDay(' + ${stat.index} + ')'">
-                            <span class="day-tab-label" th:text="'Day ' + ${day}">Day 1</span>
-                            <span class="day-tab-date"
-                                  th:text="${#temporals.format(planner.startDate.plusDays(stat.index), 'M/d')}">3/20</span>
-                        </button>
-                    </th:block>
-                    <th:block th:unless="${planner.days > 0}">
-                        <button type="button" class="day-tab active" data-day="0" onclick="selectDay(0)">
-                            <span class="day-tab-label">Day 1</span>
-                            <span class="day-tab-date">-</span>
-                        </button>
-                    </th:block>
-                </div>
-
-                <!-- 액션 버튼 -->
-                <div class="planner-detail-actions" th:if="${canEdit}">
-                    <!-- 공개 설정 토글 (소유자만) -->
-                    <div class="visibility-toggle" id="visibilityToggle" th:if="${isOwner}">
-                        <span class="visibility-toggle-label">공개 설정</span>
-                        <label class="visibility-toggle-switch">
-                            <input type="checkbox" id="visibilitySwitch"
-                                   th:checked="${planner.visibility.name() == 'PUBLIC'}"
-                                   onchange="toggleVisibility()">
-                            <span class="visibility-toggle-slider"></span>
-                        </label>
-                        <span class="visibility-toggle-status" id="visibilityStatus"
-                              th:text="${planner.visibility.name() == 'PUBLIC' ? '공개' : '비공개'}"
-                              th:class="'visibility-toggle-status' + (${planner.visibility.name() == 'PUBLIC'} ? ' public' : '')">비공개</span>
+                        <p>등록된 일정이 없습니다.</p>
+                        <p th:if="${canEdit}">위의 '일정 추가' 버튼을 눌러 일정을 추가해보세요.</p>
                     </div>
 
-                    <button type="button" class="btn-planner-action primary" onclick="savePlanner()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                            <polyline points="17 21 17 13 7 13 7 21"/>
-                            <polyline points="7 3 7 8 15 8"/>
-                        </svg>
-                        저장
-                    </button>
-                    <button type="button" class="btn-planner-action secondary" onclick="openShareModal()" th:if="${isOwner}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="18" cy="5" r="3"/>
-                            <circle cx="6" cy="12" r="3"/>
-                            <circle cx="18" cy="19" r="3"/>
-                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                        </svg>
-                        공유
-                    </button>
-                    <button type="button" class="btn-planner-action secondary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                        PDF
-                    </button>
-                    <button type="button" class="btn-planner-action danger" onclick="deletePlanner()" th:if="${isOwner}">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                            <line x1="10" y1="11" x2="10" y2="17"/>
-                            <line x1="14" y1="11" x2="14" y2="17"/>
-                        </svg>
-                        삭제
-                    </button>
-                </div>
-                <!-- 읽기 전용 안내 -->
-                <div class="planner-detail-readonly" th:unless="${canEdit}">
-                    <span class="readonly-badge">읽기 전용</span>
-                </div>
-            </div>
-
-            <!-- 레이아웃 -->
-            <div class="planner-detail-layout">
-                <!-- 일정 섹션 -->
-                <div class="itinerary-section">
-                    <div class="itinerary-header">
-                        <h3>일정</h3>
-                        <button type="button" class="btn-add-itinerary" onclick="openAddItineraryModal()" th:if="${canEdit}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="12" y1="5" x2="12" y2="19"/>
-                                <line x1="5" y1="12" x2="19" y2="12"/>
-                            </svg>
-                            일정 추가
-                        </button>
-                    </div>
-
-                    <!-- 일정 목록 -->
-                    <div class="itinerary-list" id="itineraryList">
-                        <!-- 일정이 없는 경우 -->
-                        <div class="itinerary-empty" id="itineraryEmpty" th:if="${#lists.isEmpty(itineraries)}">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                <line x1="16" y1="2" x2="16" y2="6"/>
-                                <line x1="8" y1="2" x2="8" y2="6"/>
-                                <line x1="3" y1="10" x2="21" y2="10"/>
-                            </svg>
-                            <p>등록된 일정이 없습니다.</p>
-                            <p th:if="${canEdit}">위의 '일정 추가' 버튼을 눌러 일정을 추가해보세요.</p>
-                        </div>
-
-                        <!-- 일정 카드들 -->
-                        <div th:each="item : ${itineraries}"
-                             class="itinerary-card"
-                             th:data-day="${item.dayIndex}"
-                             th:data-id="${item.id}"
-                             th:style="${item.dayIndex != 0} ? 'display:none;' : ''">
-                            <div class="itinerary-card-header">
-                                <div class="itinerary-checkbox"
-                                     th:classappend="${item.completed} ? 'checked' : ''"
-                                     th:if="${canEdit}"
-                                     th:onclick="'toggleItineraryComplete(' + ${item.id} + ', this)'">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-                                         th:style="${item.completed} ? 'width:12px;height:12px;display:block;' : 'width:12px;height:12px;display:none;'">
-                                        <polyline points="20 6 9 17 4 12"/>
-                                    </svg>
-                                </div>
-                                <div class="itinerary-card-main">
-                                    <div class="itinerary-time-category">
-                                        <div class="itinerary-time" th:if="${item.time != null and !item.time.isEmpty()}">
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <circle cx="12" cy="12" r="10"/>
-                                                <polyline points="12 6 12 12 16 14"/>
-                                            </svg>
-                                            <span th:text="${item.time}">09:00</span>
-                                        </div>
-                                        <span class="itinerary-category"
-                                              th:classappend="${item.categoryClassName}"
-                                              th:text="${item.categoryDisplayName}">관광지</span>
-                                    </div>
-                                    <div class="itinerary-title" th:text="${item.title}">일정 제목</div>
-                                    <div class="itinerary-location" th:if="${item.location != null and !item.location.isEmpty()}">
+                    <!-- 일정 카드들 -->
+                    <div th:each="item : ${itineraries}"
+                         class="itinerary-card"
+                         th:data-day="${item.dayIndex}"
+                         th:data-id="${item.id}"
+                         th:style="${item.dayIndex != 0} ? 'display:none;' : ''">
+                        <div class="itinerary-card-header">
+                            <div class="itinerary-checkbox"
+                                 th:classappend="${item.completed} ? 'checked' : ''"
+                                 th:if="${canEdit}"
+                                 th:onclick="'toggleItineraryComplete(' + ${item.id} + ', this)'">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                                     th:style="${item.completed} ? 'width:12px;height:12px;display:block;' : 'width:12px;height:12px;display:none;'">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </div>
+                            <div class="itinerary-card-main">
+                                <div class="itinerary-time-category">
+                                    <div class="itinerary-time" th:if="${item.time != null and !item.time.isEmpty()}">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                                            <circle cx="12" cy="10" r="3"/>
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
                                         </svg>
-                                        <span th:text="${item.location}">위치</span>
+                                        <span th:text="${item.time}">09:00</span>
                                     </div>
-                                    <div class="itinerary-notes" th:if="${item.notes != null and !item.notes.isEmpty()}"
-                                         th:text="${item.notes}">메모</div>
-                                    <div class="itinerary-cost" th:if="${item.cost != null and item.cost > 0}">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <line x1="12" y1="1" x2="12" y2="23"/>
-                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                                        </svg>
-                                        <span th:text="${#numbers.formatInteger(item.cost, 1, 'COMMA')} + '원'">0원</span>
-                                    </div>
+                                    <span class="itinerary-category"
+                                          th:classappend="${item.categoryClassName}"
+                                          th:text="${item.categoryDisplayName}">관광지</span>
                                 </div>
-                                <button type="button" class="btn-delete-itinerary"
-                                        th:if="${canEdit}"
-                                        th:onclick="'deleteItinerary(' + ${item.id} + ')'">
+                                <div class="itinerary-title" th:text="${item.title}">일정 제목</div>
+                                <div class="itinerary-location" th:if="${item.location != null and !item.location.isEmpty()}">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="3 6 5 6 21 6"/>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                        <circle cx="12" cy="10" r="3"/>
                                     </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 사이드바 -->
-                <div class="planner-sidebar">
-                    <div class="sidebar-card">
-                        <div class="sidebar-tabs">
-                            <button type="button" class="sidebar-tab active" data-tab="checklist" onclick="switchSidebarTab('checklist')">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="9 11 12 14 22 4"/>
-                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                                </svg>
-                                체크리스트
-                            </button>
-                            <button type="button" class="sidebar-tab" data-tab="budget" onclick="switchSidebarTab('budget')">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                                    <line x1="1" y1="10" x2="23" y2="10"/>
-                                </svg>
-                                예산
-                            </button>
-                        </div>
-
-                        <!-- 체크리스트 탭 -->
-                        <div class="sidebar-content" id="checklistTab">
-                            <div class="checklist-progress">
-                                <div class="checklist-progress-header">
-                                    <span>진행률</span>
-                                    <span id="checklistCount"
-                                          th:text="${completedChecklist} + '/' + ${totalChecklist}">0/0</span>
+                                    <span th:text="${item.location}">위치</span>
                                 </div>
-                                <div class="checklist-progress-bar">
-                                    <div class="checklist-progress-fill" id="checklistProgressBar"
-                                         th:style="'width: ' + (${totalChecklist > 0} ? (${completedChecklist * 100 / totalChecklist}) : 0) + '%'"></div>
-                                </div>
-                            </div>
-
-                            <div class="checklist-items" id="checklistItems">
-                                <!-- 체크리스트가 없는 경우 -->
-                                <div class="checklist-empty" th:if="${#lists.isEmpty(checklists)}">
-                                    <p>체크리스트가 비어 있습니다.</p>
-                                </div>
-                                <!-- 체크리스트 항목들 -->
-                                <label class="checklist-item" th:each="item : ${checklists}">
-                                    <input type="checkbox"
-                                           th:checked="${item.completed}"
-                                           th:disabled="${!canEdit}"
-                                           th:onchange="'toggleChecklistItem(' + ${item.id} + ', this)'">
-                                    <div class="checklist-item-content">
-                                        <div class="checklist-item-category" th:if="${item.category != null}"
-                                             th:text="${item.category}">카테고리</div>
-                                        <div class="checklist-item-text"
-                                             th:classappend="${item.completed} ? 'completed' : ''"
-                                             th:text="${item.text}">항목</div>
-                                    </div>
-                                    <button type="button" class="btn-delete-checklist"
-                                            th:if="${canEdit}"
-                                            th:onclick="'deleteChecklistItem(' + ${item.id} + ', event)'">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <line x1="18" y1="6" x2="6" y2="18"/>
-                                            <line x1="6" y1="6" x2="18" y2="18"/>
-                                        </svg>
-                                    </button>
-                                </label>
-                            </div>
-
-                            <div class="checklist-add" th:if="${canEdit}">
-                                <input type="text" id="newChecklistItem" placeholder="새 항목 추가..." onkeydown="if(event.key==='Enter') addChecklistItem()">
-                                <button type="button" onclick="addChecklistItem()">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;">
-                                        <line x1="12" y1="5" x2="12" y2="19"/>
-                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                <div class="itinerary-notes" th:if="${item.notes != null and !item.notes.isEmpty()}"
+                                     th:text="${item.notes}">메모</div>
+                                <div class="itinerary-cost" th:if="${item.cost != null and item.cost > 0}">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="12" y1="1" x2="12" y2="23"/>
+                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                                     </svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- 예산 탭 -->
-                        <div class="sidebar-content" id="budgetTab" style="display: none;">
-                            <div class="budget-summary">
-                                <div class="budget-summary-label">총 예산</div>
-                                <div class="budget-summary-total"
-                                     th:text="'₩' + ${#numbers.formatInteger(totalPlanned, 1, 'COMMA')}">₩0</div>
-                                <div class="budget-summary-detail"
-                                     th:text="'사용: ₩' + ${#numbers.formatInteger(totalActual, 1, 'COMMA')} + ' | 남음: ₩' + ${#numbers.formatInteger(totalRemaining, 1, 'COMMA')}">
-                                    사용: ₩0 | 남음: ₩0
+                                    <span th:text="${#numbers.formatInteger(item.cost, 1, 'COMMA')} + '원'">0원</span>
                                 </div>
                             </div>
-
-                            <div class="budget-items" id="budgetItems">
-                                <!-- 예산이 없는 경우 -->
-                                <div class="budget-empty" th:if="${#lists.isEmpty(budgets)}">
-                                    <p>등록된 예산 항목이 없습니다.</p>
-                                </div>
-                                <!-- 예산 항목들 -->
-                                <div class="budget-item" th:each="item : ${budgets}" th:data-id="${item.id}">
-                                    <div class="budget-item-header">
-                                        <span class="budget-item-name" th:text="${item.name}">항목명</span>
-                                        <span class="budget-item-percent"
-                                              th:text="${item.usagePercent} + '%'"
-                                              th:classappend="${item.overBudget} ? ' over' : ''">0%</span>
-                                    </div>
-                                    <div class="budget-item-bar">
-                                        <div class="budget-item-fill"
-                                             th:style="'width: ' + ${T(java.lang.Math).min(item.usagePercent, 100)} + '%'"
-                                             th:classappend="${item.overBudget} ? ' over' : ''"></div>
-                                    </div>
-                                    <div class="budget-item-detail">
-                                        <span class="budget-item-planned"
-                                              th:text="'예산: ₩' + ${#numbers.formatInteger(item.plannedAmount, 1, 'COMMA')}">예산: ₩0</span>
-                                        <span class="budget-item-actual">
-                                            <input type="number"
-                                                   th:value="${item.actualAmount}"
-                                                   th:disabled="${!canEdit}"
-                                                   th:onchange="'updateBudgetActual(' + ${item.id} + ', this.value)'">
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="budget-add" th:if="${canEdit}">
-                                <input type="text" id="newBudgetName" placeholder="항목명">
-                                <input type="number" id="newBudgetAmount" placeholder="예산">
-                                <button type="button" onclick="addBudgetItem()">추가</button>
-                            </div>
+                            <button type="button" class="btn-delete-itinerary"
+                                    th:if="${canEdit}"
+                                    th:onclick="'deleteItinerary(' + ${item.id} + ')'">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </main>
 
-    <!-- 일정 추가 모달 -->
-    <div id="addItineraryModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h2>일정 추가</h2>
-                <button type="button" class="btn-modal-close" onclick="closeAddItineraryModal()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="addItineraryForm">
-                    <div class="form-group">
-                        <label for="itineraryTime">시간</label>
-                        <input type="time" id="itineraryTime" name="time">
-                    </div>
-                    <div class="form-group">
-                        <label for="itineraryTitle">제목 *</label>
-                        <input type="text" id="itineraryTitle" name="title" required placeholder="일정 제목">
-                    </div>
-                    <div class="form-group">
-                        <label for="itineraryLocation">위치</label>
-                        <input type="text" id="itineraryLocation" name="location" placeholder="주소 또는 장소명">
-                    </div>
-                    <div class="form-group">
-                        <label for="itineraryCategory">카테고리</label>
-                        <select id="itineraryCategory" name="category">
-                            <option value="ATTRACTION">관광지</option>
-                            <option value="RESTAURANT">식당</option>
-                            <option value="ACCOMMODATION">숙소</option>
-                            <option value="TRANSPORT">교통</option>
-                            <option value="SHOPPING">쇼핑</option>
-                            <option value="OTHER">기타</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="itineraryNotes">메모</label>
-                        <textarea id="itineraryNotes" name="notes" rows="3" placeholder="추가 메모"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="itineraryCost">예상 비용 (원)</label>
-                        <input type="number" id="itineraryCost" name="cost" min="0" value="0">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-modal-cancel" onclick="closeAddItineraryModal()">취소</button>
-                <button type="button" class="btn-modal-confirm" onclick="submitAddItinerary()">추가</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 공유 모달 -->
-    <div id="shareModal" class="modal-overlay">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h2>플래너 공유하기</h2>
-                <button type="button" class="btn-modal-close" onclick="closeShareModal()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="share-settings">
-                    <div class="share-settings-header">
-                        <h4>
+            <!-- 사이드바 -->
+            <div class="planner-sidebar">
+                <div class="sidebar-card">
+                    <div class="sidebar-tabs">
+                        <button type="button" class="sidebar-tab active" data-tab="checklist" onclick="switchSidebarTab('checklist')">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                <circle cx="9" cy="7" r="4"/>
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                <polyline points="9 11 12 14 22 4"/>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                             </svg>
-                            공유된 사용자
-                        </h4>
+                            체크리스트
+                        </button>
+                        <button type="button" class="sidebar-tab" data-tab="budget" onclick="switchSidebarTab('budget')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                                <line x1="1" y1="10" x2="23" y2="10"/>
+                            </svg>
+                            예산
+                        </button>
                     </div>
 
-                    <div class="share-add-form">
-                        <input type="text" id="shareUsername" placeholder="사용자 아이디 입력">
-                        <select id="sharePermission">
-                            <option value="VIEW">보기만</option>
-                            <option value="EDIT">편집 가능</option>
-                        </select>
-                        <button type="button" onclick="addShare()">추가</button>
-                    </div>
-
-                    <div class="share-list" id="shareList">
-                        <div class="share-empty">공유된 사용자가 없습니다.</div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-modal-cancel" onclick="closeShareModal()">닫기</button>
-            </div>
-        </div>
-    </div>
-
-    <script th:inline="javascript">
-        const plannerId = [[${plannerId}]];
-        const canEdit = [[${canEdit}]];
-        const isOwner = [[${isOwner}]];
-        const totalDays = [[${planner.days}]];
-        const csrfToken = document.querySelector('meta[name="_csrf"]').content;
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
-
-        let selectedDay = 0;
-
-        // 페이지 로드 시 초기화
-        document.addEventListener('DOMContentLoaded', function() {
-            const navLinks = document.querySelectorAll('.header-nav a');
-            navLinks.forEach(link => {
-                if (link.getAttribute('href').includes('/planner')) {
-                    link.classList.add('active');
-                }
-            });
-
-            // 첫 번째 Day 탭 선택 상태 확인
-            updateItineraryVisibility();
-        });
-
-        // Day 탭 선택
-        function selectDay(day) {
-            selectedDay = day;
-
-            // 탭 활성화
-            document.querySelectorAll('.day-tab').forEach(tab => {
-                tab.classList.remove('active');
-                if (parseInt(tab.dataset.day) === day) {
-                    tab.classList.add('active');
-                }
-            });
-
-            updateItineraryVisibility();
-        }
-
-        // 일정 표시/숨김 업데이트
-        function updateItineraryVisibility() {
-            const cards = document.querySelectorAll('.itinerary-card');
-            let visibleCount = 0;
-
-            cards.forEach(card => {
-                if (parseInt(card.dataset.day) === selectedDay) {
-                    card.style.display = 'block';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-
-            // 빈 상태 메시지 표시/숨김
-            const emptyMsg = document.getElementById('itineraryEmpty');
-            if (emptyMsg) {
-                emptyMsg.style.display = visibleCount === 0 ? 'flex' : 'none';
-            }
-        }
-
-        // 사이드바 탭 전환
-        function switchSidebarTab(tab) {
-            document.querySelectorAll('.sidebar-tab').forEach(t => {
-                t.classList.remove('active');
-                if (t.dataset.tab === tab) {
-                    t.classList.add('active');
-                }
-            });
-
-            document.getElementById('checklistTab').style.display = tab === 'checklist' ? 'block' : 'none';
-            document.getElementById('budgetTab').style.display = tab === 'budget' ? 'block' : 'none';
-        }
-
-        // 일정 완료 토글
-        async function toggleItineraryComplete(itineraryId, element) {
-            if (!canEdit) return;
-
-            try {
-                const response = await fetch(`/api/planner/itinerary/${itineraryId}/toggle`, {
-                    method: 'PUT',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    element.classList.toggle('checked');
-                    const svg = element.querySelector('svg');
-                    svg.style.display = element.classList.contains('checked') ? 'block' : 'none';
-                }
-            } catch (error) {
-                console.error('Error toggling itinerary:', error);
-            }
-        }
-
-        // 일정 추가 모달 열기
-        function openAddItineraryModal() {
-            document.getElementById('addItineraryModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-            document.getElementById('addItineraryForm').reset();
-        }
-
-        // 일정 추가 모달 닫기
-        function closeAddItineraryModal() {
-            document.getElementById('addItineraryModal').classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        // 일정 추가 제출
-        async function submitAddItinerary() {
-            const form = document.getElementById('addItineraryForm');
-            const title = document.getElementById('itineraryTitle').value.trim();
-
-            if (!title) {
-                alert('제목을 입력해주세요.');
-                return;
-            }
-
-            const data = {
-                dayIndex: selectedDay,
-                time: document.getElementById('itineraryTime').value || null,
-                title: title,
-                location: document.getElementById('itineraryLocation').value || null,
-                category: document.getElementById('itineraryCategory').value,
-                notes: document.getElementById('itineraryNotes').value || null,
-                cost: parseInt(document.getElementById('itineraryCost').value) || 0
-            };
-
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/itinerary`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    closeAddItineraryModal();
-                    location.reload(); // 페이지 새로고침으로 간단히 처리
-                } else {
-                    alert('일정 추가에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
-                }
-            } catch (error) {
-                console.error('Error adding itinerary:', error);
-                alert('일정 추가 중 오류가 발생했습니다.');
-            }
-        }
-
-        // 일정 삭제
-        async function deleteItinerary(itineraryId) {
-            if (!confirm('이 일정을 삭제하시겠습니까?')) return;
-
-            try {
-                const response = await fetch(`/api/planner/itinerary/${itineraryId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    const card = document.querySelector(`.itinerary-card[data-id="${itineraryId}"]`);
-                    if (card) card.remove();
-                    updateItineraryVisibility();
-                } else {
-                    alert('일정 삭제에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error deleting itinerary:', error);
-                alert('일정 삭제 중 오류가 발생했습니다.');
-            }
-        }
-
-        // 체크리스트 항목 토글
-        async function toggleChecklistItem(itemId, element) {
-            if (!canEdit) return;
-
-            try {
-                const response = await fetch(`/api/planner/checklist/${itemId}/toggle`, {
-                    method: 'PUT',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    const textEl = element.closest('.checklist-item').querySelector('.checklist-item-text');
-                    if (element.checked) {
-                        textEl.classList.add('completed');
-                    } else {
-                        textEl.classList.remove('completed');
-                    }
-                    updateChecklistProgress();
-                } else {
-                    element.checked = !element.checked; // 원복
-                }
-            } catch (error) {
-                console.error('Error toggling checklist:', error);
-                element.checked = !element.checked; // 원복
-            }
-        }
-
-        // 체크리스트 항목 추가
-        async function addChecklistItem() {
-            const input = document.getElementById('newChecklistItem');
-            const text = input.value.trim();
-            if (!text) return;
-
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/checklist`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify({
-                        category: '기타',
-                        text: text
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    input.value = '';
-                    location.reload();
-                } else {
-                    alert('체크리스트 추가에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error adding checklist:', error);
-                alert('체크리스트 추가 중 오류가 발생했습니다.');
-            }
-        }
-
-        // 체크리스트 항목 삭제
-        async function deleteChecklistItem(itemId, event) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            if (!confirm('이 항목을 삭제하시겠습니까?')) return;
-
-            try {
-                const response = await fetch(`/api/planner/checklist/${itemId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    location.reload();
-                } else {
-                    alert('삭제에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error deleting checklist:', error);
-                alert('삭제 중 오류가 발생했습니다.');
-            }
-        }
-
-        // 체크리스트 진행률 업데이트
-        function updateChecklistProgress() {
-            const checkboxes = document.querySelectorAll('#checklistItems input[type="checkbox"]');
-            const total = checkboxes.length;
-            const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
-            const percent = total > 0 ? (checked / total) * 100 : 0;
-
-            document.getElementById('checklistCount').textContent = `${checked}/${total}`;
-            document.getElementById('checklistProgressBar').style.width = `${percent}%`;
-        }
-
-        // 예산 실제 지출 업데이트
-        async function updateBudgetActual(budgetId, value) {
-            if (!canEdit) return;
-
-            try {
-                const response = await fetch(`/api/planner/budget/${budgetId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify({
-                        actualAmount: parseInt(value) || 0
-                    })
-                });
-
-                const result = await response.json();
-
-                if (!result.success) {
-                    alert('예산 업데이트에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error updating budget:', error);
-            }
-        }
-
-        // 예산 항목 추가
-        async function addBudgetItem() {
-            const name = document.getElementById('newBudgetName').value.trim();
-            const amount = parseInt(document.getElementById('newBudgetAmount').value) || 0;
-
-            if (!name) {
-                alert('항목명을 입력해주세요.');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/budget`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify({
-                        name: name,
-                        plannedAmount: amount
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    location.reload();
-                } else {
-                    alert('예산 추가에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error adding budget:', error);
-                alert('예산 추가 중 오류가 발생했습니다.');
-            }
-        }
-
-        // 공개 설정 토글
-        async function toggleVisibility() {
-            const visibilitySwitch = document.getElementById('visibilitySwitch');
-            const visibilityStatus = document.getElementById('visibilityStatus');
-            const isPublic = visibilitySwitch.checked;
-
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/visibility`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify({
-                        visibility: isPublic ? 'PUBLIC' : 'PRIVATE'
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    visibilityStatus.textContent = isPublic ? '공개' : '비공개';
-                    if (isPublic) {
-                        visibilityStatus.classList.add('public');
-                    } else {
-                        visibilityStatus.classList.remove('public');
-                    }
-                } else {
-                    visibilitySwitch.checked = !isPublic;
-                    alert('공개 설정 변경에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error toggling visibility:', error);
-                visibilitySwitch.checked = !isPublic;
-                alert('공개 설정 변경 중 오류가 발생했습니다.');
-            }
-        }
-
-        // 공유 모달 열기
-        function openShareModal() {
-            document.getElementById('shareModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-            loadShares();
-        }
-
-        // 공유 모달 닫기
-        function closeShareModal() {
-            document.getElementById('shareModal').classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        // 공유 목록 로드
-        async function loadShares() {
-            const shareList = document.getElementById('shareList');
-
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/shares`);
-                const result = await response.json();
-
-                if (result.success && result.data && result.data.length > 0) {
-                    shareList.innerHTML = result.data.map(share => `
-                        <div class="share-item">
-                            <div class="share-user">
-                                <span class="share-username">${share.username}</span>
-                                <span class="share-permission">${share.permission === 'EDIT' ? '편집 가능' : '보기만'}</span>
+                    <!-- 체크리스트 탭 -->
+                    <div class="sidebar-content" id="checklistTab">
+                        <div class="checklist-progress">
+                            <div class="checklist-progress-header">
+                                <span>진행률</span>
+                                <span id="checklistCount"
+                                      th:text="${completedChecklist} + '/' + ${totalChecklist}">0/0</span>
                             </div>
-                            <button type="button" class="btn-remove-share" onclick="removeShare(${share.userId})">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="18" y1="6" x2="6" y2="18"/>
-                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                            <div class="checklist-progress-bar">
+                                <div class="checklist-progress-fill" id="checklistProgressBar"
+                                     th:style="'width: ' + (${totalChecklist > 0} ? (${completedChecklist * 100 / totalChecklist}) : 0) + '%'"></div>
+                            </div>
+                        </div>
+
+                        <div class="checklist-items" id="checklistItems">
+                            <!-- 체크리스트가 없는 경우 -->
+                            <div class="checklist-empty" th:if="${#lists.isEmpty(checklists)}">
+                                <p>체크리스트가 비어 있습니다.</p>
+                            </div>
+                            <!-- 체크리스트 항목들 -->
+                            <label class="checklist-item" th:each="item : ${checklists}">
+                                <input type="checkbox"
+                                       th:checked="${item.completed}"
+                                       th:disabled="${!canEdit}"
+                                       th:onchange="'toggleChecklistItem(' + ${item.id} + ', this)'">
+                                <div class="checklist-item-content">
+                                    <div class="checklist-item-category" th:if="${item.category != null}"
+                                         th:text="${item.category}">카테고리</div>
+                                    <div class="checklist-item-text"
+                                         th:classappend="${item.completed} ? 'completed' : ''"
+                                         th:text="${item.text}">항목</div>
+                                </div>
+                                <button type="button" class="btn-delete-checklist"
+                                        th:if="${canEdit}"
+                                        th:onclick="'deleteChecklistItem(' + ${item.id} + ', event)'">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18"/>
+                                        <line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                </button>
+                            </label>
+                        </div>
+
+                        <div class="checklist-add" th:if="${canEdit}">
+                            <input type="text" id="newChecklistItem" placeholder="새 항목 추가..." onkeydown="if(event.key==='Enter') addChecklistItem()">
+                            <button type="button" onclick="addChecklistItem()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
                                 </svg>
                             </button>
                         </div>
-                    `).join('');
-                } else {
-                    shareList.innerHTML = '<div class="share-empty">공유된 사용자가 없습니다.</div>';
-                }
-            } catch (error) {
-                console.error('Error loading shares:', error);
-                shareList.innerHTML = '<div class="share-empty">공유 목록을 불러올 수 없습니다.</div>';
-            }
-        }
+                    </div>
 
-        // 공유 추가
-        async function addShare() {
-            const username = document.getElementById('shareUsername').value.trim();
-            const permission = document.getElementById('sharePermission').value;
+                    <!-- 예산 탭 -->
+                    <div class="sidebar-content" id="budgetTab" style="display: none;">
+                        <div class="budget-summary">
+                            <div class="budget-summary-label">총 예산</div>
+                            <div class="budget-summary-total"
+                                 th:text="'₩' + ${#numbers.formatInteger(totalPlanned, 1, 'COMMA')}">₩0</div>
+                            <div class="budget-summary-detail"
+                                 th:text="'사용: ₩' + ${#numbers.formatInteger(totalActual, 1, 'COMMA')} + ' | 남음: ₩' + ${#numbers.formatInteger(totalRemaining, 1, 'COMMA')}">
+                                사용: ₩0 | 남음: ₩0
+                            </div>
+                        </div>
 
-            if (!username) {
-                alert('사용자 아이디를 입력해주세요.');
-                return;
-            }
+                        <div class="budget-items" id="budgetItems">
+                            <!-- 예산이 없는 경우 -->
+                            <div class="budget-empty" th:if="${#lists.isEmpty(budgets)}">
+                                <p>등록된 예산 항목이 없습니다.</p>
+                            </div>
+                            <!-- 예산 항목들 -->
+                            <div class="budget-item" th:each="item : ${budgets}" th:data-id="${item.id}">
+                                <div class="budget-item-header">
+                                    <span class="budget-item-name" th:text="${item.name}">항목명</span>
+                                    <span class="budget-item-percent"
+                                          th:text="${item.usagePercent} + '%'"
+                                          th:classappend="${item.overBudget} ? ' over' : ''">0%</span>
+                                </div>
+                                <div class="budget-item-bar">
+                                    <div class="budget-item-fill"
+                                         th:style="'width: ' + ${T(java.lang.Math).min(item.usagePercent, 100)} + '%'"
+                                         th:classappend="${item.overBudget} ? ' over' : ''"></div>
+                                </div>
+                                <div class="budget-item-detail">
+                                    <span class="budget-item-planned"
+                                          th:text="'예산: ₩' + ${#numbers.formatInteger(item.plannedAmount, 1, 'COMMA')}">예산: ₩0</span>
+                                    <span class="budget-item-actual">
+                                        <input type="number"
+                                               th:value="${item.actualAmount}"
+                                               th:disabled="${!canEdit}"
+                                               th:onchange="'updateBudgetActual(' + ${item.id} + ', this.value)'">
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
 
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/share`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        permission: permission
-                    })
-                });
+                        <div class="budget-add" th:if="${canEdit}">
+                            <input type="text" id="newBudgetName" placeholder="항목명">
+                            <input type="number" id="newBudgetAmount" placeholder="예산">
+                            <button type="button" onclick="addBudgetItem()">추가</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
 
-                const result = await response.json();
+<!-- 일정 추가 모달 -->
+<div th:fragment="plannerDetailModals" id="addItineraryModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h2>일정 추가</h2>
+            <button type="button" class="btn-modal-close" onclick="closeAddItineraryModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="addItineraryForm">
+                <div class="form-group">
+                    <label for="itineraryTime">시간</label>
+                    <input type="time" id="itineraryTime" name="time">
+                </div>
+                <div class="form-group">
+                    <label for="itineraryTitle">제목 *</label>
+                    <input type="text" id="itineraryTitle" name="title" required placeholder="일정 제목">
+                </div>
+                <div class="form-group">
+                    <label for="itineraryLocation">위치</label>
+                    <input type="text" id="itineraryLocation" name="location" placeholder="주소 또는 장소명">
+                </div>
+                <div class="form-group">
+                    <label for="itineraryCategory">카테고리</label>
+                    <select id="itineraryCategory" name="category">
+                        <option value="ATTRACTION">관광지</option>
+                        <option value="RESTAURANT">식당</option>
+                        <option value="ACCOMMODATION">숙소</option>
+                        <option value="TRANSPORT">교통</option>
+                        <option value="SHOPPING">쇼핑</option>
+                        <option value="OTHER">기타</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="itineraryNotes">메모</label>
+                    <textarea id="itineraryNotes" name="notes" rows="3" placeholder="추가 메모"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="itineraryCost">예상 비용 (원)</label>
+                    <input type="number" id="itineraryCost" name="cost" min="0" value="0">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modal-cancel" onclick="closeAddItineraryModal()">취소</button>
+            <button type="button" class="btn-modal-confirm" onclick="submitAddItinerary()">추가</button>
+        </div>
+    </div>
+</div>
 
-                if (result.success) {
-                    document.getElementById('shareUsername').value = '';
-                    loadShares();
-                    alert('공유가 추가되었습니다.');
-                } else {
-                    alert('공유 추가에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
-                }
-            } catch (error) {
-                console.error('Error adding share:', error);
-                alert('공유 추가 중 오류가 발생했습니다.');
-            }
-        }
+<!-- 공유 모달 -->
+<div id="shareModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h2>플래너 공유하기</h2>
+            <button type="button" class="btn-modal-close" onclick="closeShareModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="share-settings">
+                <div class="share-settings-header">
+                    <h4>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        공유된 사용자
+                    </h4>
+                </div>
 
-        // 공유 삭제
-        async function removeShare(userId) {
-            if (!confirm('이 사용자의 공유를 취소하시겠습니까?')) return;
+                <div class="share-add-form">
+                    <input type="text" id="shareUsername" placeholder="사용자 아이디 입력">
+                    <select id="sharePermission">
+                        <option value="VIEW">보기만</option>
+                        <option value="EDIT">편집 가능</option>
+                    </select>
+                    <button type="button" onclick="addShare()">추가</button>
+                </div>
 
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/share/${userId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    loadShares();
-                } else {
-                    alert('공유 취소에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error removing share:', error);
-                alert('공유 취소 중 오류가 발생했습니다.');
-            }
-        }
-
-        // 플래너 저장 (기본 정보)
-        async function savePlanner() {
-            alert('플래너가 저장되었습니다!');
-        }
-
-        // 플래너 삭제
-        async function deletePlanner() {
-            if (!confirm('정말 이 플래너를 삭제하시겠습니까?\n삭제된 플래너는 복구할 수 없습니다.')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/planner/${plannerId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    alert('플래너가 삭제되었습니다.');
-                    window.location.href = '/planner/list';
-                } else {
-                    alert('삭제에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
-                }
-            } catch (error) {
-                console.error('Error deleting planner:', error);
-                alert('삭제 중 오류가 발생했습니다.');
-            }
-        }
-
-        // 모달 외부 클릭 시 닫기
-        document.querySelectorAll('.modal-overlay').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.classList.remove('active');
-                    document.body.style.overflow = '';
-                }
-            });
-        });
-
-        // ESC 키로 모달 닫기
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay.active').forEach(modal => {
-                    modal.classList.remove('active');
-                });
-                document.body.style.overflow = '';
-            }
-        });
-    </script>
-</body>
-</html>
+                <div class="share-list" id="shareList">
+                    <div class="share-empty">공유된 사용자가 없습니다.</div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modal-cancel" onclick="closeShareModal()">닫기</button>
+        </div>
+    </div>
+</div>

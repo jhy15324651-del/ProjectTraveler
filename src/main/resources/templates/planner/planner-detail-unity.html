@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${planner.title} + ' - 日本 Travel LMS'">여행 플래너 - 日本 Travel LMS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/planner.css}">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+
+<!-- 헤더 없음 (유니티) -->
+
+<!-- 플래너 상세 콘텐츠 -->
+<div th:replace="planner/planner-detail :: plannerDetailContent"></div>
+
+<!-- 모달들 -->
+<div th:replace="planner/planner-detail :: plannerDetailModals"></div>
+<div th:include="planner/planner-detail :: shareModal"></div>
+
+<script th:inline="javascript">
+    const plannerId = [[${plannerId}]];
+    const canEdit = [[${canEdit}]];
+    const isOwner = [[${isOwner}]];
+    const totalDays = [[${planner.days}]];
+    const isUnity = [[${isUnity}]];
+    const listPath = isUnity ? '/planner-unity/list' : '/planner/list';
+    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+    let selectedDay = 0;
+
+    // 페이지 로드 시 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+        // 첫 번째 Day 탭 선택 상태 확인
+        updateItineraryVisibility();
+    });
+
+    // Day 탭 선택
+    function selectDay(day) {
+        selectedDay = day;
+
+        // 탭 활성화
+        document.querySelectorAll('.day-tab').forEach(tab => {
+            tab.classList.remove('active');
+            if (parseInt(tab.dataset.day) === day) {
+                tab.classList.add('active');
+            }
+        });
+
+        updateItineraryVisibility();
+    }
+
+    // 일정 표시/숨김 업데이트
+    function updateItineraryVisibility() {
+        const cards = document.querySelectorAll('.itinerary-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            if (parseInt(card.dataset.day) === selectedDay) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // 빈 상태 메시지 표시/숨김
+        const emptyMsg = document.getElementById('itineraryEmpty');
+        if (emptyMsg) {
+            emptyMsg.style.display = visibleCount === 0 ? 'flex' : 'none';
+        }
+    }
+
+    // 사이드바 탭 전환
+    function switchSidebarTab(tab) {
+        document.querySelectorAll('.sidebar-tab').forEach(t => {
+            t.classList.remove('active');
+            if (t.dataset.tab === tab) {
+                t.classList.add('active');
+            }
+        });
+
+        document.getElementById('checklistTab').style.display = tab === 'checklist' ? 'block' : 'none';
+        document.getElementById('budgetTab').style.display = tab === 'budget' ? 'block' : 'none';
+    }
+
+    // 일정 완료 토글
+    async function toggleItineraryComplete(itineraryId, element) {
+        if (!canEdit) return;
+
+        try {
+            const response = await fetch(`/api/planner/itinerary/${itineraryId}/toggle`, {
+                method: 'PUT',
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                element.classList.toggle('checked');
+                const svg = element.querySelector('svg');
+                svg.style.display = element.classList.contains('checked') ? 'block' : 'none';
+            }
+        } catch (error) {
+            console.error('Error toggling itinerary:', error);
+        }
+    }
+
+    // 일정 추가 모달 열기
+    function openAddItineraryModal() {
+        document.getElementById('addItineraryModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        document.getElementById('addItineraryForm').reset();
+    }
+
+    // 일정 추가 모달 닫기
+    function closeAddItineraryModal() {
+        document.getElementById('addItineraryModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // 일정 추가 제출
+    async function submitAddItinerary() {
+        const form = document.getElementById('addItineraryForm');
+        const title = document.getElementById('itineraryTitle').value.trim();
+
+        if (!title) {
+            alert('제목을 입력해주세요.');
+            return;
+        }
+
+        const data = {
+            dayIndex: selectedDay,
+            time: document.getElementById('itineraryTime').value || null,
+            title: title,
+            location: document.getElementById('itineraryLocation').value || null,
+            category: document.getElementById('itineraryCategory').value,
+            notes: document.getElementById('itineraryNotes').value || null,
+            cost: parseInt(document.getElementById('itineraryCost').value) || 0
+        };
+
+        try {
+            const response = await fetch(`/api/planner/${plannerId}/itinerary`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                closeAddItineraryModal();
+                location.reload();
+            } else {
+                alert('일정 추가에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
+            }
+        } catch (error) {
+            console.error('Error adding itinerary:', error);
+            alert('일정 추가 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 일정 삭제
+    async function deleteItinerary(itineraryId) {
+        if (!confirm('이 일정을 삭제하시겠습니까?')) return;
+
+        try {
+            const response = await fetch(`/api/planner/itinerary/${itineraryId}`, {
+                method: 'DELETE',
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const card = document.querySelector(`.itinerary-card[data-id="${itineraryId}"]`);
+                if (card) card.remove();
+                updateItineraryVisibility();
+            } else {
+                alert('일정 삭제에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error deleting itinerary:', error);
+            alert('일정 삭제 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 체크리스트 항목 토글
+    async function toggleChecklistItem(itemId, element) {
+        if (!canEdit) return;
+
+        try {
+            const response = await fetch(`/api/planner/checklist/${itemId}/toggle`, {
+                method: 'PUT',
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const textEl = element.closest('.checklist-item').querySelector('.checklist-item-text');
+                if (element.checked) {
+                    textEl.classList.add('completed');
+                } else {
+                    textEl.classList.remove('completed');
+                }
+                updateChecklistProgress();
+            } else {
+                element.checked = !element.checked;
+            }
+        } catch (error) {
+            console.error('Error toggling checklist:', error);
+            element.checked = !element.checked;
+        }
+    }
+
+    // 체크리스트 항목 추가
+    async function addChecklistItem() {
+        const input = document.getElementById('newChecklistItem');
+        const text = input.value.trim();
+        if (!text) return;
+
+        try {
+            const response = await fetch(`/api/planner/${plannerId}/checklist`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({
+                    category: '기타',
+                    text: text
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                input.value = '';
+                location.reload();
+            } else {
+                alert('체크리스트 추가에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error adding checklist:', error);
+            alert('체크리스트 추가 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 체크리스트 항목 삭제
+    async function deleteChecklistItem(itemId, event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (!confirm('이 항목을 삭제하시겠습니까?')) return;
+
+        try {
+            const response = await fetch(`/api/planner/checklist/${itemId}`, {
+                method: 'DELETE',
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('삭제에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error deleting checklist:', error);
+            alert('삭제 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 체크리스트 진행률 업데이트
+    function updateChecklistProgress() {
+        const checkboxes = document.querySelectorAll('#checklistItems input[type="checkbox"]');
+        const total = checkboxes.length;
+        const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+        const percent = total > 0 ? (checked / total) * 100 : 0;
+
+        document.getElementById('checklistCount').textContent = `${checked}/${total}`;
+        document.getElementById('checklistProgressBar').style.width = `${percent}%`;
+    }
+
+    // 예산 실제 지출 업데이트
+    async function updateBudgetActual(budgetId, value) {
+        if (!canEdit) return;
+
+        try {
+            const response = await fetch(`/api/planner/budget/${budgetId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({
+                    actualAmount: parseInt(value) || 0
+                })
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                alert('예산 업데이트에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error updating budget:', error);
+        }
+    }
+
+    // 예산 항목 추가
+    async function addBudgetItem() {
+        const name = document.getElementById('newBudgetName').value.trim();
+        const amount = parseInt(document.getElementById('newBudgetAmount').value) || 0;
+
+        if (!name) {
+            alert('항목명을 입력해주세요.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/planner/${plannerId}/budget`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({
+                    name: name,
+                    plannedAmount: amount
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('예산 추가에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error adding budget:', error);
+            alert('예산 추가 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 공개 설정 토글
+    async function toggleVisibility() {
+        const visibilitySwitch = document.getElementById('visibilitySwitch');
+        const visibilityStatus = document.getElementById('visibilityStatus');
+        const isPublic = visibilitySwitch.checked;
+
+        try {
+            const response = await fetch(`/api/planner/${plannerId}/visibility`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({
+                    visibility: isPublic ? 'PUBLIC' : 'PRIVATE'
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                visibilityStatus.textContent = isPublic ? '공개' : '비공개';
+                if (isPublic) {
+                    visibilityStatus.classList.add('public');
+                } else {
+                    visibilityStatus.classList.remove('public');
+                }
+            } else {
+                visibilitySwitch.checked = !isPublic;
+                alert('공개 설정 변경에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error toggling visibility:', error);
+            visibilitySwitch.checked = !isPublic;
+            alert('공개 설정 변경 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 공유 모달 열기
+    function openShareModal() {
+        document.getElementById('shareModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        loadShares();
+    }
+
+    // 공유 모달 닫기
+    function closeShareModal() {
+        document.getElementById('shareModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // 공유 목록 로드
+    async function loadShares() {
+        const shareList = document.getElementById('shareList');
+
+        try {
+            const response = await fetch(`/api/planner/${plannerId}/shares`);
+            const result = await response.json();
+
+            if (result.success && result.data && result.data.length > 0) {
+                shareList.innerHTML = result.data.map(share => `
+                    <div class="share-item">
+                        <div class="share-user">
+                            <span class="share-username">${share.username}</span>
+                            <span class="share-permission">${share.permission === 'EDIT' ? '편집 가능' : '보기만'}</span>
+                        </div>
+                        <button type="button" class="btn-remove-share" onclick="removeShare(${share.userId})">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                `).join('');
+            } else {
+                shareList.innerHTML = '<div class="share-empty">공유된 사용자가 없습니다.</div>';
+            }
+        } catch (error) {
+            console.error('Error loading shares:', error);
+            shareList.innerHTML = '<div class="share-empty">공유 목록을 불러올 수 없습니다.</div>';
+        }
+    }
+
+    // 공유 추가
+    async function addShare() {
+        const username = document.getElementById('shareUsername').value.trim();
+        const permission = document.getElementById('sharePermission').value;
+
+        if (!username) {
+            alert('사용자 아이디를 입력해주세요.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/planner/${plannerId}/share`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({
+                    username: username,
+                    permission: permission
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                document.getElementById('shareUsername').value = '';
+                loadShares();
+                alert('공유가 추가되었습니다.');
+            } else {
+                alert('공유 추가에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
+            }
+        } catch (error) {
+            console.error('Error adding share:', error);
+            alert('공유 추가 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 공유 삭제
+    async function removeShare(userId) {
+        if (!confirm('이 사용자의 공유를 취소하시겠습니까?')) return;
+
+        try {
+            const response = await fetch(`/api/planner/${plannerId}/share/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                loadShares();
+            } else {
+                alert('공유 취소에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error removing share:', error);
+            alert('공유 취소 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 플래너 저장 (기본 정보)
+    async function savePlanner() {
+        alert('플래너가 저장되었습니다!');
+    }
+
+    // 플래너 삭제
+    async function deletePlanner() {
+        if (!confirm('정말 이 플래너를 삭제하시겠습니까?\n삭제된 플래너는 복구할 수 없습니다.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/planner/${plannerId}`, {
+                method: 'DELETE',
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('플래너가 삭제되었습니다.');
+                window.location.href = listPath;
+            } else {
+                alert('삭제에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
+            }
+        } catch (error) {
+            console.error('Error deleting planner:', error);
+            alert('삭제 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 모달 외부 클릭 시 닫기
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    });
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            document.body.style.overflow = '';
+        }
+    });
+</script>
+</body>
+</html>
