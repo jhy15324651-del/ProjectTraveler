@@ -163,3 +163,8 @@ Reviews - Detail (reviews-read.html)
     text-decoration: underline;
     text-underline-offset: 3px;
 }
+
+/* reviews 페이지 배경을 planner 톤(#FDF2F2)으로 맞춤 */
+body.reviews-page{
+    background: linear-gradient(to bottom, #FDF2F2, var(--white));
+}

@@ -1,27 +1,29 @@
-<!-- templates/reviews-post.html -->
+<!-- templates/reviews/reviews-post.html -->
 <div th:fragment="postContent" class="container reviews-post">
 
     <div class="reviews-post-title-row">
         <h1 class="page-title">여행 후기 작성</h1>
 
-        <!-- ✅ 유니티/웹 분기: 목록으로 -->
+        <!-- 목록으로 -->
         <a class="back-btn"
            th:href="${isUnity == true} ? @{/reviews-unity} : @{/reviews}">
             ← 돌아가기
         </a>
     </div>
 
+    <!-- create: POST /reviews -->
     <form id="postForm" method="post" th:action="@{/reviews}" th:object="${request}">
-        <input type="hidden" name="fromUnity" th:value="${isUnity} ? '1' : '0'">
+
+        <!-- 유니티 분기용 (컨트롤러: @RequestParam fromUnity) -->
+        <input type="hidden" name="fromUnity" th:value="${isUnity == true} ? '1' : '0'" value="0"/>
 
         <!-- 제목 -->
         <section class="write-section">
             <label class="write-label">제목</label>
             <input type="text"
-                   name="title"
                    class="write-input"
                    placeholder="여행 후기를 한 줄로 요약해 주세요"
-                   th:value="*{title}">
+                   th:field="*{title}">
         </section>
 
         <!-- 예산 -->
@@ -31,35 +33,35 @@
             <div class="budget-grid" id="budgetGrid">
                 <div class="budget-item">
                     <span class="b-label">항공</span>
-                    <input type="text" name="budgetFlight" class="b-input" inputmode="numeric" placeholder="0"
-                           th:value="*{budgetFlight}">
+                    <input type="text" class="b-input" inputmode="numeric" placeholder="0"
+                           th:field="*{budgetFlight}">
                     <span class="unit">만 원</span>
                 </div>
 
                 <div class="budget-item">
                     <span class="b-label">숙박</span>
-                    <input type="text" name="budgetLodging" class="b-input" inputmode="numeric" placeholder="0"
-                           th:value="*{budgetLodging}">
+                    <input type="text" class="b-input" inputmode="numeric" placeholder="0"
+                           th:field="*{budgetLodging}">
                     <span class="unit">만 원</span>
                 </div>
 
                 <div class="budget-item">
                     <span class="b-label">식비</span>
-                    <input type="text" name="budgetFood" class="b-input" inputmode="numeric" placeholder="0"
-                           th:value="*{budgetFood}">
+                    <input type="text" class="b-input" inputmode="numeric" placeholder="0"
+                           th:field="*{budgetFood}">
                     <span class="unit">만 원</span>
                 </div>
 
                 <div class="budget-item">
                     <span class="b-label">기타</span>
-                    <input type="text" name="budgetExtra" class="b-input" inputmode="numeric" placeholder="0"
-                           th:value="*{budgetExtra}">
+                    <input type="text" class="b-input" inputmode="numeric" placeholder="0"
+                           th:field="*{budgetExtra}">
                     <span class="unit">만 원</span>
                 </div>
             </div>
 
-            <!-- 서버로 총액도 같이 보낼 거면 사용 (현재 create에서는 안 쓰면 제거 가능) -->
-            <input type="hidden" name="budgetTotal" id="budgetTotal" value="0">
+            <!-- budgetTotal은 DTO에 없으니 제거 -->
+            <!-- <input type="hidden" name="budgetTotal" id="budgetTotal" value="0"> -->
         </section>
 
         <!-- 태그 선택 -->
@@ -71,13 +73,15 @@
                     <div class="filter-label">여행 유형</div>
                     <div class="filter-hint single">한 개만 선택</div>
                 </div>
-                <div class="filter-chips" data-key="travelType">
+
+                <div class="filter-chips" data-key="travelType" data-mode="single">
                     <button type="button" class="chip" data-value="solo">혼자</button>
                     <button type="button" class="chip" data-value="couple">커플</button>
                     <button type="button" class="chip" data-value="family">가족</button>
                     <button type="button" class="chip" data-value="friends">친구</button>
                 </div>
-                <input type="hidden" name="travelType" th:value="*{travelType}">
+
+                <input type="hidden" th:field="*{travelType}">
             </div>
 
             <!-- 테마 (단일) -->
@@ -86,14 +90,16 @@
                     <div class="filter-label">테마</div>
                     <div class="filter-hint single">한 개만 선택</div>
                 </div>
-                <div class="filter-chips" data-key="theme">
+
+                <div class="filter-chips" data-key="theme" data-mode="single">
                     <button type="button" class="chip" data-value="freedom">자유</button>
                     <button type="button" class="chip" data-value="healing">힐링</button>
                     <button type="button" class="chip" data-value="food">맛집</button>
                     <button type="button" class="chip" data-value="activity">액티비티</button>
                     <button type="button" class="chip" data-value="nature">자연</button>
                 </div>
-                <input type="hidden" name="theme" th:value="*{theme}">
+
+                <input type="hidden" th:field="*{theme}">
             </div>
 
             <!-- 기간 (단일) -->
@@ -102,13 +108,15 @@
                     <div class="filter-label">기간</div>
                     <div class="filter-hint single">한 개만 선택</div>
                 </div>
-                <div class="filter-chips" data-key="period">
+
+                <div class="filter-chips" data-key="period" data-mode="single">
                     <button type="button" class="chip" data-value="당일치기">당일</button>
                     <button type="button" class="chip" data-value="1박2일">1박2일</button>
                     <button type="button" class="chip" data-value="2박3일">2박3일</button>
                     <button type="button" class="chip" data-value="3박4일">3박4일</button>
                 </div>
-                <input type="hidden" name="period" th:value="*{period}">
+
+                <input type="hidden" th:field="*{period}">
             </div>
 
             <!-- 난이도 (단일) -->
@@ -117,19 +125,21 @@
                     <div class="filter-label">난이도</div>
                     <div class="filter-hint single">한 개만 선택</div>
                 </div>
-                <div class="filter-chips" data-key="level">
+
+                <div class="filter-chips" data-key="level" data-mode="single">
                     <button type="button" class="chip" data-value="초급">초급</button>
                     <button type="button" class="chip" data-value="중급">중급</button>
                     <button type="button" class="chip" data-value="상급">상급</button>
                 </div>
-                <input type="hidden" name="level" th:value="*{level}">
+
+                <input type="hidden" th:field="*{level}">
             </div>
 
             <!-- 지역 (다중) -->
             <div class="filter-row">
                 <div>
                     <div class="filter-label">지역</div>
-                    <div class="filter-hint single">중복 선택 가능</div>
+                    <div class="filter-hint multi">중복 선택 가능</div>
                 </div>
 
                 <div class="filter-chips" data-key="region" data-mode="multi">
@@ -140,11 +150,11 @@
                     <button type="button" class="chip" data-value="삿포로">삿포로</button>
                 </div>
 
-                <!-- ✅ 다중 선택 hidden input들이 들어갈 자리 (reviews-post.js가 생성) -->
-                <div class="region-inputs"></div>
+                <!-- ✅ JS가 여기다가 name="regionTags" hidden들을 생성 -->
+                <div class="region-inputs" id="regionInputs"></div>
             </div>
 
-            <!-- ✅ 선택 요약 -->
+            <!-- 선택 요약 -->
             <div class="tag-summary-mini" id="miniSummary">
                 <span class="empty">선택된 조건 없음</span>
             </div>
@@ -155,14 +165,12 @@
         <section class="write-section">
             <label class="write-label">여행 후기 내용</label>
             <div id="editor"></div>
-            <input type="hidden" name="content" id="content" th:value="*{content}">
+            <input type="hidden" id="content" th:field="*{content}">
         </section>
 
         <!-- 제출 -->
         <section class="write-section">
-            <button type="submit" class="submit-btn">
-                여행 후기 등록
-            </button>
+            <button type="submit" class="submit-btn">여행 후기 등록</button>
         </section>
 
     </form>

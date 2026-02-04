@@ -1,0 +1,105 @@
+<!-- templates/reviews/reviews-read.html -->
+<div th:fragment="reviewsReadContent" class="container reviews">
+
+    <section class="post-read">
+
+        <!-- 상단 타이틀/버튼 -->
+        <div class="reviews-title-row">
+            <h1 class="page-title" th:text="${post != null ? post.title : '제목 없음'}">제목</h1>
+
+            <!-- ✅ 웹/유니티 분기: 유니티면 /reviews-unity, 아니면 /reviews -->
+            <a class="write-btn"
+               th:href="${isUnity == true} ? @{/reviews-unity} : @{/reviews}">
+                ← 목록으로
+            </a>
+        </div>
+
+        <!-- 작성자 / 날짜 -->
+        <div class="post-meta" style="margin-top: 8px;">
+            <!-- ✅ writer가 엔티티(User)인지, 문자열인지 프로젝트마다 달라서 안전하게 처리 -->
+            <span th:text="${
+          post.writer != null
+            ? (post.writer.fullName != null ? post.writer.fullName : (post.writer.username != null ? post.writer.username : '익명'))
+            : (post.writerName != null ? post.writerName : '익명')
+      }">작성자</span>
+
+            <span> · </span>
+
+            <span th:text="${post.createdAt != null ? #temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm') : ''}">
+        2026-01-27 16:40
+      </span>
+        </div>
+
+        <!-- 메타 칩들 -->
+        <div class="post-meta" style="margin-top: 12px; display:flex; gap:8px; flex-wrap:wrap;">
+
+            <!-- 여행유형 -->
+            <span class="chip"
+                  th:if="${post.travelType != null and !post.travelType.isEmpty()}"
+                  th:text="${
+              post.travelType == 'solo'   ? '혼자' :
+              post.travelType == 'couple' ? '커플' :
+              post.travelType == 'family' ? '가족' :
+              post.travelType == 'friends'? '친구' :
+              post.travelType
+            }">유형</span>
+
+            <!-- 테마 -->
+            <span class="chip"
+                  th:if="${post.theme != null and !post.theme.isEmpty()}"
+                  th:text="${
+              post.theme == 'freedom'  ? '자유여행' :
+              post.theme == 'healing'  ? '힐링' :
+              post.theme == 'food'     ? '맛집' :
+              post.theme == 'activity' ? '액티비티' :
+              post.theme == 'nature'   ? '자연' :
+              post.theme
+            }">테마</span>
+
+            <!-- 기간 -->
+            <span class="chip"
+                  th:if="${post.period != null and !post.period.isEmpty()}"
+                  th:text="${post.period}">기간</span>
+
+            <!-- 난이도 -->
+            <span class="chip"
+                  th:if="${post.level != null and !post.level.isEmpty()}"
+                  th:text="${post.level}">난이도</span>
+
+            <!-- 지역 태그들 -->
+            <span class="chip"
+                  th:if="${post.regionTags != null}"
+                  th:each="tag : ${post.regionTags}"
+                  th:text="${tag}">지역</span>
+        </div>
+
+        <!-- 예산 -->
+        <div class="post-budget" style="margin-top: 14px;">
+            <div>
+                항공: <b th:text="${post.budgetFlight  ?: 0}">0</b>만 /
+                숙박: <b th:text="${post.budgetLodging ?: 0}">0</b>만 /
+                식비: <b th:text="${post.budgetFood   ?: 0}">0</b>만 /
+                기타: <b th:text="${post.budgetExtra  ?: 0}">0</b>만
+            </div>
+
+            <div style="margin-top: 6px;">
+                사용 금액:
+                <b th:text="${
+            (post.budgetFlight  ?: 0)
+          + (post.budgetLodging ?: 0)
+          + (post.budgetFood   ?: 0)
+          + (post.budgetExtra  ?: 0)
+        }">0</b>만 원
+            </div>
+        </div>
+
+        <hr style="margin:18px 0; border:0; border-top:1px solid #e5e7eb;">
+
+        <!-- ✅ Quill HTML 본문 렌더링 (HTML 그대로 출력) -->
+        <article class="post-content" th:utext="${post.content}">
+            본문
+        </article>
+
+    </section>
+
+</div>
