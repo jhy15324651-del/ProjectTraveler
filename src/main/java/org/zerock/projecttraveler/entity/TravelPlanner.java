@@ -59,6 +59,15 @@ public class TravelPlanner {
     @Builder.Default
     private Integer likeCount = 0;
 
+    @Column(name = "total_budget")
+    @Builder.Default
+    private Integer totalBudget = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "currency", length = 10)
+    @Builder.Default
+    private Currency currency = Currency.KRW;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -107,6 +116,28 @@ public class TravelPlanner {
         FOOD,       // 맛집 투어
         CULTURE,    // 문화 체험
         SHOPPING    // 쇼핑 여행
+    }
+
+    public enum Currency {
+        KRW("₩", "원"),
+        USD("$", "달러"),
+        JPY("¥", "엔");
+
+        private final String symbol;
+        private final String name;
+
+        Currency(String symbol, String name) {
+            this.symbol = symbol;
+            this.name = name;
+        }
+
+        public String getSymbol() {
+            return symbol;
+        }
+
+        public String getDisplayName() {
+            return name;
+        }
     }
 
     // 여행 일수 계산

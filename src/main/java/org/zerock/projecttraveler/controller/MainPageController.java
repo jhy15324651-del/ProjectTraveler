@@ -352,13 +352,24 @@ public class MainPageController {
         var checklists = plannerService.getChecklists(id);
         var budgets = plannerService.getBudgets(id);
 
-        // 총 예산 계산
-        int totalPlanned = budgets.stream().mapToInt(b -> b.getPlannedAmount() != null ? b.getPlannedAmount() : 0).sum();
-        int totalActual = budgets.stream().mapToInt(b -> b.getActualAmount() != null ? b.getActualAmount() : 0).sum();
+        // 총 예산 (직접 입력된 값 또는 0)
+        int totalBudget = planner.getTotalBudget() != null ? planner.getTotalBudget() : 0;
+        // 예산 항목별 사용 금액 합계 (직접 입력 항목)
+        int totalBudgetActual = budgets.stream().mapToInt(b -> b.getActualAmount() != null ? b.getActualAmount() : 0).sum();
+        // 일정 예상비용 총합
+        int itineraryCostTotal = plannerService.calculateItineraryCostTotal(id);
+        // 총 사용 금액 = 일정 예상비용 (수동 입력 항목 제거)
+        int totalActual = itineraryCostTotal;
+
+        // 카테고리별 예산 사용 비율
+        var categoryBudgetSummary = plannerService.getCategoryBudgetSummary(id, totalBudget);
 
         // 체크리스트 진행률 계산
         int totalChecklist = checklists.size();
         int completedChecklist = (int) checklists.stream().filter(c -> Boolean.TRUE.equals(c.getCompleted())).count();
+
+        // 통화 정보
+        TravelPlanner.Currency currency = planner.getCurrency() != null ? planner.getCurrency() : TravelPlanner.Currency.KRW;
 
         // 조회수 증가 (본인 플래너가 아닌 경우)
         if (!isOwner) {
@@ -372,11 +383,17 @@ public class MainPageController {
         model.addAttribute("budgets", budgets);
         model.addAttribute("canEdit", canEdit);
         model.addAttribute("isOwner", isOwner);
-        model.addAttribute("totalPlanned", totalPlanned);
+        model.addAttribute("totalBudget", totalBudget);
         model.addAttribute("totalActual", totalActual);
-        model.addAttribute("totalRemaining", totalPlanned - totalActual);
+        model.addAttribute("totalRemaining", totalBudget - totalActual);
         model.addAttribute("totalChecklist", totalChecklist);
         model.addAttribute("completedChecklist", completedChecklist);
+        model.addAttribute("itineraryCostTotal", itineraryCostTotal);
+        model.addAttribute("totalBudgetActual", totalBudgetActual);
+        model.addAttribute("currency", currency);
+        model.addAttribute("currencySymbol", currency.getSymbol());
+        model.addAttribute("currencies", TravelPlanner.Currency.values());
+        model.addAttribute("categoryBudgetSummary", categoryBudgetSummary);
     }
 
     // ==================== 플래너 둘러보기 페이지 ====================

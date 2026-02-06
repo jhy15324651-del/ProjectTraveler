@@ -468,4 +468,98 @@ public class PlannerApiController {
         plannerService.deleteBudgetItem(budgetId);
         return ResponseEntity.ok(Map.of("success", true));
     }
+
+    /**
+     * 총 예산 업데이트
+     */
+    @PutMapping("/{id}/total-budget")
+    public ResponseEntity<?> updateTotalBudget(@PathVariable Long id, @RequestBody Map<String, Object> request) {
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+
+        if (!plannerService.canEdit(id, userId)) {
+            return ResponseEntity.status(403).body(Map.of("error", "권한이 없습니다."));
+        }
+
+        Integer totalBudget = request.get("totalBudget") != null ? ((Number) request.get("totalBudget")).intValue() : 0;
+        plannerService.updateTotalBudget(id, totalBudget);
+
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
+    /**
+     * 통화 업데이트
+     */
+    @PutMapping("/{id}/currency")
+    public ResponseEntity<?> updateCurrency(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+
+        if (!plannerService.canEdit(id, userId)) {
+            return ResponseEntity.status(403).body(Map.of("error", "권한이 없습니다."));
+        }
+
+        String currencyStr = request.get("currency");
+        if (currencyStr == null || currencyStr.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "통화 값이 필요합니다."));
+        }
+
+        try {
+            TravelPlanner.Currency currency = TravelPlanner.Currency.valueOf(currencyStr.toUpperCase());
+            plannerService.updateCurrency(id, currency);
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "유효하지 않은 통화 값입니다."));
+        }
+    }
+
+    /**
+     * 일정 예상비용 총합 조회
+     */
+    @GetMapping("/{id}/itinerary-cost-total")
+    public ResponseEntity<?> getItineraryCostTotal(@PathVariable Long id) {
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+
+        if (!plannerService.canAccess(id, userId)) {
+            return ResponseEntity.status(403).body(Map.of("error", "접근 권한이 없습니다."));
+        }
+
+        int total = plannerService.calculateItineraryCostTotal(id);
+        return ResponseEntity.ok(Map.of("success", true, "itineraryCostTotal", total));
+    }
+
+    /**
+     * 예산 요약 조회 (카테고리별 사용 비율 포함)
+     */
+    @GetMapping("/{id}/budget-summary")
+    public ResponseEntity<?> getBudgetSummary(@PathVariable Long id) {
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+
+        if (!plannerService.canAccess(id, userId)) {
+            return ResponseEntity.status(403).body(Map.of("error", "접근 권한이 없습니다."));
+        }
+
+        TravelPlanner planner = plannerService.findById(id).orElse(null);
+        if (planner == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        int totalBudget = planner.getTotalBudget() != null ? planner.getTotalBudget() : 0;
+        int itineraryCostTotal = plannerService.calculateItineraryCostTotal(id);
+        int remaining = totalBudget - itineraryCostTotal;
+
+        var categoryList = plannerService.getCategoryBudgetSummary(id, totalBudget);
+        List<Map<String, Object>> categories = categoryList.stream().map(c -> Map.<String, Object>of(
+                "categoryName", c.getCategoryName(),
+                "categoryClassName", c.getCategoryClassName(),
+                "amount", c.getAmount(),
+                "percent", c.getPercent()
+        )).toList();
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "totalBudget", totalBudget,
+                "usedEstimated", itineraryCostTotal,
+                "remaining", remaining,
+                "categories", categories
+        ));
+    }
 }

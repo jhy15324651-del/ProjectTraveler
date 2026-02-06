@@ -6,10 +6,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.zerock.projecttraveler.dto.CategoryBudgetSummary;
 import org.zerock.projecttraveler.entity.*;
 import org.zerock.projecttraveler.repository.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -416,5 +418,57 @@ public class PlannerService {
     @Transactional
     public void deleteBudgetItem(Long budgetId) {
         budgetRepository.deleteById(budgetId);
+    }
+
+    /**
+     * 총 예산 업데이트
+     */
+    @Transactional
+    public void updateTotalBudget(Long plannerId, Integer totalBudget) {
+        plannerRepository.findById(plannerId).ifPresent(planner -> {
+            planner.setTotalBudget(totalBudget != null ? totalBudget : 0);
+        });
+    }
+
+    /**
+     * 통화 업데이트
+     */
+    @Transactional
+    public void updateCurrency(Long plannerId, TravelPlanner.Currency currency) {
+        TravelPlanner planner = plannerRepository.findById(plannerId)
+                .orElseThrow(() -> new IllegalArgumentException("플래너를 찾을 수 없습니다."));
+        planner.setCurrency(currency);
+    }
+
+    /**
+     * 일정 예상비용 총합 계산
+     */
+    public int calculateItineraryCostTotal(Long plannerId) {
+        List<PlannerItinerary> itineraries = itineraryRepository.findByPlannerIdOrderByDayIndexAscSortOrderAsc(plannerId);
+        return itineraries.stream()
+                .mapToInt(it -> it.getCost() != null ? it.getCost() : 0)
+                .sum();
+    }
+
+    /**
+     * 카테고리별 예산 사용 비율 조회
+     */
+    public List<CategoryBudgetSummary> getCategoryBudgetSummary(Long plannerId, int totalBudget) {
+        List<Object[]> results = itineraryRepository.sumCostByCategory(plannerId);
+        List<CategoryBudgetSummary> summaries = new ArrayList<>();
+
+        for (Object[] row : results) {
+            PlannerItinerary.Category category = (PlannerItinerary.Category) row[0];
+            int amount = ((Number) row[1]).intValue();
+
+            if (amount > 0) {
+                summaries.add(CategoryBudgetSummary.of(category, amount, totalBudget));
+            }
+        }
+
+        // 금액 내림차순 정렬
+        summaries.sort((a, b) -> Integer.compare(b.getAmount(), a.getAmount()));
+
+        return summaries;
     }
 }
