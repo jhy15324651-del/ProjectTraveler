@@ -1,0 +1,36 @@
+/* 공용 HERO 규격: info/reviews 모두 동일하게 */
+.page-hero{
+    width: min(1200px, 92%);
+    margin: 0 auto;
+    padding: 18px 0 18px;  /* 위/아래 간격 고정 */
+}
+
+/* 공용 HERO 박스 */
+.page-heroBox{
+    /* box 느낌 제거 */
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    margin-bottom: 18px;
+}
+
+.page-heroBox__inner{ display: grid; gap: 10px; }
+
+.page-heroBox__title{
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.page-heroBox__desc{
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+}
+
+.page-content{
+    width: min(1200px, 92%);
+    margin: 0 auto;
+    padding: 0 0 44px;
+}

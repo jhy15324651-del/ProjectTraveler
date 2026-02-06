@@ -5,6 +5,9 @@
    - cards rendered from DB
    - inline detail (view + quill)
 ================================ */
+body.main-page{
+    background: rgba(239, 68, 68, 0.06);
+}
 
 /* =========================
    0) PAGE TOKENS + BASE TYPO
@@ -54,18 +57,37 @@
 .info-page a{ color: inherit; }
 
 /* =========================
-   1) HERO
+   1) HERO (re-style like reviews header)
 ========================= */
 .info-hero{
-    background: linear-gradient(180deg, rgba(239,68,68,0.06), rgba(255,255,255,0));
-    border: 1px solid var(--if-border);
-    border-radius: var(--if-radius-lg);
-    padding: 28px 24px;
+    /* box 느낌 제거 */
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+
+    /* 페이지 헤더 영역처럼 */
+    padding: 26px 0;
     margin-bottom: 18px;
 }
-.info-hero__inner{ display: grid; gap: 10px; }
-.info-hero__title{ font-size: 30px; font-weight: 900; }
-.info-hero__desc{ font-size: 14px; color: var(--if-subtext); }
+
+.info-hero__inner{
+    /* container 폭을 info-page와 맞춰서 정렬 */
+    width: min(1200px, 92%);
+    margin: 0 auto;
+
+    display: grid;
+    gap: 10px;
+}
+
+.info-hero__title{
+    font-size: 30px;
+    font-weight: 900;
+}
+
+.info-hero__desc{
+    font-size: 14px;
+    color: var(--if-subtext);
+}
 
 /* =========================
    2) LAYOUT
@@ -457,6 +479,21 @@
     margin: -6px 6px 14px;
 }
 
+/* Map embed wrapper */
+.info-map{
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--if-border);
+}
+
+/* 혹시 iframe이 width/height를 들고 와도 반응형으로 보정 */
+.info-content-view iframe,
+.ql-editor iframe{
+    width: 100%;
+    max-width: 100%;
+    border: 0;
+}
+
 
 /* View content typography */
 .info-content-view{
@@ -511,6 +548,31 @@
     height: auto;
     display: block;
 }
+
+/* Info content: embedded media guardrail */
+.info-content-view iframe{
+    width: 100%;
+    max-width: 100%;
+    border: 0;
+    border-radius: 14px;
+}
+
+/* 지도처럼 높이 필요한 경우 기본 높이 */
+.info-content-view iframe[src*="google.com/maps/embed"]{
+    height: 320px;
+}
+
+.ql-editor iframe{
+    width: 100%;
+    max-width: 100%;
+    border: 0;
+    border-radius: 14px;
+}
+
+.ql-editor iframe[src*="google.com/maps/embed"]{
+    height: 320px;
+}
+
 
 /* =========================
    10) RESPONSIVE
