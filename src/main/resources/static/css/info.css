@@ -1,0 +1,540 @@
+/* ===============================
+   INFO PAGE ONLY (namespaced)
+   - tabelog-like left sidebar
+   - main card + tabs + panels
+   - cards rendered from DB
+   - inline detail (view + quill)
+================================ */
+
+/* =========================
+   0) PAGE TOKENS + BASE TYPO
+========================= */
+.info-page{
+    width: min(1200px, 92%);
+    margin: 0 auto;
+    padding: 28px 0 44px;
+
+    --if-font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+    --if-lh: 1.55;
+
+    /* Neutral */
+    --if-text: #111827;
+    --if-subtext: #6b7280;
+    --if-muted: #9ca3af;
+
+    --if-border: #e5e7eb;
+    --if-bg: #ffffff;
+    --if-soft: #f8fafc;
+    --if-soft2: #f3f4f6;
+
+    /* Accent */
+    --if-accent: #ef4444;
+    --if-accent2: #3b82f6;
+    --if-accent-soft: rgba(239, 68, 68, 0.10);
+
+    /* Radius + shadow */
+    --if-radius-lg: 18px;
+    --if-radius-md: 14px;
+    --if-radius-sm: 12px;
+    --if-shadow: 0 10px 22px rgba(17, 24, 39, 0.06);
+
+    font-family: var(--if-font);
+    color: var(--if-text);
+    line-height: var(--if-lh);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+.info-page h1, .info-page h2, .info-page h3, .info-page h4{
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--if-text);
+}
+.info-page p{ margin: 0; color: var(--if-subtext); }
+.info-page a{ color: inherit; }
+
+/* =========================
+   1) HERO
+========================= */
+.info-hero{
+    background: linear-gradient(180deg, rgba(239,68,68,0.06), rgba(255,255,255,0));
+    border: 1px solid var(--if-border);
+    border-radius: var(--if-radius-lg);
+    padding: 28px 24px;
+    margin-bottom: 18px;
+}
+.info-hero__inner{ display: grid; gap: 10px; }
+.info-hero__title{ font-size: 30px; font-weight: 900; }
+.info-hero__desc{ font-size: 14px; color: var(--if-subtext); }
+
+/* =========================
+   2) LAYOUT
+========================= */
+.info-layout{
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 18px;
+    align-items: start;
+}
+
+/* =========================
+   3) SIDEBAR
+========================= */
+.info-sidebar--left{
+    position: sticky;
+    top: 110px;
+}
+.info-sidebar__card{
+    background: var(--if-bg);
+    border: 1px solid var(--if-border);
+    border-radius: var(--if-radius-lg);
+    padding: 16px;
+    box-shadow: var(--if-shadow);
+}
+
+.info-sidebar__head{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 6px 6px 12px;
+}
+.info-sidebar__title{
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.info-acc{
+    display: grid;
+    gap: 10px;
+    margin-top: 10px;
+}
+.info-acc__item{
+    background: var(--if-soft);
+    border: 1px solid var(--if-border);
+    border-radius: var(--if-radius-md);
+    overflow: hidden;
+}
+.info-acc__head{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 10px 12px;
+    background: transparent;
+    border: 0;
+
+    color: var(--if-text);
+    font-weight: 900;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+}
+.info-acc__chev{
+    opacity: 0.9;
+    transition: transform 0.18s ease;
+}
+.info-acc__body{
+    display: grid;          /* grid 유지 */
+    gap: 8px;
+
+    padding: 0 10px;        /* 닫혔을 때 padding 때문에 튀지 않게 */
+    max-height: 0;
+    overflow: hidden;
+
+    opacity: 0;
+    transform: translateY(-6px);
+
+    transition:
+            max-height 0.28s ease,
+            opacity 0.22s ease,
+            transform 0.22s ease,
+            padding 0.22s ease;
+}
+
+.info-acc__item.is-open .info-acc__body{
+    padding: 10px 10px 12px;
+
+     /* 지역 개수가 늘어날때마다 적절히 늘려줄것!!!!!!!!!!!!!! */
+    max-height: 520px;
+
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.info-acc__item.is-open .info-acc__chev{ transform: rotate(180deg); }
+
+.info-sidebar__item{
+    display: block;
+    text-decoration: none;
+    color: var(--if-text);
+
+    background: #fff;
+    border: 1px solid var(--if-border);
+    padding: 10px 12px;
+    border-radius: var(--if-radius-sm);
+
+    font-weight: 800;
+}
+.info-sidebar__item:hover{ background: var(--if-soft); }
+.info-sidebar__item.is-active{
+    background: var(--if-accent-soft);
+    border-color: rgba(239,68,68,0.35);
+}
+
+/* =========================
+   4) MAIN CARD
+========================= */
+.info-main{ min-width: 0; }
+
+.info-mainCard{
+    background: var(--if-bg);
+    border: 1px solid var(--if-border);
+    border-radius: var(--if-radius-lg);
+    padding: 18px;
+    box-shadow: var(--if-shadow);
+    min-height: 540px;
+}
+
+.info-mainCard__header{
+    display: grid;
+    gap: 8px;
+    padding: 6px 6px 14px;
+    border-bottom: 1px solid var(--if-border);
+    margin-bottom: 14px;
+}
+.info-mainCard__region{
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.info-regionTitle{ font-size: 24px; font-weight: 900; }
+.info-regionDesc{ color: var(--if-subtext); line-height: 1.55; }
+
+/* =========================
+   5) TABS
+========================= */
+.info-tabs{
+    display: flex;
+    gap: 18px;
+    border-bottom: 1px solid var(--if-border);
+    padding: 0 6px 10px;
+    margin-bottom: 16px;
+}
+.info-tab{
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+
+    padding: 8px 6px;
+    text-decoration: none;
+    color: var(--if-subtext);
+    font-weight: 900;
+    font-size: 14px;
+}
+.info-tab:hover{ color: var(--if-text); }
+.info-tab.is-active{ color: var(--if-accent); }
+.info-tab.is-active::after{
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -11px;
+    height: 3px;
+    background: var(--if-accent);
+    border-radius: 999px;
+}
+
+/* =========================
+   6) PANELS + HEAD
+========================= */
+.info-panel{ display: none; }
+.info-panel.is-open{ display: block; }
+
+.info-panel__head{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 6px 6px 14px;
+}
+.info-panel__title{
+    font-size: 16px;
+    font-weight: 900;
+    margin: 0;
+}
+
+.info-panel__actions{
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+}
+
+/* =========================
+   7) BUTTONS (admin + inline)
+========================= */
+.info-editBtn,
+.info-addBtn,
+.info-btn{
+    border: 1px solid var(--if-border);
+    background: #fff;
+    color: var(--if-text);
+    font-weight: 900;
+    font-size: 12px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+.info-editBtn:hover,
+.info-addBtn:hover,
+.info-btn:hover{
+    background: var(--if-soft);
+}
+
+.info-btn--primary{
+    border-color: rgba(59,130,246,0.35);
+    background: rgba(59,130,246,0.10);
+    color: #1d4ed8;
+}
+.info-btn--primary:hover{
+    background: rgba(59,130,246,0.14);
+}
+
+.info-btn--ghost{
+    background: #fff;
+}
+
+.info-panel.is-editing .info-card{
+    outline: 2px solid rgba(239,68,68,0.18);
+    background: #fff;
+}
+.info-panel.is-editing .info-card [contenteditable="true"]{ outline: none; }
+
+.info-editBtn.is-on{
+    border-color: rgba(239,68,68,0.35);
+    background: rgba(239,68,68,0.08);
+    color: var(--if-accent);
+}
+
+/* =========================
+   8) CARD LIST (vertical)
+========================= */
+.info-cardGrid{
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 0 6px 6px;
+}
+
+.info-card{
+    background: var(--if-soft);
+    border: 1px solid var(--if-border);
+    border-radius: var(--if-radius-md);
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+.info-card:hover{
+    background: #fff;
+    border-color: rgba(17,24,39,0.14);
+}
+.info-card::before{
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 14px;
+    width: 4px;
+    height: 42px;
+    border-radius: 999px;
+    background: var(--if-accent2);
+    opacity: 0.9;
+}
+.info-card__name{
+    margin: 0 0 8px;
+    padding-left: 8px;
+    font-size: 15px;
+    font-weight: 900;
+    color: var(--if-text);
+}
+.info-card__desc{
+    margin: 0;
+    padding-left: 8px;
+    font-size: 13px;
+    color: var(--if-subtext);
+    line-height: 1.55;
+}
+
+.info-card.is-open{
+    border-color: rgba(239,68,68,0.28);
+    background: rgba(239,68,68,0.04);
+}
+
+.info-empty{
+    padding: 18px 10px;
+    color: var(--if-subtext);
+    background: var(--if-soft2);
+    border: 1px dashed var(--if-border);
+    border-radius: var(--if-radius-md);
+}
+
+/* =========================
+   9) INLINE DETAIL (view + quill)
+========================= */
+.info-inlineDetail{
+    border: 1px solid var(--if-border);
+    background: #fff;
+    border-radius: var(--if-radius-md);
+    padding: 14px;
+    margin: -6px 6px 14px; /* 카드 아래 자연스럽게 */
+}
+
+.info-inlineDetail__head{
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--if-border);
+    margin-bottom: 12px;
+}
+
+.info-inlineDetail__meta{
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+}
+.info-inlineDetail__title{
+    font-size: 14px;
+    font-weight: 900;
+    margin: 0;
+    color: var(--if-text);
+    word-break: break-word;
+}
+.info-inlineDetail__summary{
+    margin: 0;
+    font-size: 13px;
+    color: var(--if-subtext);
+    line-height: 1.55;
+    word-break: break-word;
+}
+
+.info-inlineDetail__actions{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+.info-inlineDetail__adminBtns{
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Inline detail slide motion */
+.info-inlineDetail{
+    overflow: hidden; /* 애니메이션에서 필수 */
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-8px);
+    padding: 0;       /* 닫힘 상태에서 여백 제거 */
+    margin: 0;        /* 닫힘 상태에서 여백 제거 */
+
+    transition:
+            max-height 0.32s ease,
+            opacity 0.22s ease,
+            transform 0.22s ease,
+            padding 0.22s ease,
+            margin 0.22s ease;
+}
+
+/* 열린 상태 */
+.info-inlineDetail.is-open{
+    max-height: 1600px;
+    opacity: 1;
+    transform: translateY(0);
+
+    padding: 14px;
+    margin: -6px 6px 14px;
+}
+
+
+/* View content typography */
+.info-content-view{
+    color: var(--if-text);
+    line-height: 1.75;
+    font-size: 14px;
+}
+.info-content-view p{
+    color: var(--if-text);
+    margin: 0 0 10px;
+}
+.info-content-view h1,
+.info-content-view h2,
+.info-content-view h3{
+    color: var(--if-text);
+    margin: 16px 0 10px;
+    line-height: 1.25;
+}
+.info-content-view a{
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+/* ✅ 핵심: 이미지가 페이지 밖으로 튀어나가지 않게 */
+.info-content-view img{
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Quill wrapper polish */
+.info-content-editor{
+    border: 1px solid var(--if-border);
+    border-radius: var(--if-radius-md);
+    overflow: hidden;
+    background: #fff;
+}
+.ql-toolbar.ql-snow{
+    border: 0;
+    border-bottom: 1px solid var(--if-border);
+}
+.ql-container.ql-snow{
+    border: 0;
+}
+.ql-editor{
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--if-text);
+}
+.ql-editor img{
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* =========================
+   10) RESPONSIVE
+========================= */
+@media (max-width: 1020px){
+    .info-layout{ grid-template-columns: 1fr; }
+    .info-sidebar--left{ position: static; top: auto; order: -1; }
+    .info-cardGrid{ grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px){
+    .info-hero__title{ font-size: 26px; }
+    .info-regionTitle{ font-size: 20px; }
+    .info-tabs{
+        gap: 14px;
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+    .info-inlineDetail__head{
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .info-inlineDetail__actions{
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+}
