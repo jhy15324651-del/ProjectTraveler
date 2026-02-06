@@ -197,6 +197,16 @@
                                     <span th:text="${#numbers.formatInteger(item.cost, 1, 'COMMA')} + '원'">0원</span>
                                 </div>
                             </div>
+                            <!-- 수정 버튼 -->
+                            <button type="button" class="btn-edit-itinerary"
+                                    th:if="${canEdit}"
+                                    th:onclick="'openEditItineraryModal(' + ${item.id} + ')'">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                                수정
+                            </button>
                             <button type="button" class="btn-delete-itinerary"
                                     th:if="${canEdit}"
                                     th:onclick="'deleteItinerary(' + ${item.id} + ')'">
@@ -204,6 +214,7 @@
                                     <polyline points="3 6 5 6 21 6"/>
                                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                                 </svg>
+                                삭제
                             </button>
                         </div>
                     </div>
@@ -231,7 +242,7 @@
                     </div>
 
                     <!-- 체크리스트 탭 -->
-                    <div class="sidebar-content" id="checklistTab">
+                    <div class="sidebar-content" id="checklistTab" style="display: flex;">
                         <div class="checklist-progress">
                             <div class="checklist-progress-header">
                                 <span>진행률</span>
@@ -286,51 +297,89 @@
 
                     <!-- 예산 탭 -->
                     <div class="sidebar-content" id="budgetTab" style="display: none;">
+                        <!-- 통화 선택기 -->
+                        <div class="currency-selector" th:if="${canEdit}">
+                            <span class="currency-selector-label">통화</span>
+                            <div class="currency-options">
+                                <label th:each="curr : ${currencies}" class="currency-option">
+                                    <input type="radio" name="currency"
+                                           th:value="${curr}"
+                                           th:checked="${curr == currency}"
+                                           th:attr="onchange='updateCurrency(\'' + ${curr} + '\')'">
+                                    <span class="currency-option-label" th:text="${curr.getSymbol()} + ' ' + ${curr.getDisplayName()}">₩ 원</span>
+                                </label>
+                            </div>
+                        </div>
+                        <!-- 읽기 전용일 때 통화 표시 -->
+                        <div class="currency-display" th:unless="${canEdit}">
+                            <span class="currency-display-label">통화: </span>
+                            <span th:text="${currencySymbol} + ' ' + ${currency.getDisplayName()}">₩ 원</span>
+                        </div>
+
                         <div class="budget-summary">
                             <div class="budget-summary-label">총 예산</div>
-                            <div class="budget-summary-total"
-                                 th:text="'₩' + ${#numbers.formatInteger(totalPlanned, 1, 'COMMA')}">₩0</div>
+                            <!-- 편집 가능한 경우 입력 필드 표시 -->
+                            <div class="budget-summary-total" th:if="${canEdit}">
+                                <span class="budget-currency" id="budgetCurrencySymbol" th:text="${currencySymbol}">₩</span>
+                                <input type="number"
+                                       id="totalBudgetInput"
+                                       th:value="${totalBudget}"
+                                       onchange="updateTotalBudget(this.value)"
+                                       placeholder="0">
+                            </div>
+                            <!-- 편집 불가능한 경우 텍스트만 표시 -->
+                            <div class="budget-summary-total" th:unless="${canEdit}"
+                                 th:text="${currencySymbol} + ${#numbers.formatInteger(totalBudget, 1, 'COMMA')}">₩0</div>
                             <div class="budget-summary-detail"
-                                 th:text="'사용: ₩' + ${#numbers.formatInteger(totalActual, 1, 'COMMA')} + ' | 남음: ₩' + ${#numbers.formatInteger(totalRemaining, 1, 'COMMA')}">
+                                 id="budgetSummaryDetail"
+                                 th:text="'사용: ' + ${currencySymbol} + ${#numbers.formatInteger(totalActual, 1, 'COMMA')} + ' | 남음: ' + ${currencySymbol} + ${#numbers.formatInteger(totalRemaining, 1, 'COMMA')}">
                                 사용: ₩0 | 남음: ₩0
                             </div>
                         </div>
 
-                        <div class="budget-items" id="budgetItems">
-                            <!-- 예산이 없는 경우 -->
-                            <div class="budget-empty" th:if="${#lists.isEmpty(budgets)}">
-                                <p>등록된 예산 항목이 없습니다.</p>
+                        <!-- 예산 상세 내역 -->
+                        <div class="budget-detail-breakdown">
+                            <div class="budget-breakdown-item">
+                                <span class="breakdown-label">일정 예상비용</span>
+                                <span class="breakdown-value" id="itineraryCostTotalDisplay"
+                                      th:text="${currencySymbol} + ${#numbers.formatInteger(itineraryCostTotal, 1, 'COMMA')}">₩0</span>
                             </div>
-                            <!-- 예산 항목들 -->
-                            <div class="budget-item" th:each="item : ${budgets}" th:data-id="${item.id}">
-                                <div class="budget-item-header">
-                                    <span class="budget-item-name" th:text="${item.name}">항목명</span>
-                                    <span class="budget-item-percent"
-                                          th:text="${item.usagePercent} + '%'"
-                                          th:classappend="${item.overBudget} ? ' over' : ''">0%</span>
-                                </div>
-                                <div class="budget-item-bar">
-                                    <div class="budget-item-fill"
-                                         th:style="'width: ' + ${T(java.lang.Math).min(item.usagePercent, 100)} + '%'"
-                                         th:classappend="${item.overBudget} ? ' over' : ''"></div>
-                                </div>
-                                <div class="budget-item-detail">
-                                    <span class="budget-item-planned"
-                                          th:text="'예산: ₩' + ${#numbers.formatInteger(item.plannedAmount, 1, 'COMMA')}">예산: ₩0</span>
-                                    <span class="budget-item-actual">
-                                        <input type="number"
-                                               th:value="${item.actualAmount}"
-                                               th:disabled="${!canEdit}"
-                                               th:onchange="'updateBudgetActual(' + ${item.id} + ', this.value)'">
-                                    </span>
-                                </div>
+                            <div class="budget-breakdown-item total">
+                                <span class="breakdown-label">남은 예산</span>
+                                <span class="breakdown-value" id="remainingBudgetDisplay"
+                                      th:classappend="${totalRemaining < 0} ? ' negative' : ''"
+                                      th:text="${currencySymbol} + ${#numbers.formatInteger(totalRemaining, 1, 'COMMA')}">₩0</span>
                             </div>
                         </div>
 
-                        <div class="budget-add" th:if="${canEdit}">
-                            <input type="text" id="newBudgetName" placeholder="항목명">
-                            <input type="number" id="newBudgetAmount" placeholder="예산">
-                            <button type="button" onclick="addBudgetItem()">추가</button>
+                        <!-- 카테고리별 사용 비율 -->
+                        <div class="category-budget-section" id="categoryBudgetSection">
+                            <div class="category-budget-header">
+                                <h4>카테고리별 사용 비율</h4>
+                            </div>
+                            <div class="category-budget-list" id="categoryBudgetList">
+                                <!-- 카테고리가 없는 경우 -->
+                                <div class="category-budget-empty" th:if="${#lists.isEmpty(categoryBudgetSummary)}">
+                                    <p>등록된 일정이 없습니다.</p>
+                                    <p>일정을 추가하면 카테고리별 예산이 자동 집계됩니다.</p>
+                                </div>
+                                <!-- 카테고리별 항목들 -->
+                                <div class="category-budget-item" th:each="item : ${categoryBudgetSummary}">
+                                    <div class="category-budget-item-header">
+                                        <span class="category-budget-name" th:classappend="${item.categoryClassName}"
+                                              th:text="${item.categoryName}">카테고리</span>
+                                        <span class="category-budget-amount"
+                                              th:text="${currencySymbol} + ${#numbers.formatInteger(item.amount, 1, 'COMMA')}">₩0</span>
+                                    </div>
+                                    <div class="category-budget-bar">
+                                        <div class="category-budget-fill"
+                                             th:classappend="${item.categoryClassName}"
+                                             th:style="'width: ' + ${T(java.lang.Math).min(item.percent, 100)} + '%'"></div>
+                                    </div>
+                                    <div class="category-budget-percent"
+                                         th:text="${item.percent} + '%'">0%</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -393,8 +442,66 @@
     </div>
 </div>
 
+<!-- 일정 수정 모달 -->
+<div th:fragment="editItineraryModal" id="editItineraryModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h2>일정 수정</h2>
+            <button type="button" class="btn-modal-close" onclick="closeEditItineraryModal()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="editItineraryForm">
+                <input type="hidden" id="editItineraryId">
+                <div class="form-group">
+                    <label for="editItineraryTime">시간</label>
+                    <input type="time" id="editItineraryTime" name="time">
+                </div>
+                <div class="form-group">
+                    <label for="editItineraryTitle">제목 *</label>
+                    <input type="text" id="editItineraryTitle" name="title" required placeholder="일정 제목">
+                </div>
+                <div class="form-group">
+                    <label for="editItineraryLocation">위치</label>
+                    <input type="text" id="editItineraryLocation" name="location" placeholder="주소 또는 장소명">
+                </div>
+                <div class="form-group">
+                    <label for="editItineraryCategory">카테고리</label>
+                    <select id="editItineraryCategory" name="category">
+                        <option value="ATTRACTION">관광지</option>
+                        <option value="RESTAURANT">식당</option>
+                        <option value="ACCOMMODATION">숙소</option>
+                        <option value="TRANSPORT">교통</option>
+                        <option value="SHOPPING">쇼핑</option>
+                        <option value="OTHER">기타</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editItineraryNotes">메모</label>
+                    <textarea id="editItineraryNotes" name="notes" rows="3" placeholder="추가 메모"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editItineraryCost">예상 비용</label>
+                    <div class="cost-input-wrapper">
+                        <span class="cost-currency" id="editCostCurrency" th:text="${currencySymbol}">₩</span>
+                        <input type="number" id="editItineraryCost" name="cost" min="0" value="0">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modal-cancel" onclick="closeEditItineraryModal()">취소</button>
+            <button type="button" class="btn-modal-confirm" onclick="submitEditItinerary()">저장</button>
+        </div>
+    </div>
+</div>
+
 <!-- 공유 모달 -->
-<div id="shareModal" class="modal-overlay">
+<div th:fragment="shareModal" id="shareModal" class="modal-overlay">
     <div class="modal-content" style="max-width: 500px;">
         <div class="modal-header">
             <h2>플래너 공유하기</h2>

@@ -18,7 +18,8 @@
 
     <!-- 모달들 -->
     <div th:replace="planner/planner-detail :: plannerDetailModals"></div>
-    <div th:include="planner/planner-detail :: shareModal"></div>
+    <div th:replace="planner/planner-detail :: editItineraryModal"></div>
+    <div th:replace="planner/planner-detail :: shareModal"></div>
 
     <script th:inline="javascript">
         const plannerId = [[${plannerId}]];
@@ -31,6 +32,9 @@
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
 
         let selectedDay = 0;
+        let currentCurrency = '[[${currency}]]';
+        let currencySymbol = '[[${currencySymbol}]]';
+        let itineraryCostTotal = [[${itineraryCostTotal}]];
 
         // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', function() {
@@ -90,8 +94,9 @@
                 }
             });
 
-            document.getElementById('checklistTab').style.display = tab === 'checklist' ? 'block' : 'none';
-            document.getElementById('budgetTab').style.display = tab === 'budget' ? 'block' : 'none';
+            // flex 구조 유지를 위해 display: flex 사용
+            document.getElementById('checklistTab').style.display = tab === 'checklist' ? 'flex' : 'none';
+            document.getElementById('budgetTab').style.display = tab === 'budget' ? 'flex' : 'none';
         }
 
         // 일정 완료 토글
@@ -165,7 +170,8 @@
 
                 if (result.success) {
                     closeAddItineraryModal();
-                    location.reload(); // 페이지 새로고침으로 간단히 처리
+                    // 예산 요약 갱신 후 페이지 새로고침
+                    location.reload();
                 } else {
                     alert('일정 추가에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
                 }
@@ -193,6 +199,8 @@
                     const card = document.querySelector(`.itinerary-card[data-id="${itineraryId}"]`);
                     if (card) card.remove();
                     updateItineraryVisibility();
+                    // 예산 요약 갱신
+                    refreshBudgetSummary();
                 } else {
                     alert('일정 삭제에 실패했습니다.');
                 }
@@ -305,66 +313,42 @@
             document.getElementById('checklistProgressBar').style.width = `${percent}%`;
         }
 
-        // 예산 실제 지출 업데이트
-        async function updateBudgetActual(budgetId, value) {
+        // 총 예산 업데이트
+        async function updateTotalBudget(value) {
             if (!canEdit) return;
 
+            const totalBudget = parseInt(value) || 0;
+
             try {
-                const response = await fetch(`/api/planner/budget/${budgetId}`, {
+                const response = await fetch(`/api/planner/${plannerId}/total-budget`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                         [csrfHeader]: csrfToken
                     },
                     body: JSON.stringify({
-                        actualAmount: parseInt(value) || 0
-                    })
-                });
-
-                const result = await response.json();
-
-                if (!result.success) {
-                    alert('예산 업데이트에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error updating budget:', error);
-            }
-        }
-
-        // 예산 항목 추가
-        async function addBudgetItem() {
-            const name = document.getElementById('newBudgetName').value.trim();
-            const amount = parseInt(document.getElementById('newBudgetAmount').value) || 0;
-
-            if (!name) {
-                alert('항목명을 입력해주세요.');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/budget`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify({
-                        name: name,
-                        plannedAmount: amount
+                        totalBudget: totalBudget
                     })
                 });
 
                 const result = await response.json();
 
                 if (result.success) {
-                    location.reload();
+                    // 남은 예산 계산 및 UI 업데이트
+                    updateBudgetSummary(totalBudget);
                 } else {
-                    alert('예산 추가에 실패했습니다.');
+                    alert('총 예산 업데이트에 실패했습니다.');
                 }
             } catch (error) {
-                console.error('Error adding budget:', error);
-                alert('예산 추가 중 오류가 발생했습니다.');
+                console.error('Error updating total budget:', error);
+                alert('총 예산 업데이트 중 오류가 발생했습니다.');
             }
+        }
+
+        // 예산 요약 UI 업데이트
+        function updateBudgetSummary(totalBudget) {
+            // 총 예산 변경 시 카테고리별 비율도 갱신
+            refreshBudgetSummary();
         }
 
         // 공개 설정 토글
@@ -516,6 +500,256 @@
         // 플래너 저장 (기본 정보)
         async function savePlanner() {
             alert('플래너가 저장되었습니다!');
+        }
+
+        // ==================== 일정 수정 기능 ====================
+
+        // 일정 수정 모달 열기
+        async function openEditItineraryModal(itineraryId) {
+            // 일정 카드에서 데이터 가져오기
+            const card = document.querySelector(`.itinerary-card[data-id="${itineraryId}"]`);
+            if (!card) {
+                alert('일정을 찾을 수 없습니다.');
+                return;
+            }
+
+            // 폼에 데이터 채우기
+            document.getElementById('editItineraryId').value = itineraryId;
+
+            // 시간 추출
+            const timeEl = card.querySelector('.itinerary-time span');
+            document.getElementById('editItineraryTime').value = timeEl ? timeEl.textContent.trim() : '';
+
+            // 제목 추출
+            const titleEl = card.querySelector('.itinerary-title');
+            document.getElementById('editItineraryTitle').value = titleEl ? titleEl.textContent.trim() : '';
+
+            // 위치 추출
+            const locationEl = card.querySelector('.itinerary-location span');
+            document.getElementById('editItineraryLocation').value = locationEl ? locationEl.textContent.trim() : '';
+
+            // 카테고리 추출
+            const categoryEl = card.querySelector('.itinerary-category');
+            if (categoryEl) {
+                const categoryClass = Array.from(categoryEl.classList).find(c =>
+                    ['attraction', 'restaurant', 'accommodation', 'transport', 'shopping', 'other'].includes(c)
+                );
+                if (categoryClass) {
+                    document.getElementById('editItineraryCategory').value = categoryClass.toUpperCase();
+                }
+            }
+
+            // 메모 추출
+            const notesEl = card.querySelector('.itinerary-notes');
+            document.getElementById('editItineraryNotes').value = notesEl ? notesEl.textContent.trim() : '';
+
+            // 비용 추출
+            const costEl = card.querySelector('.itinerary-cost span');
+            if (costEl) {
+                const costText = costEl.textContent.replace(/[^\d]/g, '');
+                document.getElementById('editItineraryCost').value = costText || 0;
+            } else {
+                document.getElementById('editItineraryCost').value = 0;
+            }
+
+            document.getElementById('editItineraryModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // 일정 수정 모달 닫기
+        function closeEditItineraryModal() {
+            document.getElementById('editItineraryModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // 일정 수정 제출
+        async function submitEditItinerary() {
+            const itineraryId = document.getElementById('editItineraryId').value;
+            const title = document.getElementById('editItineraryTitle').value.trim();
+
+            if (!title) {
+                alert('제목을 입력해주세요.');
+                return;
+            }
+
+            const data = {
+                time: document.getElementById('editItineraryTime').value || null,
+                title: title,
+                location: document.getElementById('editItineraryLocation').value || null,
+                category: document.getElementById('editItineraryCategory').value,
+                notes: document.getElementById('editItineraryNotes').value || null,
+                cost: parseInt(document.getElementById('editItineraryCost').value) || 0
+            };
+
+            try {
+                const response = await fetch(`/api/planner/itinerary/${itineraryId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeader]: csrfToken
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    closeEditItineraryModal();
+                    // 예산 요약 갱신 후 페이지 새로고침
+                    location.reload();
+                } else {
+                    alert('일정 수정에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
+                }
+            } catch (error) {
+                console.error('Error updating itinerary:', error);
+                alert('일정 수정 중 오류가 발생했습니다.');
+            }
+        }
+
+        // ==================== 통화 변경 기능 ====================
+
+        // 통화 업데이트
+        async function updateCurrency(currency) {
+            if (!canEdit) return;
+
+            try {
+                const response = await fetch(`/api/planner/${plannerId}/currency`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeader]: csrfToken
+                    },
+                    body: JSON.stringify({ currency: currency })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentCurrency = currency;
+                    // 통화 기호 업데이트
+                    const symbols = { 'KRW': '₩', 'USD': '$', 'JPY': '¥' };
+                    currencySymbol = symbols[currency] || '₩';
+
+                    // UI 업데이트
+                    updateCurrencyDisplay();
+                } else {
+                    alert('통화 변경에 실패했습니다.');
+                    // 라디오 버튼 원복
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Error updating currency:', error);
+                alert('통화 변경 중 오류가 발생했습니다.');
+                location.reload();
+            }
+        }
+
+        // 통화 표시 업데이트
+        function updateCurrencyDisplay() {
+            // 예산 요약 통화 기호
+            const budgetCurrencyEl = document.getElementById('budgetCurrencySymbol');
+            if (budgetCurrencyEl) budgetCurrencyEl.textContent = currencySymbol;
+
+            // 모달의 통화 기호
+            const editCurrencyEl = document.getElementById('editCostCurrency');
+            if (editCurrencyEl) editCurrencyEl.textContent = currencySymbol;
+
+            // 예산 요약 업데이트
+            updateBudgetSummaryWithItinerary();
+        }
+
+        // ==================== 예산 요약 업데이트 (일정비용 기반) ====================
+
+        // 예산 요약 UI 업데이트 (일정 예상비용 기반)
+        function updateBudgetSummaryWithItinerary() {
+            const totalBudget = parseInt(document.getElementById('totalBudgetInput')?.value) || 0;
+
+            // 총 사용 금액 = 일정 예상비용
+            const remaining = totalBudget - itineraryCostTotal;
+
+            // 요약 업데이트
+            const summaryDetail = document.getElementById('budgetSummaryDetail');
+            if (summaryDetail) {
+                summaryDetail.textContent = `사용: ${currencySymbol}${itineraryCostTotal.toLocaleString()} | 남음: ${currencySymbol}${remaining.toLocaleString()}`;
+            }
+
+            // 상세 내역 업데이트
+            const itineraryCostDisplay = document.getElementById('itineraryCostTotalDisplay');
+            if (itineraryCostDisplay) {
+                itineraryCostDisplay.textContent = `${currencySymbol}${itineraryCostTotal.toLocaleString()}`;
+            }
+
+            const remainingDisplay = document.getElementById('remainingBudgetDisplay');
+            if (remainingDisplay) {
+                remainingDisplay.textContent = `${currencySymbol}${remaining.toLocaleString()}`;
+                remainingDisplay.classList.toggle('negative', remaining < 0);
+            }
+        }
+
+        // 예산 요약 전체 갱신 (API 호출)
+        async function refreshBudgetSummary() {
+            try {
+                const response = await fetch(`/api/planner/${plannerId}/budget-summary`);
+                const result = await response.json();
+
+                if (result.success) {
+                    itineraryCostTotal = result.usedEstimated;
+                    const totalBudget = parseInt(document.getElementById('totalBudgetInput')?.value) || result.totalBudget;
+                    const remaining = totalBudget - result.usedEstimated;
+
+                    // 요약 업데이트
+                    const summaryDetail = document.getElementById('budgetSummaryDetail');
+                    if (summaryDetail) {
+                        summaryDetail.textContent = `사용: ${currencySymbol}${result.usedEstimated.toLocaleString()} | 남음: ${currencySymbol}${remaining.toLocaleString()}`;
+                    }
+
+                    // 상세 내역 업데이트
+                    const itineraryCostDisplay = document.getElementById('itineraryCostTotalDisplay');
+                    if (itineraryCostDisplay) {
+                        itineraryCostDisplay.textContent = `${currencySymbol}${result.usedEstimated.toLocaleString()}`;
+                    }
+
+                    const remainingDisplay = document.getElementById('remainingBudgetDisplay');
+                    if (remainingDisplay) {
+                        remainingDisplay.textContent = `${currencySymbol}${remaining.toLocaleString()}`;
+                        remainingDisplay.classList.toggle('negative', remaining < 0);
+                    }
+
+                    // 카테고리별 사용 비율 업데이트
+                    updateCategoryBudgetList(result.categories, totalBudget);
+                }
+            } catch (error) {
+                console.error('Error refreshing budget summary:', error);
+            }
+        }
+
+        // 카테고리별 사용 비율 DOM 업데이트
+        function updateCategoryBudgetList(categories, totalBudget) {
+            const listEl = document.getElementById('categoryBudgetList');
+            if (!listEl) return;
+
+            if (!categories || categories.length === 0) {
+                listEl.innerHTML = `
+                    <div class="category-budget-empty">
+                        <p>등록된 일정이 없습니다.</p>
+                        <p>일정을 추가하면 카테고리별 예산이 자동 집계됩니다.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = categories.map(cat => `
+                <div class="category-budget-item">
+                    <div class="category-budget-item-header">
+                        <span class="category-budget-name ${cat.categoryClassName}">${cat.categoryName}</span>
+                        <span class="category-budget-amount">${currencySymbol}${cat.amount.toLocaleString()}</span>
+                    </div>
+                    <div class="category-budget-bar">
+                        <div class="category-budget-fill ${cat.categoryClassName}" style="width: ${Math.min(cat.percent, 100)}%"></div>
+                    </div>
+                    <div class="category-budget-percent">${cat.percent}%</div>
+                </div>
+            `).join('');
         }
 
         // 플래너 삭제

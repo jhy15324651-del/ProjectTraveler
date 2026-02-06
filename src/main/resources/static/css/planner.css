@@ -1375,21 +1375,28 @@
 }
 
 .btn-delete-itinerary {
-    background: none;
-    border: none;
-    padding: 8px;
-    color: #999;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: #dc3545;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
-    transition: color 0.3s;
-    opacity: 0;
+    transition: all 0.3s;
 }
 
-.itinerary-card:hover .btn-delete-itinerary {
-    opacity: 1;
+.btn-delete-itinerary svg {
+    width: 14px;
+    height: 14px;
 }
 
 .btn-delete-itinerary:hover {
-    color: var(--primary-red);
+    background: #dc3545;
+    color: white;
 }
 
 /* 빈 일정 */
@@ -1431,26 +1438,32 @@
 
 /* ========================================
    사이드바 (우측 영역 - 체크리스트/예산)
+   - 3단 구조: 탭/요약(고정) + 리스트(스크롤) + 추가영역(고정)
    ======================================== */
 .planner-sidebar {
     position: sticky;
     top: 100px;
     min-width: 0; /* grid 아이템에서 overflow 방지 */
     max-width: 100%;
-    overflow: hidden;
+    /* overflow: hidden 제거 - 내부 스크롤 허용 */
 }
 
 .sidebar-card {
     background: var(--white);
     border-radius: 15px;
-    overflow: hidden;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
     max-width: 100%;
+    /* 핵심: flex 구조 + 높이 제한 */
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 150px); /* 헤더 높이 고려 */
+    overflow: hidden;
 }
 
 .sidebar-tabs {
     display: flex;
     border-bottom: 1px solid var(--border-gray);
+    flex-shrink: 0; /* 탭 영역 축소 방지 */
 }
 
 .sidebar-tab {
@@ -1485,12 +1498,19 @@
 }
 
 .sidebar-content {
+    /* 핵심: flex 구조로 내부 스크롤 지원 */
+    flex: 1 1 auto;
+    min-height: 0; /* flex 아이템 스크롤 필수! */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     padding: 16px;
 }
 
 /* 체크리스트 */
 .checklist-progress {
     margin-bottom: 16px;
+    flex-shrink: 0; /* 진행률 영역 고정 */
 }
 
 .checklist-progress-header {
@@ -1524,7 +1544,12 @@
 }
 
 .checklist-items {
-    margin-bottom: 16px;
+    /* 핵심: 리스트만 스크롤 */
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    margin-bottom: 0; /* 기존 margin 제거 */
+    padding-right: 4px; /* 스크롤바 여유 공간 */
 }
 
 .checklist-item {
@@ -1571,6 +1596,12 @@
 .checklist-add {
     display: flex;
     gap: 8px;
+    /* 핵심: 하단 고정 */
+    flex-shrink: 0;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-gray);
+    background: var(--white);
 }
 
 .checklist-add input {
@@ -1607,6 +1638,7 @@
     padding: 16px;
     border-radius: 12px;
     margin-bottom: 16px;
+    flex-shrink: 0; /* 요약 영역 고정 */
 }
 
 .budget-summary-label {
@@ -1619,6 +1651,47 @@
     font-size: 24px;
     font-weight: 700;
     margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* 총 예산 입력 필드 */
+.budget-summary-total .budget-currency {
+    font-size: 20px;
+}
+
+.budget-summary-total input {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+    color: var(--white);
+    font-size: 24px;
+    font-weight: 700;
+    padding: 4px 8px;
+    width: 150px;
+    text-align: right;
+}
+
+.budget-summary-total input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.budget-summary-total input:focus {
+    outline: none;
+    border-color: var(--white);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* number input 스피너 숨기기 */
+.budget-summary-total input::-webkit-outer-spin-button,
+.budget-summary-total input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.budget-summary-total input[type=number] {
+    -moz-appearance: textfield;
 }
 
 .budget-summary-detail {
@@ -1629,6 +1702,11 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    /* 핵심: 리스트만 스크롤 */
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px; /* 스크롤바 여유 공간 */
 }
 
 .budget-item {
@@ -2576,17 +2654,21 @@
     margin-bottom: 16px;
 }
 
-/* 예산 추가 폼 */
+/* 예산 추가 폼 - 세로 배치 */
 .budget-add {
     display: flex;
+    flex-direction: column;
     gap: 8px;
-    margin-top: 16px;
+    /* 핵심: 하단 고정 */
+    flex-shrink: 0;
+    margin-top: auto;
     padding-top: 16px;
     border-top: 1px solid var(--border-gray);
+    background: var(--white);
 }
 
 .budget-add input[type="text"] {
-    flex: 1;
+    width: 100%;
     padding: 10px 12px;
     border: 1px solid var(--border-gray);
     border-radius: 8px;
@@ -2594,7 +2676,7 @@
 }
 
 .budget-add input[type="number"] {
-    width: 100px;
+    width: 100%;
     padding: 10px 12px;
     border: 1px solid var(--border-gray);
     border-radius: 8px;
@@ -2607,6 +2689,7 @@
 }
 
 .budget-add button {
+    width: 100%;
     padding: 10px 16px;
     background: var(--primary-red);
     color: var(--white);
@@ -2772,4 +2855,473 @@
 
 .btn-modal-cancel:hover {
     background: var(--light-gray);
+}
+
+/* ========================================
+   사이드바 스크롤바 스타일
+   ======================================== */
+
+/* 체크리스트/예산 리스트 스크롤바 (Webkit) */
+.checklist-items::-webkit-scrollbar,
+.budget-items::-webkit-scrollbar {
+    width: 6px;
+}
+
+.checklist-items::-webkit-scrollbar-track,
+.budget-items::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.checklist-items::-webkit-scrollbar-thumb,
+.budget-items::-webkit-scrollbar-thumb {
+    background: rgba(193, 39, 45, 0.3);
+    border-radius: 3px;
+}
+
+.checklist-items::-webkit-scrollbar-thumb:hover,
+.budget-items::-webkit-scrollbar-thumb:hover {
+    background: rgba(193, 39, 45, 0.5);
+}
+
+/* Firefox 스크롤바 */
+.checklist-items,
+.budget-items {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(193, 39, 45, 0.3) transparent;
+}
+
+/* ========================================
+   반응형 - 사이드바 높이 조정
+   ======================================== */
+
+@media (max-width: 1024px) {
+    /* Tablet에서 사이드바가 하단에 배치되므로 높이 제한 조정 */
+    .sidebar-card {
+        max-height: 500px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Mobile에서 사이드바 높이 */
+    .sidebar-card {
+        max-height: 450px;
+    }
+}
+
+/* ========================================
+   일정 수정 버튼 스타일
+   ======================================== */
+
+.btn-edit-itinerary {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 123, 255, 0.1);
+    border: 1px solid rgba(0, 123, 255, 0.3);
+    border-radius: 6px;
+    padding: 6px 12px;
+    color: #007bff;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-edit-itinerary svg {
+    width: 14px;
+    height: 14px;
+}
+
+.btn-edit-itinerary:hover {
+    background: #007bff;
+    color: white;
+}
+
+/* ========================================
+   통화 선택기 스타일
+   ======================================== */
+
+.currency-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--light-gray);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    flex-shrink: 0;
+}
+
+.currency-selector-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark-gray);
+    white-space: nowrap;
+}
+
+.currency-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.currency-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.currency-option input[type="radio"] {
+    display: none;
+}
+
+.currency-option-label {
+    padding: 6px 12px;
+    border: 2px solid var(--border-gray);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    background: var(--white);
+    transition: all 0.3s;
+}
+
+.currency-option input[type="radio"]:checked + .currency-option-label {
+    border-color: var(--primary-red);
+    background: rgba(193, 39, 45, 0.1);
+    color: var(--primary-red);
+}
+
+.currency-option-label:hover {
+    border-color: rgba(193, 39, 45, 0.5);
+}
+
+/* 읽기 전용 통화 표시 */
+.currency-display {
+    padding: 10px 12px;
+    background: var(--light-gray);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #666;
+    flex-shrink: 0;
+}
+
+.currency-display-label {
+    font-weight: 600;
+    color: var(--dark-gray);
+}
+
+/* ========================================
+   예산 상세 내역 스타일
+   ======================================== */
+
+.budget-detail-breakdown {
+    background: var(--light-gray);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 16px;
+    flex-shrink: 0;
+}
+
+.budget-breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 14px;
+}
+
+.budget-breakdown-item:not(:last-child) {
+    border-bottom: 1px solid var(--border-gray);
+}
+
+.budget-breakdown-item .breakdown-label {
+    color: #666;
+}
+
+.budget-breakdown-item .breakdown-value {
+    font-weight: 600;
+    color: var(--dark-gray);
+}
+
+.budget-breakdown-item.total {
+    margin-top: 4px;
+    padding-top: 12px;
+}
+
+.budget-breakdown-item.total .breakdown-label {
+    font-weight: 600;
+    color: var(--dark-gray);
+}
+
+.budget-breakdown-item.total .breakdown-value {
+    font-size: 16px;
+    color: var(--primary-red);
+}
+
+.budget-breakdown-item .breakdown-value.negative {
+    color: #dc3545;
+}
+
+/* ========================================
+   비용 입력 래퍼 (모달용)
+   ======================================== */
+
+.cost-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cost-input-wrapper .cost-currency {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--dark-gray);
+    min-width: 20px;
+}
+
+.cost-input-wrapper input[type="number"] {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--border-gray);
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.cost-input-wrapper input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary-red);
+}
+
+/* number input 스피너 숨기기 */
+.cost-input-wrapper input[type="number"]::-webkit-outer-spin-button,
+.cost-input-wrapper input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.cost-input-wrapper input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* ========================================
+   반응형 - 통화 선택기
+   ======================================== */
+
+@media (max-width: 480px) {
+    .currency-selector {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .currency-options {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .currency-option-label {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+}
+
+/* ========================================
+   카테고리별 예산 사용 비율 스타일
+   ======================================== */
+
+.category-budget-section {
+    margin-top: 20px;
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 14px;
+    padding: 16px;
+}
+
+.category-budget-header {
+    margin-bottom: 16px;
+}
+
+.category-budget-header h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.category-budget-header h4::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 16px;
+    background: var(--primary-red, #dc3545);
+    border-radius: 2px;
+}
+
+.category-budget-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.category-budget-empty {
+    text-align: center;
+    padding: 24px 16px;
+    color: #999;
+}
+
+.category-budget-empty p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.category-budget-empty p:first-child {
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.category-budget-item {
+    padding: 12px;
+    background: #fafafa;
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+
+.category-budget-item:hover {
+    background: #f5f5f5;
+}
+
+.category-budget-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.category-budget-name {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+    color: #fff;
+    background: #999;
+}
+
+/* 카테고리별 색상 */
+.category-budget-name.attraction {
+    background: #e74c3c;
+}
+
+.category-budget-name.restaurant {
+    background: #f39c12;
+}
+
+.category-budget-name.accommodation {
+    background: #3498db;
+}
+
+.category-budget-name.transport {
+    background: #1abc9c;
+}
+
+.category-budget-name.shopping {
+    background: #9b59b6;
+}
+
+.category-budget-name.other {
+    background: #95a5a6;
+}
+
+.category-budget-amount {
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+}
+
+.category-budget-bar {
+    height: 8px;
+    background: #eee;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.category-budget-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+    background: var(--primary-red, #dc3545);
+}
+
+/* 카테고리별 프로그레스바 색상 */
+.category-budget-fill.attraction {
+    background: #e74c3c;
+}
+
+.category-budget-fill.restaurant {
+    background: #f39c12;
+}
+
+.category-budget-fill.accommodation {
+    background: #3498db;
+}
+
+.category-budget-fill.transport {
+    background: #1abc9c;
+}
+
+.category-budget-fill.shopping {
+    background: #9b59b6;
+}
+
+.category-budget-fill.other {
+    background: #95a5a6;
+}
+
+.category-budget-percent {
+    font-size: 12px;
+    color: #666;
+    text-align: right;
+}
+
+/* 사이드바 overflow 수정 - 내용이 잘리지 않도록 */
+.sidebar-content {
+    overflow: visible !important;
+    max-height: none !important;
+}
+
+.sidebar-card {
+    overflow: visible !important;
+}
+
+#budgetTab {
+    overflow: visible !important;
+    padding-bottom: 20px;
+}
+
+/* 반응형 - 카테고리별 예산 */
+@media (max-width: 768px) {
+    .category-budget-section {
+        margin-top: 16px;
+        padding: 14px;
+    }
+
+    .category-budget-item {
+        padding: 10px;
+    }
+
+    .category-budget-name {
+        font-size: 12px;
+        padding: 3px 8px;
+    }
+
+    .category-budget-amount {
+        font-size: 13px;
+    }
 }
