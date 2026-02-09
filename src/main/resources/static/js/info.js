@@ -551,6 +551,75 @@ document.addEventListener("DOMContentLoaded", () => {
         const toolbar = current.quill.getModule("toolbar");
         toolbar.addHandler("image", () => selectLocalImageAndUpload());
 
+        // 🗺 지도 버튼 추가 (iframe 코드만 받음)
+        addMapButtonToQuillToolbar(toolbar, current.quill);
+
+        function addMapButtonToQuillToolbar(toolbar, quill) {
+            // 중복 추가 방지
+            const container = toolbar?.container;
+            if (!container) return;
+            if (container.querySelector(".ql-infomap")) return;
+
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "ql-infomap"; // quill 스타일을 따라가게 ql- prefix
+            btn.innerHTML = "🗺";         // 아이콘(원하면 텍스트로 바꿔도 됨)
+            btn.title = "지도 추가(iframe)";
+
+            // 툴바 맨 끝에 붙이기
+            container.appendChild(btn);
+
+            btn.addEventListener("click", () => {
+                const raw = prompt("구글 지도 '퍼가기' iframe 코드를 그대로 붙여넣어주세요.");
+                if (!raw) return;
+
+                const src = extractIframeSrc(raw);
+                if (!src) {
+                    alert("iframe 코드에서 src를 찾지 못했습니다. (예: <iframe src=\"...\"></iframe>)");
+                    return;
+                }
+
+                // (선택) 안전하게 Google Maps embed만 허용하고 싶으면 아래 주석 해제
+                // if (!src.includes("google.com/maps/embed")) {
+                //     alert("구글 지도 embed 주소가 아닙니다.");
+                //     return;
+                // }
+
+                insertMapIframe(quill, src);
+            });
+        }
+
+        function extractIframeSrc(iframeCode) {
+            // src="..." 또는 src='...'
+            const m = String(iframeCode).match(/src\s*=\s*["']([^"']+)["']/i);
+            return m ? m[1] : null;
+        }
+
+        function insertMapIframe(quill, src) {
+            const safeSrc = String(src).trim();
+
+            // 현재 커서 위치에 삽입 (없으면 끝에 삽입)
+            const range = quill.getSelection(true);
+            const index = range ? range.index : quill.getLength();
+
+            // 반응형/스타일을 위한 wrapper 클래스 포함
+            const html = `
+<div class="info-map">
+  <iframe
+    src="${safeSrc}"
+    width="100%"
+    height="320"
+    style="border:0;"
+    loading="lazy"
+    referrerpolicy="no-referrer-when-downgrade"
+    allowfullscreen>
+  </iframe>
+</div><p><br></p>`;
+
+            quill.clipboard.dangerouslyPasteHTML(index, html);
+            quill.setSelection(index + 1, 0);
+        }
+
         return current.quill;
     }
 

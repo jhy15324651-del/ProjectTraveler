@@ -60,6 +60,12 @@
     margin: 10px 0 18px;
 }
 
+.reviews .page-title-sub{
+    font-size: 24px;
+    font-weight: 800;
+    margin: 10px 0 14px;
+}
+
 .reviews .reviews-title-row{
     display: flex;
     align-items: center;
@@ -69,21 +75,23 @@
 }
 .reviews .reviews-title-row .page-title{ margin: 0; }
 
-/* write button (same feel as q-btn) */
+/* =========================
+   Write button
+========================= */
 .reviews .write-btn{
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    height: 38px;
-    padding: 0 14px;
+    height: 34px;
+    padding: 0 12px;
     border-radius: var(--rv-pill);
 
-    font-size: 0.86rem;
+    font-size: 0.82rem;
     font-weight: 800;
     line-height: 1;
-    text-decoration: none;
     white-space: nowrap;
+    text-decoration: none;
 
     border: 1px solid var(--rv-chip-border);
     background: var(--rv-chip-bg-active);
@@ -92,11 +100,13 @@
     box-shadow: var(--rv-shadow-btn);
     transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
 }
+
 .reviews .write-btn:hover{
     transform: translateY(-1px);
     box-shadow: var(--rv-shadow-btn-hover);
     filter: brightness(0.98);
 }
+
 .reviews .write-btn:active{
     transform: translateY(0);
     box-shadow: 0 1px 0 rgba(0,0,0,0.10);
@@ -898,6 +908,15 @@
 body.reviews-page{
     background: linear-gradient(to bottom, #FDF2F2, var(--white));
 }
+
+/* reviews hero: align title + write button in one row */
+.reviews-hero__titleRow{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
 
 /* =========================
    7) Responsive
