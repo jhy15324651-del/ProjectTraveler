@@ -228,11 +228,113 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================
+// ✅ Region Group Dropdown (main -> sub) for POST page
+// =========================
+    const regionSubWrap  = qs("#regionSubWrap");
+    const regionSubGroup = qs(".filter-chips.region-sub[data-key='region']");
+    const regionSubChips = qsa(".filter-chips.region-sub .chip");
+    const regionMainBtns = qsa(".region-main-btn");
+
+// regionTags hidden들이 들어가는 곳
+    const regionInputsWrap = qs("#regionInputs") || qs(".region-inputs") || postForm;
+
+    function closeRegionDropdown() {
+        if (regionSubWrap) regionSubWrap.style.display = "none";
+        if (regionSubLabel) regionSubLabel.style.display = "none";
+        regionSubChips.forEach((ch) => (ch.style.display = "none"));
+    }
+
+    function openRegionDropdown(group) {
+        if (!regionSubWrap) return;
+
+        regionSubWrap.style.display = "block";
+        if (regionSubLabel) regionSubLabel.style.display = "block"; // ✅ 추가
+
+        regionSubChips.forEach((ch) => {
+            const g = ch.getAttribute("data-group");
+            ch.style.display = (g === group) ? "" : "none";
+        });
+    }
+
+    function setRegionMainActive(group) {
+        regionMainBtns.forEach((b) => b.classList.remove("active"));
+        const target = regionMainBtns.find((b) => (b.getAttribute("data-group") || "") === (group || ""));
+        if (target) target.classList.add("active");
+    }
+
+    /**
+     * ✅ 작성 페이지용 "지역만" 초기화
+     * - 하위칩 active 제거
+     * - regionTags hidden 제거
+     * - 드롭다운 닫기
+     * - 요약 갱신
+     */
+    function resetRegionOnly() {
+        // 1) 하위칩 active 제거
+        if (regionSubGroup) {
+            qsa(".chip", regionSubGroup).forEach((c) => c.classList.remove("active"));
+        }
+
+        // 2) regionTags hidden 제거
+        qsa('input[name="regionTags"]', regionInputsWrap).forEach((el) => el.remove());
+
+        // 3) 드롭다운 닫기
+        closeRegionDropdown();
+
+        // 4) 상위 '전체' 활성
+        setRegionMainActive("");
+
+        // 5) 요약 갱신
+        renderMiniSummary();
+    }
+
+// 1) 상위 지역 버튼 클릭 -> 드롭다운 제어
+    regionMainBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const group = btn.getAttribute("data-group") || "";
+
+            // 상위칩 active 표시
+            setRegionMainActive(group);
+
+            // 상위 '전체' = 지역만 초기화
+            if (group === "") {
+                resetRegionOnly();
+                return;
+            }
+
+            // 해당 그룹의 세부 태그만 열기
+            openRegionDropdown(group);
+        });
+    });
+
+// 2) 초기 로드: 이미 선택된 regionTags가 있으면 그 그룹을 열어준다.
+    const initialRegionTags = qsa('input[name="regionTags"]', regionInputsWrap)
+        .map((inp) => (inp.value || "").trim())
+        .filter((v) => v.length > 0);
+
+    if (initialRegionTags.length > 0) {
+        const firstTag = initialRegionTags[0];
+        const firstChip = regionSubChips.find((ch) => (ch.dataset.value || "") === firstTag);
+        const g = firstChip?.getAttribute("data-group");
+        if (g) {
+            openRegionDropdown(g);
+            setRegionMainActive(g);
+            // 선택된 그룹의 칩만 보이게 열렸으니 OK
+        }
+    } else {
+        setRegionMainActive("");
+        closeRegionDropdown();
+    }
+
+    // =========================
     // 칩 선택 로직 (단일 + 지역 다중)
     // =========================
     qsa(".filter-chips").forEach((group) => {
-        const key = group.dataset.key;               // travelType/theme/period/level/region
-        const mode = group.dataset.mode || "single"; // single | multi
+        const key = group.dataset.key;   // travelType/theme/period/level/region
+        const mode = group.dataset.mode; // single | multi
+
+        // ✅ region-main 처럼 data-key/data-mode 없는 그룹은 무시
+        if (!key || !mode) return;
 
         const row = group.closest(".filter-row");
         const singleHidden =
@@ -254,11 +356,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // ✅ 다중(region)
+            // ✅ 다중(region) - region-sub에서만 동작
             if (mode === "multi") {
                 btn.classList.toggle("active");
 
+                // ✅ hidden inputs는 #regionInputs에만 넣자(작성 페이지 기준으로 가장 안전)
                 const wrap =
+                    qs("#regionInputs") ||
                     row?.querySelector(".region-inputs") ||
                     qs(".region-inputs") ||
                     postForm;

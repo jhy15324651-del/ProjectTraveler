@@ -14,6 +14,10 @@ import org.zerock.projecttraveler.security.CustomUserDetails;
 import org.zerock.projecttraveler.security.SecurityUtils;
 import org.zerock.projecttraveler.service.reviews.ReviewPostService;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 @Controller
 @RequiredArgsConstructor
 public class ReviewsController {
@@ -36,6 +40,7 @@ public class ReviewsController {
     @GetMapping("/reviews")
     public String reviewsWeb(@ModelAttribute("search") ReviewPostSearchRequest req, Model model) {
         applyCommonModel(model);
+        applyFilterOptions(model);
         model.addAttribute("isUnity", false);
 
         Page<ReviewPost> pageResult = reviewPostService.search(req, buildPageableFixed(req));
@@ -49,6 +54,7 @@ public class ReviewsController {
     @GetMapping("/reviews-unity")
     public String reviewsUnity(@ModelAttribute("search") ReviewPostSearchRequest req, Model model) {
         applyCommonModel(model);
+        applyFilterOptions(model);
         model.addAttribute("isUnity", true);
 
         Page<ReviewPost> pageResult = reviewPostService.search(req, buildPageableFixed(req));
@@ -63,6 +69,7 @@ public class ReviewsController {
     public String reviewsPostWeb(Model model,
                                  @ModelAttribute("request") ReviewPostCreateRequest request) {
         applyCommonModel(model);
+        applyFilterOptions(model); // ✅ 추가
         model.addAttribute("isUnity", false);
 
         // ✅ templates/reviews/reviews-post-web.html
@@ -73,6 +80,7 @@ public class ReviewsController {
     public String reviewsPostUnity(Model model,
                                    @ModelAttribute("request") ReviewPostCreateRequest request) {
         applyCommonModel(model);
+        applyFilterOptions(model); // ✅ 추가
         model.addAttribute("isUnity", true);
 
         // ✅ templates/reviews/reviews-post-unity.html
@@ -89,6 +97,7 @@ public class ReviewsController {
 
         if (bindingResult.hasErrors()) {
             applyCommonModel(model);
+            applyFilterOptions(model); // ✅ 추가 (에러 시에도 regionGroups 필요)
             model.addAttribute("isUnity", isUnity);
 
             // ✅ templates/reviews/reviews-post-*.html 로 돌아가야 함
@@ -118,4 +127,23 @@ public class ReviewsController {
         // ✅ templates/reviews/reviews-read-unity.html
         return "reviews/reviews-read-unity";
     }
+
+    private void applyFilterOptions(Model model) {
+
+        // ✅ 지역 그룹(순서 유지)
+        Map<String, List<String>> regionGroups = new LinkedHashMap<>();
+        regionGroups.put("홋카이도", List.of("아사히카와", "삿포로", "하코다테"));
+        regionGroups.put("혼슈", List.of("도쿄", "오사카", "나고야", "히로시마", "교토"));
+        regionGroups.put("시코쿠", List.of("고치", "마쓰야마", "다카마쓰"));
+        regionGroups.put("큐슈", List.of("기타큐슈", "나가사키", "구마모토", "후쿠오카", "오키나와"));
+
+        model.addAttribute("regionGroups", regionGroups);
+
+        // ✅ (확장성 포인트) 추후 다른 필터도 여기서 같이 내려주면 됨
+        // model.addAttribute("travelTypeOptions", ...);
+        // model.addAttribute("themeOptions", ...);
+        // model.addAttribute("periodOptions", ...);
+        // model.addAttribute("levelOptions", ...);
+    }
+
 }

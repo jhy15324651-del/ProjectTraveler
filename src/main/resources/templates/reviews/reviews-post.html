@@ -2,7 +2,7 @@
 <div th:fragment="postContent" class="container reviews-post">
 
     <div class="reviews-post-title-row">
-        <h1 class="page-title">여행 후기 작성</h1>
+        <h1 class="page-title">✈️ 이번 여행은...</h1>
 
         <!-- 목록으로 -->
         <a class="back-btn"
@@ -135,24 +135,64 @@
                 <input type="hidden" th:field="*{level}">
             </div>
 
-            <!-- 지역 (다중) -->
-            <div class="filter-row">
-                <div>
+            <!-- 지역 (다중 / 드롭다운) -->
+            <div class="filter-row region-row">
+
+                <!-- (1) 좌상: 지역 + 힌트 -->
+                <div class="region-left">
                     <div class="filter-label">지역</div>
                     <div class="filter-hint multi">중복 선택 가능</div>
                 </div>
 
-                <div class="filter-chips" data-key="region" data-mode="multi">
-                    <button type="button" class="chip" data-value="도쿄">도쿄</button>
-                    <button type="button" class="chip" data-value="오사카">오사카</button>
-                    <button type="button" class="chip" data-value="교토">교토</button>
-                    <button type="button" class="chip" data-value="후쿠오카">후쿠오카</button>
-                    <button type="button" class="chip" data-value="삿포로">삿포로</button>
+                <!-- (2) 우상: 상위 지역 칩 -->
+                <div class="region-main-col">
+                    <div class="filter-chips region-main">
+                        <!-- 전체(지역 초기화용) : ↺ -->
+                        <button type="button"
+                                class="chip region-main-btn region-all"
+                                data-group="">↺</button>
+
+                        <!-- 상위 지역 -->
+                        <button type="button"
+                                class="chip region-main-btn"
+                                th:each="entry : ${regionGroups}"
+                                th:data-group="${entry.key}"
+                                th:text="${entry.key}">
+                            상위지역
+                        </button>
+                    </div>
                 </div>
 
-                <!-- ✅ JS가 여기다가 name="regionTags" hidden들을 생성 -->
+                <!-- (3) 좌하: “하위 지역 선택” (드롭다운 열릴 때만 표시) -->
+                <div class="region-sub-left" id="regionSubLabel" style="display:none;">
+                    하위 지역 선택
+                </div>
+
+                <!-- (4) 우하: 하위 지역 칩(드롭다운) -->
+                <div class="region-sub-col">
+                    <div class="region-sub-wrap" id="regionSubWrap" style="display:none;">
+                        <div class="filter-chips region-sub" data-key="region" data-mode="multi">
+
+                            <th:block th:each="entry : ${regionGroups}">
+                                <button type="button"
+                                        class="chip"
+                                        th:each="sub : ${entry.value}"
+                                        th:data-group="${entry.key}"
+                                        th:data-value="${sub}"
+                                        th:text="${sub}"
+                                        style="display:none;">
+                                    세부지역
+                                </button>
+                            </th:block>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- hidden inputs (JS가 regionTags 생성) -->
                 <div class="region-inputs" id="regionInputs"></div>
             </div>
+
 
             <!-- 선택 요약 -->
             <div class="tag-summary-mini" id="miniSummary">

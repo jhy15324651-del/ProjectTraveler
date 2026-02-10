@@ -1,26 +1,31 @@
 // reviews.js
-// - chips(single/multi) + hidden inputs + 페이지 reset
+// =====================================================
+// Reviews Filter UI Script
+// - chips(single/multi) + hidden inputs sync + page reset
 // - budget: min/max slider + range bar + ticks + reset/unlock
 // - URL 파라미터로 UI 복원 (페이지네이션 이동 시 유지)
+// - Region: 상위(그룹) -> 하위(세부칩) 드롭다운
+// - Search/Paging: postList로 스무스 스크롤
+// =====================================================
 
 document.addEventListener("DOMContentLoaded", () => {
     const filterForm = document.getElementById("filterForm");
     if (!filterForm) return;
 
-    // ==============================
-    // Multi hidden input mapping
-    // ==============================
+    // =====================================================
+    // 0) Multi hidden input mapping
+    // =====================================================
     const multiWrap = {
         period: { wrapId: "periodInputs", inputName: "periods" },
         level:  { wrapId: "levelInputs",  inputName: "levels"  },
-        region: { wrapId: "tagInputs",    inputName: "tags"    }
+        region: { wrapId: "tagInputs",    inputName: "tags"    },
     };
 
     const params = new URLSearchParams(window.location.search);
 
-    // ==============================
-    // Utils
-    // ==============================
+    // =====================================================
+    // 1) Utils (공용 함수)
+    // =====================================================
     const isBlank = (v) => v == null || String(v).trim() === "";
     const toIntOrNull = (v) => {
         if (isBlank(v)) return null;
@@ -31,26 +36,36 @@ document.addEventListener("DOMContentLoaded", () => {
     function clearGroupActive(group) {
         group.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
     }
+
     function setAllActive(group) {
         const allBtn = group.querySelector('.chip[data-value=""]');
         if (allBtn) allBtn.classList.add("active");
     }
+
     function unsetAllActive(group) {
         const allBtn = group.querySelector('.chip[data-value=""]');
         if (allBtn) allBtn.classList.remove("active");
     }
+
     function getSelectedValues(group) {
         return [...group.querySelectorAll(".chip.active")]
             .map((c) => c.dataset.value)
             .filter((v) => v !== "");
     }
+
     function resetPage() {
         const pageInput = document.getElementById("f_page");
         if (pageInput) pageInput.value = "0";
     }
+
+    /**
+     * multi 그룹(period/level/region) 선택값을 hidden input 리스트로 동기화
+     * - values가 비면 wrap 내부 비움
+     */
     function syncMultiHiddenInputs(key, values) {
         const cfg = multiWrap[key];
         if (!cfg) return;
+
         const wrap = document.getElementById(cfg.wrapId);
         if (!wrap) return;
 
@@ -64,9 +79,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ==============================
-    // Mini Summary (선택된 조건 요약)
-    // ==============================
+    // =====================================================
+    // 2) Mini Summary (선택된 조건 요약)
+    // =====================================================
     function renderMiniSummary() {
         const box = document.getElementById("miniSummary");
         if (!box) return;
@@ -79,6 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const addChip = (label, className = "") => {
             const text = (label ?? "").toString().trim();
             if (!text) return;
+
             const span = document.createElement("span");
             span.className = `chip ${className}`.trim();
             span.textContent = text;
@@ -87,27 +103,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const chips = [];
 
-        // single
+        // (1) single
         const typeVal = document.getElementById("f_travelType")?.value || "";
         if (typeVal) chips.push(typeMap[typeVal] || typeVal);
 
         const themeVal = document.getElementById("f_theme")?.value || "";
         if (themeVal) chips.push(themeMap[themeVal] || themeVal);
 
-        // multi
+        // (2) multi (hidden inputs 기반)
         document.querySelectorAll("#periodInputs input[type='hidden']").forEach((inp) => {
             const v = (inp.value || "").trim();
             if (v) chips.push(v);
         });
+
         document.querySelectorAll("#levelInputs input[type='hidden']").forEach((inp) => {
             const v = (inp.value || "").trim();
             if (v) chips.push(v);
         });
+
         document.querySelectorAll("#tagInputs input[type='hidden']").forEach((inp) => {
             const v = (inp.value || "").trim();
             if (v) chips.push(v);
         });
 
+        // (3) UI 렌더
         if (chips.length === 0) {
             const empty = document.createElement("span");
             empty.className = "empty";
@@ -117,16 +136,16 @@ document.addEventListener("DOMContentLoaded", () => {
             chips.forEach((label) => addChip(label));
         }
 
-        // budget
+        // (4) budget 요약 (항상 표시)
         const min = parseInt(document.getElementById("f_minBudget")?.value || "0", 10);
         const max = parseInt(document.getElementById("f_maxBudget")?.value || "5000000", 10);
         const fmt = (n) => (isNaN(n) ? "0" : n).toLocaleString("ko-KR");
         addChip(`예산 범위 : ${fmt(min)}원 ~ ${fmt(max)}원`, "budget");
     }
 
-    // ==============================
-    // URL -> UI 복원
-    // ==============================
+    // =====================================================
+    // 3) URL -> UI 복원 (칩 active + hidden inputs)
+    // =====================================================
     function restoreSingle(key, paramName) {
         const group = document.querySelector(`.filter-chips[data-key="${key}"]`);
         if (!group) return;
@@ -137,7 +156,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (hidden) hidden.value = val;
 
         clearGroupActive(group);
-        const btn = group.querySelector(`.chip[data-value="${val}"]`) || group.querySelector(`.chip[data-value=""]`);
+        const btn =
+            group.querySelector(`.chip[data-value="${val}"]`) ||
+            group.querySelector(`.chip[data-value=""]`);
         if (btn) btn.classList.add("active");
     }
 
@@ -149,6 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
         syncMultiHiddenInputs(key, values);
 
         clearGroupActive(group);
+
         if (values.length === 0) {
             setAllActive(group);
             return;
@@ -161,9 +183,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ==============================
-    // Budget slider (HTML ID 완전 일치)
-    // ==============================
+    // =====================================================
+    // 4) Budget slider (HTML ID 완전 일치)
+    // =====================================================
     const minInput  = document.getElementById("budgetMin");
     const maxInput  = document.getElementById("budgetMax");
     const minLabel  = document.getElementById("budgetMinLabel");
@@ -176,9 +198,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const rangeBar  = document.getElementById("budgetRange");
 
     // 버튼/상태 hidden (HTML 기준)
-    const resetBtn   = document.getElementById("budgetResetBtn");
-    const unlockBtn  = document.getElementById("budgetUnlockBtn");     // ✅ 핵심: HTML은 UnlockBtn
-    const hiddenUnlimit = document.getElementById("f_budgetUnlimit");  // ✅ hidden 상태
+    const resetBtn      = document.getElementById("budgetResetBtn");
+    const unlockBtn     = document.getElementById("budgetUnlockBtn");     // ✅ 핵심: HTML은 UnlockBtn
+    const hiddenUnlimit = document.getElementById("f_budgetUnlimit");     // ✅ hidden 상태
 
     // 기본값 / 제한해제 max
     const DEFAULT_MIN = 0;
@@ -239,6 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         addTick(min, true);
+
         for (let v = min + tickStep; v <= max; v += tickStep) {
             addTick(v, (v % labelStep === 0));
         }
@@ -272,13 +295,16 @@ document.addEventListener("DOMContentLoaded", () => {
         if (rangeBar) {
             const min = parseInt(minInput.min, 10);
             const max = parseInt(maxInput.max, 10);
+
             const left  = ((minVal - min) / (max - min)) * 100;
             const right = ((maxVal - min) / (max - min)) * 100;
+
             rangeBar.style.left  = left + "%";
             rangeBar.style.width = (right - left) + "%";
         }
 
         if (reset) resetPage();
+
         renderMiniSummary();
     }
 
@@ -294,6 +320,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // 잠금으로 돌아갈 때 현재 값이 500만 넘으면 500만으로 clamp
             const curMin = parseInt(minInput.value || "0", 10);
             const curMax = parseInt(maxInput.value || "0", 10);
+
             if (curMin > DEFAULT_MAX) minInput.value = String(DEFAULT_MAX);
             if (curMax > DEFAULT_MAX) maxInput.value = String(DEFAULT_MAX);
         }
@@ -302,9 +329,9 @@ document.addEventListener("DOMContentLoaded", () => {
         syncBudget({ reset: false });
     }
 
-    // ==============================
-    // 1) URL 기반 복원 먼저
-    // ==============================
+    // =====================================================
+    // 5) 초기 로드: URL 기반 복원 + budget + summary
+    // =====================================================
     restoreSingle("travelType", "travelType");
     restoreSingle("theme", "theme");
 
@@ -336,12 +363,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (pageHidden && params.get("page") !== null) pageHidden.value = params.get("page");
     if (sizeHidden && params.get("size") !== null) sizeHidden.value = params.get("size");
 
-    // ==============================
-    // 2) 이벤트 바인딩 (사용자 조작 시 page=0)
-    // ==============================
+    // =====================================================
+    // 6) Chip click handlers (single / multi 공통)
+    // =====================================================
     document.querySelectorAll(".filter-chips").forEach((group) => {
         const key = group.dataset.key;
         const mode = group.dataset.mode;
+
+        // ✅ 방어: key/mode 없는 filter-chips는 처리 대상 아님
+        if (!key || !mode) return;
 
         group.addEventListener("click", (e) => {
             const btn = e.target.closest(".chip");
@@ -400,15 +430,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    // =====================================================
+    // 7) Budget events (slider + buttons)
+    // =====================================================
     // budget sliders
     if (minInput && maxInput) {
         minInput.addEventListener("input", () => syncBudget({ reset: true }));
         maxInput.addEventListener("input", () => syncBudget({ reset: true }));
     }
 
-    // ==============================
-    // Budget buttons
-    // ==============================
+    // Budget reset button (↺)
     if (resetBtn) {
         resetBtn.addEventListener("click", () => {
             if (!minInput || !maxInput) return;
@@ -421,6 +452,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Budget unlock toggle
     if (unlockBtn) {
         // 초기 aria
         unlockBtn.setAttribute("aria-pressed", isUnlocked() ? "true" : "false");
@@ -434,9 +466,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ==============================
-    // 전체 초기화 버튼 (검색 버튼 오른쪽)
-    // ==============================
+    // =====================================================
+    // 8) 전체 초기화 버튼 (검색 버튼 오른쪽)
+    // - URL submit은 하지 않고, 화면/hidden/요약만 초기화
+    // =====================================================
     const allResetBtn = document.getElementById("btnReset");
 
     if (allResetBtn) {
@@ -495,11 +528,173 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // 7) (선택) 초기화 즉시 서버에 GET 요청해서 URL도 깨끗하게 만들고 싶으면 submit
             // - "초기상태로 되돌리는" 의미에 가장 충실함
-            filterForm.submit();
+            // filterForm.submit();
         });
     }
+
+    // =====================================================
+    // 9) Region Group Dropdown (main -> sub)
+    // =====================================================
+    const regionSubWrap  = document.getElementById("regionSubWrap");
+    const regionSubGroup = document.querySelector(".filter-chips.region-sub[data-key='region']");
+    const regionSubChips = document.querySelectorAll(".filter-chips.region-sub .chip");
+    const regionMainBtns = document.querySelectorAll(".region-main-btn");
+
+    function closeRegionDropdown() {
+        if (regionSubWrap) regionSubWrap.style.display = "none";
+        regionSubChips.forEach((ch) => (ch.style.display = "none"));
+    }
+
+    function openRegionDropdown(group) {
+        if (!regionSubWrap) return;
+
+        regionSubWrap.style.display = "block";
+
+        regionSubChips.forEach((ch) => {
+            const g = ch.getAttribute("data-group");
+            ch.style.display = (g === group) ? "" : "none";
+        });
+    }
+
+    /**
+     * ✅ "지역만" 초기화
+     * - 세부지역 active 해제
+     * - hidden tags 제거
+     * - 세부 패널 닫기
+     * - page=0 + summary 갱신
+     */
+    function resetRegionOnly() {
+        // 1) 세부 chips active 제거 + "전체" active로
+        if (regionSubGroup) {
+            clearGroupActive(regionSubGroup);
+            setAllActive(regionSubGroup);
+        }
+
+        // 2) hidden tags 제거 (region = tags)
+        syncMultiHiddenInputs("region", []);
+
+        // 3) 드롭다운 닫기
+        closeRegionDropdown();
+
+        // 4) page reset + 요약
+        resetPage();
+        renderMiniSummary();
+    }
+
+    // 1) 상위지역 버튼 클릭 핸들링
+    regionMainBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const group = btn.getAttribute("data-group") || "";
+
+            // ✅ 클릭한 상위칩 active 표시
+            setRegionMainActive(group);
+
+            // 상위 "전체" 클릭 = 지역만 초기화 + 원래 UI로
+            if (group === "") {
+                resetRegionOnly();
+                return;
+            }
+
+            // 해당 그룹의 세부 태그만 열기
+            openRegionDropdown(group);
+        });
+    });
+
+    function setRegionMainActive(group) {
+        // group: "" | "홋카이도" | "혼슈" ...
+        regionMainBtns.forEach((b) => b.classList.remove("active"));
+
+        const target = [...regionMainBtns].find((b) => (b.getAttribute("data-group") || "") === (group || ""));
+        if (target) target.classList.add("active");
+    }
+
+    // 2) 페이지 로드 시(= URL 복원 후) tags가 있다면: 첫 태그가 속한 그룹을 열어준다.
+    const initialTags = document.querySelectorAll("#tagInputs input[type='hidden']");
+    if (initialTags.length > 0) {
+        const firstTag = (initialTags[0].value || "").trim();
+        if (firstTag) {
+            const firstChip = [...regionSubChips].find((ch) => ch.dataset.value === firstTag);
+            const g = firstChip?.getAttribute("data-group");
+            if (g) {
+                openRegionDropdown(g);
+                setRegionMainActive(g); // ✅ 검색 후에도 상위칩 표시 유지
+            }
+        }
+    } else {
+        // ✅ 선택된 세부태그가 없으면 "전체"를 active로
+        setRegionMainActive("");
+    }
+
+    // 3) 전체 초기화 버튼(btnReset)과 연동: 드롭다운도 확실히 닫아주기
+    const allResetBtn2 = document.getElementById("btnReset");
+    if (allResetBtn2) {
+        allResetBtn2.addEventListener("click", () => {
+            closeRegionDropdown();
+        });
+    }
+
+    // =====================================================
+    // 10) Smooth scroll to #postList (search/paging 공통) - FIX
+    // =====================================================
+    function smoothToPostList() {
+        const el = document.getElementById("postList");
+        if (!el) return;
+
+        // header 가림 보정 (CSS 토큰 있으면 사용)
+        const offset =
+            parseInt(
+                getComputedStyle(document.querySelector(".reviews") || document.documentElement)
+                    .getPropertyValue("--rv-anchor-offset")
+            ) || 90;
+
+        const y = el.getBoundingClientRect().top + window.pageYOffset - offset;
+
+        // 해시 점프로 이미 도착했을 가능성이 높아서,
+        // 살짝 위로 한번 옮긴 다음 smooth로 내려오게 만들어 "스르륵" 보이게 함
+        window.scrollTo({ top: Math.max(0, y - 60), behavior: "auto" });
+        requestAnimationFrame(() => {
+            window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+        });
+    }
+
+    // ✅ 페이지네이션 링크의 '#postList' 진입도 스무스 처리
+    if (window.location.hash === "#postList") {
+        // 브라우저 기본 앵커 점프/재점프 방지: URL에서 hash 제거
+        history.replaceState(null, "", window.location.pathname + window.location.search);
+
+        // 그 다음 스무스 스크롤
+        requestAnimationFrame(() => smoothToPostList());
+    }
+
+    // ✅ 검색으로 넘어온 경우에도 스무스 스크롤
+    if (sessionStorage.getItem("rv_scroll_to_postlist") === "1") {
+        sessionStorage.removeItem("rv_scroll_to_postlist");
+
+        requestAnimationFrame(() => {
+            smoothToPostList();
+        });
+    }
+
+    // =====================================================
+    // 11) 검색 submit: hash 붙이지 않고, 로드 후 스무스 스크롤만
+    // =====================================================
+    filterForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        // ✅ 이번 로드에서 스크롤하겠다는 플래그만 저장
+        sessionStorage.setItem("rv_scroll_to_postlist", "1");
+
+        const url = new URL(window.location.pathname, window.location.origin);
+        const fd = new FormData(filterForm);
+
+        for (const [k, v] of fd.entries()) {
+            if (v == null) continue;
+            const s = String(v).trim();
+            if (s === "") continue;
+            url.searchParams.append(k, s);
+        }
+
+        // ✅ hash는 붙이지 않는다 (브라우저 점프 방지)
+        window.location.href = url.toString();
+    });
 });
-
-
-
-

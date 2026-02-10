@@ -94,4 +94,8 @@ public class ReviewPost {
 
     @Transient
     private String summary;
+
+    @Transient
+    private Integer regionMatchCount;
+
 }
