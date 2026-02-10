@@ -219,6 +219,20 @@
                         <p style="text-align: center; color: #666; padding: 40px;">아직 등록된 커리큘럼이 없습니다.</p>
                     </th:block>
                 </div>
+
+                <!-- 퀴즈 상태 카드 -->
+                <div id="quizStatusCard" style="display: none; margin-top: 20px; background: white; border-radius: 12px; padding: 20px 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div id="quizStatusIcon" style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; background: #f5f5f5;"></div>
+                            <div>
+                                <div id="quizStatusTitle" style="font-weight: 600; font-size: 15px;"></div>
+                                <div id="quizStatusMessage" style="font-size: 13px; color: #666; margin-top: 2px;"></div>
+                            </div>
+                        </div>
+                        <div id="quizStatusAction"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- 소개 탭 -->
@@ -297,6 +311,62 @@
                 btn.disabled = false;
                 btn.textContent = '수강 신청';
             }
+        }
+
+        // 퀴즈 상태 로드
+        async function loadQuizStatus() {
+            try {
+                const res = await fetch(`/api/quiz/status/${courseId}`);
+                const data = await res.json();
+                if (!data.success || !data.data) return;
+
+                const status = data.data;
+                const card = document.getElementById('quizStatusCard');
+                const icon = document.getElementById('quizStatusIcon');
+                const title = document.getElementById('quizStatusTitle');
+                const msg = document.getElementById('quizStatusMessage');
+                const action = document.getElementById('quizStatusAction');
+
+                card.style.display = 'block';
+
+                if (status.quizStatusCode === 'PASSED') {
+                    icon.textContent = '✓';
+                    icon.style.background = '#e8f5e9';
+                    icon.style.color = '#2e7d32';
+                    title.textContent = '퀴즈 합격 완료';
+                    msg.textContent = '최고 점수: ' + status.bestScore + '점';
+                    action.innerHTML = '<span style="padding: 8px 16px; background: #e8f5e9; color: #2e7d32; border-radius: 20px; font-size: 13px; font-weight: 600;">합격</span>';
+                } else if (status.canAttempt) {
+                    icon.textContent = '📝';
+                    title.textContent = status.title || '퀴즈';
+                    msg.textContent = status.message || '퀴즈에 응시할 수 있습니다.';
+                    action.innerHTML = `<a href="/quiz?courseId=${courseId}&quizId=${status.quizId}" style="padding: 10px 24px; background: var(--primary-red); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">퀴즈 응시</a>`;
+                } else if (status.quizStatusCode === 'RETAKE_REQUIRED') {
+                    icon.textContent = '📚';
+                    icon.style.background = '#fff3e0';
+                    title.textContent = '재수강 필요';
+                    msg.textContent = status.message || '강의를 다시 수강한 후 퀴즈에 응시해주세요.';
+                    action.innerHTML = `<a href="/quiz?courseId=${courseId}&quizId=${status.quizId}" style="padding: 10px 24px; background: #ff9800; color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">재수강</a>`;
+                } else if (status.quizStatusCode === 'RETRY_ALLOWED') {
+                    icon.textContent = '📝';
+                    icon.style.background = '#fff3e0';
+                    title.textContent = '2차 시험 응시 가능';
+                    msg.textContent = '오답 확인 후 2차 시험에 응시하세요.';
+                    action.innerHTML = `<a href="/quiz?courseId=${courseId}&quizId=${status.quizId}" style="padding: 10px 24px; background: var(--primary-red); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">퀴즈 응시</a>`;
+                } else {
+                    icon.textContent = '📝';
+                    title.textContent = status.title || '퀴즈';
+                    msg.textContent = status.message || '';
+                }
+            } catch (e) {
+                console.error('Quiz status load error:', e);
+            }
+        }
+
+        // 수강 가능한 경우 퀴즈 상태 로드
+        const isAccessible = /*[[${course.enrollmentInfo != null and course.enrollmentInfo.accessible}]]*/ false;
+        if (isAccessible) {
+            loadQuizStatus();
         }
 
         // 레슨 선택 (영상 재생 페이지로 이동)

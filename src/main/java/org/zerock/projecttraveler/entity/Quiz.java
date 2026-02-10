@@ -22,6 +22,11 @@ public class Quiz {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
+    // 레슨(세션)별 퀴즈 지원 - null이면 강좌 전체 퀴즈
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "lesson_id")
+    private Lesson lesson;
+
     @Column(nullable = false, length = 200)
     private String title;
 

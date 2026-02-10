@@ -45,7 +45,7 @@ public class SecurityConfig {
                 )
             // CSRF 설정
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**", "/admin/courses/api/**", "/admin/enrollments/api/**") // API는 CSRF 비활성화
+                .ignoringRequestMatchers("/api/**", "/admin/courses/api/**", "/admin/enrollments/api/**", "/admin/quiz/api/**") // API는 CSRF 비활성화
             )
             // 인증/인가 규칙
             .authorizeHttpRequests(auth -> auth
@@ -72,7 +72,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/planner/**").authenticated()
                 // 나머지 페이지는 로그인 필요
                 .requestMatchers("/main", "/learning", "/course-detail", "/my-classroom",
-                               "/attendance", "/online-learning", "/guide", "/select", "/planner", "/planner/**").authenticated()
+                               "/attendance", "/online-learning", "/guide", "/select", "/quiz", "/planner", "/planner/**").authenticated()
                 .anyRequest().authenticated()
 
             )

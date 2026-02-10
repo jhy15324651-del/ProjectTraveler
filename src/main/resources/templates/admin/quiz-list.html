@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${course.title + ' - 퀴즈 관리'}">퀴즈 관리 - 관리자</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <style>
+        .admin-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .admin-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+        .admin-subtitle { color: #666; margin-bottom: 30px; }
+        .admin-nav { margin-bottom: 30px; display: flex; gap: 15px; flex-wrap: wrap; }
+        .admin-nav a { padding: 10px 20px; background: #f5f5f5; border-radius: 8px; text-decoration: none; color: #333; }
+        .admin-nav a.active { background: var(--primary-red); color: white; }
+
+        .course-info-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .course-info h2 { margin: 0 0 10px 0; font-size: 20px; }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-title { font-size: 18px; font-weight: 600; }
+        .btn-add { background: var(--primary-red); color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+        .btn-add:hover { background: #b71c1c; }
+
+        .quiz-list { display: flex; flex-direction: column; gap: 15px; }
+        .quiz-card { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 20px; }
+        .quiz-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .quiz-title { font-size: 18px; font-weight: 600; margin: 0; }
+        .quiz-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+        .badge-course { background: #e8f5e9; color: #2e7d32; }
+        .badge-lesson { background: #e3f2fd; color: #1565c0; }
+        .quiz-meta { display: flex; gap: 20px; flex-wrap: wrap; color: #666; font-size: 14px; margin-bottom: 15px; }
+        .quiz-actions { display: flex; gap: 10px; }
+        .btn-edit { background: #2196f3; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 13px; }
+        .btn-delete { background: #f44336; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-manage { background: #4caf50; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; text-decoration: none; font-size: 13px; }
+
+        .empty-state { padding: 60px 20px; text-align: center; color: #666; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+
+        /* 모달 */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary-red); }
+        .form-group .help-text { font-size: 12px; color: #666; margin-top: 5px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-submit { flex: 1; padding: 12px; background: var(--primary-red); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-cancel { flex: 1; padding: 12px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body class="main-page">
+<div th:replace="~{fragments/main-header :: mainHeader}"></div>
+
+<div class="admin-container">
+    <h1 class="admin-title">퀴즈 관리</h1>
+    <p class="admin-subtitle">강좌의 퀴즈를 관리합니다. 레슨별로 퀴즈를 추가할 수 있습니다.</p>
+
+    <div class="admin-nav">
+        <a th:href="@{/admin/courses}">강좌 관리</a>
+        <a th:href="@{/admin/courses/{id}(id=${course.id})}">레슨 관리</a>
+        <a th:href="@{/admin/quiz/course/{id}(id=${course.id})}" class="active">퀴즈 관리</a>
+        <a th:href="@{/admin/enrollments/requests}">수강 승인</a>
+    </div>
+
+    <!-- 강좌 정보 -->
+    <div class="course-info-card">
+        <div class="course-info">
+            <h2 th:text="${course.title}">강좌명</h2>
+            <p style="color: #666; margin: 0;" th:text="${course.shortDesc}">강좌 설명</p>
+        </div>
+    </div>
+
+    <!-- 퀴즈 목록 -->
+    <div class="section-header">
+        <span class="section-title">퀴즈 목록</span>
+        <button class="btn-add" onclick="openAddQuizModal()">+ 새 퀴즈 추가</button>
+    </div>
+
+    <div class="quiz-list" th:if="${!#lists.isEmpty(quizzes)}">
+        <div th:each="quiz : ${quizzes}" class="quiz-card">
+            <div class="quiz-header">
+                <div>
+                    <h3 class="quiz-title" th:text="${quiz.title}">퀴즈 제목</h3>
+                    <span class="quiz-badge"
+                          th:classappend="${quiz.lesson != null ? 'badge-lesson' : 'badge-course'}"
+                          th:text="${quiz.lesson != null ? quiz.lesson.title + ' 퀴즈' : '강좌 전체 퀴즈'}">
+                        타입
+                    </span>
+                </div>
+            </div>
+            <div class="quiz-meta">
+                <span>합격 기준: <strong th:text="${quiz.passingScore + '%'}">80%</strong></span>
+                <span>문제 수: <strong th:text="${quiz.totalQuestions + '문제'}">0문제</strong></span>
+                <span th:if="${quiz.timeLimitSec != null}">제한 시간: <strong th:text="${quiz.timeLimitSec / 60 + '분'}">30분</strong></span>
+            </div>
+            <div class="quiz-actions">
+                <a th:href="@{/admin/quiz/{id}(id=${quiz.id})}" class="btn-manage">문제 관리</a>
+                <button class="btn-edit"
+                        th:data-id="${quiz.id}"
+                        th:data-title="${quiz.title}"
+                        th:data-description="${quiz.description}"
+                        th:data-lesson-id="${quiz.lesson?.id}"
+                        th:data-passing-score="${quiz.passingScore}"
+                        th:data-time-limit="${quiz.timeLimitSec}"
+                        onclick="openEditQuizModal(this)">수정</button>
+                <button class="btn-delete" th:data-id="${quiz.id}" onclick="deleteQuiz(this)">삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(quizzes)}">
+        <p>등록된 퀴즈가 없습니다.</p>
+        <p>"새 퀴즈 추가" 버튼을 클릭하여 퀴즈를 등록하세요.</p>
+    </div>
+</div>
+
+<!-- 퀴즈 추가/수정 모달 -->
+<div class="modal-overlay" id="quizModal">
+    <div class="modal">
+        <h3 class="modal-title" id="modalTitle">새 퀴즈 추가</h3>
+        <form id="quizForm">
+            <input type="hidden" id="quizId" value="">
+
+            <div class="form-group">
+                <label for="lessonId">연결 레슨 (선택사항)</label>
+                <select id="lessonId">
+                    <option value="">강좌 전체 퀴즈</option>
+                    <option th:each="lesson : ${lessons}"
+                            th:value="${lesson.id}"
+                            th:text="${lesson.sortOrder + '강. ' + lesson.title}">레슨</option>
+                </select>
+                <p class="help-text">레슨을 선택하면 해당 레슨에만 퀴즈가 표시됩니다</p>
+            </div>
+
+            <div class="form-group">
+                <label for="quizTitle">퀴즈 제목 *</label>
+                <input type="text" id="quizTitle" required placeholder="예: 1강 이해도 테스트">
+            </div>
+
+            <div class="form-group">
+                <label for="quizDescription">설명</label>
+                <textarea id="quizDescription" rows="3" placeholder="퀴즈에 대한 설명을 입력하세요"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="passingScore">합격 기준 (%)</label>
+                <input type="number" id="passingScore" min="0" max="100" value="80">
+                <p class="help-text">이 점수 이상이면 합격입니다 (기본값: 80%)</p>
+            </div>
+
+            <div class="form-group">
+                <label for="timeLimitSec">제한 시간 (초)</label>
+                <input type="number" id="timeLimitSec" min="0" placeholder="예: 1800 (30분)">
+                <p class="help-text">제한 시간이 없으면 비워두세요</p>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeModal()">취소</button>
+                <button type="submit" class="btn-submit" id="submitBtn">추가</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const courseId = /*[[${course.id}]]*/ 0;
+    let editingQuizId = null;
+
+    function openAddQuizModal() {
+        editingQuizId = null;
+        document.getElementById('modalTitle').textContent = '새 퀴즈 추가';
+        document.getElementById('submitBtn').textContent = '추가';
+        document.getElementById('quizForm').reset();
+        document.getElementById('passingScore').value = 80;
+        document.getElementById('quizModal').classList.add('active');
+    }
+
+    function openEditQuizModal(button) {
+        editingQuizId = button.dataset.id;
+        document.getElementById('modalTitle').textContent = '퀴즈 수정';
+        document.getElementById('submitBtn').textContent = '수정';
+        document.getElementById('quizId').value = button.dataset.id;
+        document.getElementById('quizTitle').value = button.dataset.title || '';
+        document.getElementById('quizDescription').value = button.dataset.description || '';
+        document.getElementById('lessonId').value = button.dataset.lessonId || '';
+        document.getElementById('passingScore').value = button.dataset.passingScore || 80;
+        document.getElementById('timeLimitSec').value = button.dataset.timeLimit || '';
+        document.getElementById('quizModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('quizModal').classList.remove('active');
+    }
+
+    document.getElementById('quizModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    document.getElementById('quizForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const title = document.getElementById('quizTitle').value.trim();
+        const description = document.getElementById('quizDescription').value.trim();
+        const lessonId = document.getElementById('lessonId').value || null;
+        const passingScore = parseInt(document.getElementById('passingScore').value) || 80;
+        const timeLimitSec = document.getElementById('timeLimitSec').value ?
+                             parseInt(document.getElementById('timeLimitSec').value) : null;
+
+        if (!title) {
+            alert('퀴즈 제목을 입력해주세요.');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '처리 중...';
+
+        try {
+            const url = editingQuizId ? `/admin/quiz/api/${editingQuizId}` : '/admin/quiz/api';
+            const method = editingQuizId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    courseId: courseId,
+                    lessonId: lessonId ? parseInt(lessonId) : null,
+                    title: title,
+                    description: description,
+                    passingScore: passingScore,
+                    timeLimitSec: timeLimitSec
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                location.reload();
+            } else {
+                alert(result.message || '저장에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('서버 오류가 발생했습니다.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = editingQuizId ? '수정' : '추가';
+        }
+    });
+
+    async function deleteQuiz(button) {
+        if (!confirm('정말 이 퀴즈를 삭제하시겠습니까?\n삭제된 퀴즈는 복구할 수 없습니다.')) {
+            return;
+        }
+
+        const quizId = button.dataset.id;
+
+        try {
+            const response = await fetch(`/admin/quiz/api/${quizId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                location.reload();
+            } else {
+                alert(result.message || '삭제에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('서버 오류가 발생했습니다.');
+        }
+    }
+</script>
+</body>
+</html>

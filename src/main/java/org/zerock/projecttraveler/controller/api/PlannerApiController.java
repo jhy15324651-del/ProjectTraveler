@@ -1,16 +1,27 @@
 package org.zerock.projecttraveler.controller.api;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.zerock.projecttraveler.entity.*;
 import org.zerock.projecttraveler.security.SecurityUtils;
 import org.zerock.projecttraveler.service.PlannerService;
 import org.zerock.projecttraveler.service.UserService;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/planner")
@@ -19,6 +30,12 @@ public class PlannerApiController {
 
     private final PlannerService plannerService;
     private final UserService userService;
+
+    @Value("${app.upload.image-path:C:/lms-uploads/images}")
+    private String imageUploadPath;
+
+    private static final Set<String> ALLOWED_EXT = Set.of("jpg", "jpeg", "png", "webp", "gif");
+    private static final long MAX_SIZE = 5L * 1024 * 1024; // 5MB
 
     // ==================== 플래너 CRUD ====================
 
@@ -58,18 +75,21 @@ public class PlannerApiController {
 
                     // 일정 목록
                     List<PlannerItinerary> itineraries = plannerService.getItineraries(id);
-                    result.put("itineraries", itineraries.stream().map(it -> Map.of(
-                            "id", it.getId(),
-                            "dayIndex", it.getDayIndex(),
-                            "sortOrder", it.getSortOrder(),
-                            "time", it.getTime() != null ? it.getTime() : "",
-                            "title", it.getTitle(),
-                            "location", it.getLocation() != null ? it.getLocation() : "",
-                            "category", it.getCategory().name(),
-                            "notes", it.getNotes() != null ? it.getNotes() : "",
-                            "cost", it.getCost(),
-                            "completed", it.getCompleted()
-                    )).toList());
+                    result.put("itineraries", itineraries.stream().map(it -> {
+                        Map<String, Object> itMap = new java.util.HashMap<>();
+                        itMap.put("id", it.getId());
+                        itMap.put("dayIndex", it.getDayIndex());
+                        itMap.put("sortOrder", it.getSortOrder());
+                        itMap.put("time", it.getTime() != null ? it.getTime() : "");
+                        itMap.put("title", it.getTitle());
+                        itMap.put("location", it.getLocation() != null ? it.getLocation() : "");
+                        itMap.put("category", it.getCategory().name());
+                        itMap.put("notes", it.getNotes() != null ? it.getNotes() : "");
+                        itMap.put("cost", it.getCost());
+                        itMap.put("completed", it.getCompleted());
+                        itMap.put("imageUrl", it.getImageUrl() != null ? it.getImageUrl() : "");
+                        return itMap;
+                    }).toList());
 
                     // 체크리스트
                     List<PlannerChecklist> checklists = plannerService.getChecklists(id);
@@ -107,8 +127,9 @@ public class PlannerApiController {
         LocalDate endDate = LocalDate.parse((String) request.get("endDate"));
         String templateStr = (String) request.getOrDefault("template", "BLANK");
         TravelPlanner.Template template = TravelPlanner.Template.valueOf(templateStr.toUpperCase());
+        String coverImage = (String) request.get("coverImage");
 
-        TravelPlanner planner = plannerService.createPlanner(userId, title, destination, startDate, endDate, template);
+        TravelPlanner planner = plannerService.createPlanner(userId, title, destination, startDate, endDate, template, coverImage);
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -155,25 +176,52 @@ public class PlannerApiController {
     }
 
     /**
-     * 내 플래너 목록
+     * 내 플래너 목록 (내 플래너 + 공유받은 플래너)
      */
     @GetMapping("/my")
     public ResponseEntity<?> getMyPlanners() {
         Long userId = SecurityUtils.getCurrentUserIdOrThrow();
-        List<TravelPlanner> planners = plannerService.getMyPlanners(userId);
 
-        List<Map<String, Object>> result = planners.stream().map(p -> Map.<String, Object>of(
-                "id", p.getId(),
-                "title", p.getTitle(),
-                "destination", p.getDestination() != null ? p.getDestination() : "",
-                "startDate", p.getStartDate() != null ? p.getStartDate().toString() : "",
-                "endDate", p.getEndDate() != null ? p.getEndDate().toString() : "",
-                "days", p.getDays(),
-                "visibility", p.getVisibility().name(),
-                "coverImage", p.getCoverImage() != null ? p.getCoverImage() : "",
-                "viewCount", p.getViewCount(),
-                "likeCount", p.getLikeCount()
-        )).toList();
+        // 내가 생성한 플래너
+        List<TravelPlanner> myPlanners = plannerService.getMyPlanners(userId);
+        List<Map<String, Object>> result = new java.util.ArrayList<>(myPlanners.stream().map(p -> {
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", p.getId());
+            map.put("title", p.getTitle());
+            map.put("destination", p.getDestination() != null ? p.getDestination() : "");
+            map.put("startDate", p.getStartDate() != null ? p.getStartDate().toString() : "");
+            map.put("endDate", p.getEndDate() != null ? p.getEndDate().toString() : "");
+            map.put("days", p.getDays());
+            map.put("visibility", p.getVisibility().name());
+            map.put("coverImage", p.getCoverImage() != null ? p.getCoverImage() : "");
+            map.put("viewCount", p.getViewCount());
+            map.put("likeCount", p.getLikeCount());
+            map.put("isOwner", true);
+            map.put("isShared", false);
+            return map;
+        }).toList());
+
+        // 공유받은 플래너
+        List<PlannerShare> sharedPlanners = plannerService.getSharedWithMe(userId);
+        for (PlannerShare share : sharedPlanners) {
+            TravelPlanner p = share.getPlanner();
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", p.getId());
+            map.put("title", p.getTitle());
+            map.put("destination", p.getDestination() != null ? p.getDestination() : "");
+            map.put("startDate", p.getStartDate() != null ? p.getStartDate().toString() : "");
+            map.put("endDate", p.getEndDate() != null ? p.getEndDate().toString() : "");
+            map.put("days", p.getDays());
+            map.put("visibility", p.getVisibility().name());
+            map.put("coverImage", p.getCoverImage() != null ? p.getCoverImage() : "");
+            map.put("viewCount", p.getViewCount());
+            map.put("likeCount", p.getLikeCount());
+            map.put("isOwner", false);
+            map.put("isShared", true);
+            map.put("sharedByName", p.getAuthorName());
+            map.put("permission", share.getPermission().name());
+            result.add(map);
+        }
 
         return ResponseEntity.ok(result);
     }
@@ -338,8 +386,9 @@ public class PlannerApiController {
         PlannerItinerary.Category category = PlannerItinerary.Category.valueOf(categoryStr.toUpperCase());
         String notes = (String) request.get("notes");
         Integer cost = request.get("cost") != null ? ((Number) request.get("cost")).intValue() : 0;
+        String imageUrl = (String) request.get("imageUrl");
 
-        PlannerItinerary itinerary = plannerService.addItinerary(id, dayIndex, time, title, location, category, notes, cost);
+        PlannerItinerary itinerary = plannerService.addItinerary(id, dayIndex, time, title, location, category, notes, cost, imageUrl);
 
         return ResponseEntity.ok(Map.of(
                 "success", true,
@@ -360,8 +409,9 @@ public class PlannerApiController {
         String notes = (String) request.get("notes");
         Integer cost = request.get("cost") != null ? ((Number) request.get("cost")).intValue() : null;
         Boolean completed = (Boolean) request.get("completed");
+        String imageUrl = (String) request.get("imageUrl");
 
-        plannerService.updateItinerary(itineraryId, time, title, location, category, notes, cost, completed);
+        plannerService.updateItinerary(itineraryId, time, title, location, category, notes, cost, completed, imageUrl);
 
         return ResponseEntity.ok(Map.of("success", true));
     }
@@ -550,6 +600,7 @@ public class PlannerApiController {
         List<Map<String, Object>> categories = categoryList.stream().map(c -> Map.<String, Object>of(
                 "categoryName", c.getCategoryName(),
                 "categoryClassName", c.getCategoryClassName(),
+                "categoryEmoji", c.getCategoryEmoji(),
                 "amount", c.getAmount(),
                 "percent", c.getPercent()
         )).toList();
@@ -561,5 +612,91 @@ public class PlannerApiController {
                 "remaining", remaining,
                 "categories", categories
         ));
+    }
+
+    // ==================== 이미지 업로드 ====================
+
+    /**
+     * 플래너 커버 이미지 업로드
+     */
+    @PostMapping(value = "/upload-cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadCoverImage(@RequestParam("image") MultipartFile image) throws IOException {
+        SecurityUtils.getCurrentUserIdOrThrow();
+
+        if (image == null || image.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "파일이 비어있습니다."));
+        }
+
+        if (image.getSize() > MAX_SIZE) {
+            return ResponseEntity.badRequest().body(Map.of("error", "파일 용량이 너무 큽니다. (최대 5MB)"));
+        }
+
+        String originalName = StringUtils.cleanPath(image.getOriginalFilename() == null ? "" : image.getOriginalFilename());
+        String ext = getFileExtension(originalName).toLowerCase();
+
+        if (ext.isEmpty() || !ALLOWED_EXT.contains(ext)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "허용되지 않은 확장자입니다. (jpg, jpeg, png, webp, gif)"));
+        }
+
+        Path uploadDir = Paths.get(imageUploadPath, "planners").toAbsolutePath().normalize();
+        Files.createDirectories(uploadDir);
+
+        String savedName = UUID.randomUUID() + "." + ext;
+        Path target = uploadDir.resolve(savedName).normalize();
+
+        Files.copy(image.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+
+        String url = "/uploads/planners/" + savedName;
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "url", url,
+                "fileName", savedName
+        ));
+    }
+
+    /**
+     * 일정 이미지 업로드
+     */
+    @PostMapping(value = "/upload-itinerary-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadItineraryImage(@RequestParam("image") MultipartFile image) throws IOException {
+        SecurityUtils.getCurrentUserIdOrThrow();
+
+        if (image == null || image.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "파일이 비어있습니다."));
+        }
+
+        if (image.getSize() > MAX_SIZE) {
+            return ResponseEntity.badRequest().body(Map.of("error", "파일 용량이 너무 큽니다. (최대 5MB)"));
+        }
+
+        String originalName = StringUtils.cleanPath(image.getOriginalFilename() == null ? "" : image.getOriginalFilename());
+        String ext = getFileExtension(originalName).toLowerCase();
+
+        if (ext.isEmpty() || !ALLOWED_EXT.contains(ext)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "허용되지 않은 확장자입니다. (jpg, jpeg, png, webp, gif)"));
+        }
+
+        Path uploadDir = Paths.get(imageUploadPath, "itineraries").toAbsolutePath().normalize();
+        Files.createDirectories(uploadDir);
+
+        String savedName = UUID.randomUUID() + "." + ext;
+        Path target = uploadDir.resolve(savedName).normalize();
+
+        Files.copy(image.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+
+        String url = "/uploads/itineraries/" + savedName;
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "url", url,
+                "fileName", savedName
+        ));
+    }
+
+    private String getFileExtension(String filename) {
+        int idx = filename.lastIndexOf('.');
+        if (idx < 0) return "";
+        return filename.substring(idx + 1);
     }
 }

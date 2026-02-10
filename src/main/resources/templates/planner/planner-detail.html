@@ -189,12 +189,14 @@
                                 </div>
                                 <div class="itinerary-notes" th:if="${item.notes != null and !item.notes.isEmpty()}"
                                      th:text="${item.notes}">메모</div>
+                                <!-- 일정 이미지 -->
+                                <div class="itinerary-image" th:if="${item.imageUrl != null and !item.imageUrl.isEmpty()}">
+                                    <img th:src="${item.imageUrl}" th:alt="${item.title}">
+                                </div>
                                 <div class="itinerary-cost" th:if="${item.cost != null and item.cost > 0}">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <line x1="12" y1="1" x2="12" y2="23"/>
-                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                                    </svg>
-                                    <span th:text="${#numbers.formatInteger(item.cost, 1, 'COMMA')} + '원'">0원</span>
+                                    <span class="cost-label">예상비용 :</span>
+                                    <span class="cost-amount" th:data-krw="${item.cost}"
+                                          th:text="'₩' + ${#numbers.formatInteger(item.cost, 1, 'COMMA')}">₩0</span>
                                 </div>
                             </div>
                             <!-- 수정 버튼 -->
@@ -297,43 +299,49 @@
 
                     <!-- 예산 탭 -->
                     <div class="sidebar-content" id="budgetTab" style="display: none;">
-                        <!-- 통화 선택기 -->
-                        <div class="currency-selector" th:if="${canEdit}">
-                            <span class="currency-selector-label">통화</span>
+                        <!-- 통화 선택기 (화면 표시용) -->
+                        <div class="currency-selector">
+                            <span class="currency-selector-label">표시 통화</span>
                             <div class="currency-options">
-                                <label th:each="curr : ${currencies}" class="currency-option">
-                                    <input type="radio" name="currency"
-                                           th:value="${curr}"
-                                           th:checked="${curr == currency}"
-                                           th:attr="onchange='updateCurrency(\'' + ${curr} + '\')'">
-                                    <span class="currency-option-label" th:text="${curr.getSymbol()} + ' ' + ${curr.getDisplayName()}">₩ 원</span>
+                                <label class="currency-option">
+                                    <input type="radio" name="displayCurrency" value="KRW" checked
+                                           onchange="switchDisplayCurrency('KRW')">
+                                    <span class="currency-option-label">₩ 원</span>
+                                </label>
+                                <label class="currency-option">
+                                    <input type="radio" name="displayCurrency" value="USD"
+                                           onchange="switchDisplayCurrency('USD')">
+                                    <span class="currency-option-label">$ 달러</span>
+                                </label>
+                                <label class="currency-option">
+                                    <input type="radio" name="displayCurrency" value="JPY"
+                                           onchange="switchDisplayCurrency('JPY')">
+                                    <span class="currency-option-label">¥ 엔</span>
                                 </label>
                             </div>
-                        </div>
-                        <!-- 읽기 전용일 때 통화 표시 -->
-                        <div class="currency-display" th:unless="${canEdit}">
-                            <span class="currency-display-label">통화: </span>
-                            <span th:text="${currencySymbol} + ' ' + ${currency.getDisplayName()}">₩ 원</span>
                         </div>
 
                         <div class="budget-summary">
                             <div class="budget-summary-label">총 예산</div>
                             <!-- 편집 가능한 경우 입력 필드 표시 -->
                             <div class="budget-summary-total" th:if="${canEdit}">
-                                <span class="budget-currency" id="budgetCurrencySymbol" th:text="${currencySymbol}">₩</span>
+                                <span class="budget-currency" id="budgetCurrencySymbol">₩</span>
                                 <input type="number"
                                        id="totalBudgetInput"
                                        th:value="${totalBudget}"
+                                       th:data-krw="${totalBudget}"
                                        onchange="updateTotalBudget(this.value)"
                                        placeholder="0">
                             </div>
                             <!-- 편집 불가능한 경우 텍스트만 표시 -->
-                            <div class="budget-summary-total" th:unless="${canEdit}"
-                                 th:text="${currencySymbol} + ${#numbers.formatInteger(totalBudget, 1, 'COMMA')}">₩0</div>
-                            <div class="budget-summary-detail"
-                                 id="budgetSummaryDetail"
-                                 th:text="'사용: ' + ${currencySymbol} + ${#numbers.formatInteger(totalActual, 1, 'COMMA')} + ' | 남음: ' + ${currencySymbol} + ${#numbers.formatInteger(totalRemaining, 1, 'COMMA')}">
-                                사용: ₩0 | 남음: ₩0
+                            <div class="budget-summary-total currency-amount" th:unless="${canEdit}"
+                                 th:data-krw="${totalBudget}"
+                                 th:text="'₩' + ${#numbers.formatInteger(totalBudget, 1, 'COMMA')}">₩0</div>
+                            <div class="budget-summary-detail" id="budgetSummaryDetail"
+                                 th:data-used-krw="${totalActual}"
+                                 th:data-remaining-krw="${totalRemaining}">
+                                <span>사용: <span class="currency-amount" th:data-krw="${totalActual}" th:text="'₩' + ${#numbers.formatInteger(totalActual, 1, 'COMMA')}">₩0</span></span>
+                                <span> | 남음: <span class="currency-amount" th:data-krw="${totalRemaining}" th:text="'₩' + ${#numbers.formatInteger(totalRemaining, 1, 'COMMA')}">₩0</span></span>
                             </div>
                         </div>
 
@@ -341,14 +349,16 @@
                         <div class="budget-detail-breakdown">
                             <div class="budget-breakdown-item">
                                 <span class="breakdown-label">일정 예상비용</span>
-                                <span class="breakdown-value" id="itineraryCostTotalDisplay"
-                                      th:text="${currencySymbol} + ${#numbers.formatInteger(itineraryCostTotal, 1, 'COMMA')}">₩0</span>
+                                <span class="breakdown-value currency-amount" id="itineraryCostTotalDisplay"
+                                      th:data-krw="${itineraryCostTotal}"
+                                      th:text="'₩' + ${#numbers.formatInteger(itineraryCostTotal, 1, 'COMMA')}">₩0</span>
                             </div>
                             <div class="budget-breakdown-item total">
                                 <span class="breakdown-label">남은 예산</span>
-                                <span class="breakdown-value" id="remainingBudgetDisplay"
+                                <span class="breakdown-value currency-amount" id="remainingBudgetDisplay"
+                                      th:data-krw="${totalRemaining}"
                                       th:classappend="${totalRemaining < 0} ? ' negative' : ''"
-                                      th:text="${currencySymbol} + ${#numbers.formatInteger(totalRemaining, 1, 'COMMA')}">₩0</span>
+                                      th:text="'₩' + ${#numbers.formatInteger(totalRemaining, 1, 'COMMA')}">₩0</span>
                             </div>
                         </div>
 
@@ -367,9 +377,10 @@
                                 <div class="category-budget-item" th:each="item : ${categoryBudgetSummary}">
                                     <div class="category-budget-item-header">
                                         <span class="category-budget-name" th:classappend="${item.categoryClassName}"
-                                              th:text="${item.categoryName}">카테고리</span>
-                                        <span class="category-budget-amount"
-                                              th:text="${currencySymbol} + ${#numbers.formatInteger(item.amount, 1, 'COMMA')}">₩0</span>
+                                              th:text="${item.categoryEmoji} + ' ' + ${item.categoryName}">카테고리</span>
+                                        <span class="category-budget-amount currency-amount"
+                                              th:data-krw="${item.amount}"
+                                              th:text="'₩' + ${#numbers.formatInteger(item.amount, 1, 'COMMA')}">₩0</span>
                                     </div>
                                     <div class="category-budget-bar">
                                         <div class="category-budget-fill"
@@ -430,8 +441,28 @@
                     <textarea id="itineraryNotes" name="notes" rows="3" placeholder="추가 메모"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="itineraryCost">예상 비용 (원)</label>
-                    <input type="number" id="itineraryCost" name="cost" min="0" value="0">
+                    <label for="itineraryCost">예상 비용 (₩)</label>
+                    <input type="number" id="itineraryCost" name="cost" min="0" value="0" placeholder="원화로 입력">
+                </div>
+                <div class="form-group">
+                    <label for="itineraryImage">사진 (선택)</label>
+                    <div class="itinerary-image-upload">
+                        <input type="file" id="itineraryImage" name="image"
+                               accept="image/jpeg,image/png,image/webp,image/gif"
+                               onchange="previewItineraryImage(this, 'add')" style="display: none;">
+                        <div class="itinerary-image-preview" id="addImagePreview" onclick="document.getElementById('itineraryImage').click()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            <span>클릭하여 이미지 선택</span>
+                        </div>
+                        <button type="button" class="btn-remove-itinerary-image" id="btnRemoveAddImage" onclick="removeItineraryImage('add')" style="display: none;">
+                            이미지 삭제
+                        </button>
+                    </div>
+                    <input type="hidden" id="itineraryImageUrl" name="imageUrl" value="">
                 </div>
             </form>
         </div>
@@ -485,11 +516,31 @@
                     <textarea id="editItineraryNotes" name="notes" rows="3" placeholder="추가 메모"></textarea>
                 </div>
                 <div class="form-group">
-                    <label for="editItineraryCost">예상 비용</label>
+                    <label for="editItineraryCost">예상 비용 (₩)</label>
                     <div class="cost-input-wrapper">
-                        <span class="cost-currency" id="editCostCurrency" th:text="${currencySymbol}">₩</span>
-                        <input type="number" id="editItineraryCost" name="cost" min="0" value="0">
+                        <span class="cost-currency">₩</span>
+                        <input type="number" id="editItineraryCost" name="cost" min="0" value="0" placeholder="원화로 입력">
                     </div>
+                </div>
+                <div class="form-group">
+                    <label for="editItineraryImage">사진 (선택)</label>
+                    <div class="itinerary-image-upload">
+                        <input type="file" id="editItineraryImage" name="image"
+                               accept="image/jpeg,image/png,image/webp,image/gif"
+                               onchange="previewItineraryImage(this, 'edit')" style="display: none;">
+                        <div class="itinerary-image-preview" id="editImagePreview" onclick="document.getElementById('editItineraryImage').click()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            <span>클릭하여 이미지 선택</span>
+                        </div>
+                        <button type="button" class="btn-remove-itinerary-image" id="btnRemoveEditImage" onclick="removeItineraryImage('edit')" style="display: none;">
+                            이미지 삭제
+                        </button>
+                    </div>
+                    <input type="hidden" id="editItineraryImageUrl" name="imageUrl" value="">
                 </div>
             </form>
         </div>

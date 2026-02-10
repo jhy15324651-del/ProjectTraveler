@@ -102,7 +102,7 @@
                 <div class="video-container">
                     <!-- YouTube -->
                     <th:block th:if="${lesson.videoType.name() == 'YOUTUBE'}">
-                        <iframe th:id="'youtube-player'"
+                        <iframe id="youtube-player"
                                 th:src="${youtubeEmbedUrl}"
                                 frameborder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -149,6 +149,12 @@
                 <button class="complete-btn" id="completeBtn" onclick="markComplete()">
                     레슨 완료하기
                 </button>
+
+                <!-- 퀴즈 안내 -->
+                <div id="quizNotice" style="display: none; margin-top: 15px; padding: 14px 18px; background: #fff3e0; border-radius: 8px; text-align: center;">
+                    <span id="quizNoticeText" style="font-size: 14px; color: #e65100;"></span>
+                    <a id="quizNoticeLink" href="#" style="display: block; margin-top: 8px; padding: 10px; background: var(--primary-red); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">퀴즈 응시하기</a>
+                </div>
             </div>
         </div>
 
@@ -289,6 +295,7 @@
         if (!video) return;
 
         let lastTime = 0;
+        let isPlaying = false;
 
         video.addEventListener('loadedmetadata', function() {
             if (lastSavedPosition > 0) {
@@ -296,46 +303,179 @@
             }
         });
 
+        video.addEventListener('play', function() {
+            isPlaying = true;
+            lastTime = Math.floor(video.currentTime);
+        });
+
         video.addEventListener('timeupdate', function() {
+            // 재생 중이 아니면 무시
+            if (!isPlaying || video.paused) return;
+
             const currentTime = Math.floor(video.currentTime);
             const delta = currentTime - lastTime;
 
-            // 10초마다 heartbeat
-            if (delta >= 10) {
+            // 10초마다 heartbeat (비정상적인 점프 방지: delta <= 15)
+            if (delta >= 10 && delta <= 15) {
                 sendHeartbeat(currentTime, delta);
+                lastTime = currentTime;
+            } else if (delta > 15) {
+                // 시크로 인한 점프는 무시하고 위치만 갱신
                 lastTime = currentTime;
             }
         });
 
         video.addEventListener('pause', function() {
+            isPlaying = false;
             const currentTime = Math.floor(video.currentTime);
             const delta = currentTime - lastTime;
-            if (delta > 0) {
+            // 정상적인 범위의 delta만 저장
+            if (delta > 0 && delta <= 15) {
                 sendHeartbeat(currentTime, delta);
-                lastTime = currentTime;
             }
+            lastTime = currentTime;
+        });
+
+        video.addEventListener('seeking', function() {
+            // 시크 시작 시 현재 위치 갱신 (시크로 인한 delta 오차 방지)
+            lastTime = Math.floor(video.currentTime);
         });
 
         video.addEventListener('ended', function() {
-            sendHeartbeat(durationSec, durationSec - lastTime);
+            isPlaying = false;
+            const currentTime = Math.floor(video.currentTime);
+            const delta = currentTime - lastTime;
+            if (delta > 0 && delta <= 15) {
+                sendHeartbeat(currentTime, delta);
+            }
         });
     }
 
-    // YouTube API (간단한 타이머 방식)
+    // YouTube IFrame Player API
+    let youtubePlayer = null;
+    let isYoutubePlaying = false;
+    let youtubeWatchedSec = 0;
+    let youtubeLastTime = 0;
+
     function setupYouTubeTracking() {
         if (videoType !== 'YOUTUBE') return;
 
-        // YouTube iframe API는 복잡하므로 간단한 타이머로 대체
-        let watchedSec = 0;
-        heartbeatInterval = setInterval(() => {
-            watchedSec += 10;
-            sendHeartbeat(watchedSec, 10);
-        }, 10000); // 10초마다
+        // YouTube IFrame Player API 로드
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
+
+    // YouTube API가 준비되면 호출됨
+    window.onYouTubeIframeAPIReady = function() {
+        const iframe = document.getElementById('youtube-player');
+        if (!iframe) return;
+
+        youtubePlayer = new YT.Player('youtube-player', {
+            events: {
+                'onReady': onYouTubePlayerReady,
+                'onStateChange': onYouTubePlayerStateChange
+            }
+        });
+    };
+
+    function onYouTubePlayerReady(event) {
+        // 이전 시청 위치로 이동
+        if (lastSavedPosition > 0) {
+            youtubePlayer.seekTo(lastSavedPosition, true);
+        }
+    }
+
+    function onYouTubePlayerStateChange(event) {
+        // YT.PlayerState: PLAYING = 1, PAUSED = 2, ENDED = 0
+        if (event.data === YT.PlayerState.PLAYING) {
+            // 재생 시작
+            isYoutubePlaying = true;
+            youtubeLastTime = Math.floor(youtubePlayer.getCurrentTime());
+
+            // 10초마다 heartbeat 전송 (재생 중일 때만)
+            if (!heartbeatInterval) {
+                heartbeatInterval = setInterval(() => {
+                    if (isYoutubePlaying && youtubePlayer) {
+                        const currentTime = Math.floor(youtubePlayer.getCurrentTime());
+                        const delta = currentTime - youtubeLastTime;
+
+                        if (delta > 0 && delta <= 15) { // 비정상적인 점프 방지
+                            sendHeartbeat(currentTime, delta);
+                        }
+                        youtubeLastTime = currentTime;
+                    }
+                }, 10000);
+            }
+        } else if (event.data === YT.PlayerState.PAUSED) {
+            // 일시정지
+            isYoutubePlaying = false;
+
+            // 일시정지 시 현재까지의 시청 시간 저장
+            if (youtubePlayer) {
+                const currentTime = Math.floor(youtubePlayer.getCurrentTime());
+                const delta = currentTime - youtubeLastTime;
+                if (delta > 0 && delta <= 15) {
+                    sendHeartbeat(currentTime, delta);
+                }
+                youtubeLastTime = currentTime;
+            }
+        } else if (event.data === YT.PlayerState.ENDED) {
+            // 영상 종료
+            isYoutubePlaying = false;
+            if (youtubePlayer) {
+                const currentTime = Math.floor(youtubePlayer.getCurrentTime());
+                const delta = currentTime - youtubeLastTime;
+                if (delta > 0) {
+                    sendHeartbeat(currentTime, delta);
+                }
+            }
+
+            if (heartbeatInterval) {
+                clearInterval(heartbeatInterval);
+                heartbeatInterval = null;
+            }
+        }
+    }
+
+    // 퀴즈 상태 확인
+    async function checkQuizStatus() {
+        try {
+            const res = await fetch(`/api/quiz/status/${courseId}`);
+            const data = await res.json();
+            if (!data.success || !data.data) return;
+
+            const status = data.data;
+            const notice = document.getElementById('quizNotice');
+            const text = document.getElementById('quizNoticeText');
+            const link = document.getElementById('quizNoticeLink');
+
+            if (status.quizStatusCode === 'PASSED') {
+                notice.style.display = 'block';
+                notice.style.background = '#e8f5e9';
+                text.style.color = '#2e7d32';
+                text.textContent = '퀴즈 합격 완료 (' + status.bestScore + '점)';
+                link.style.display = 'none';
+            } else if (status.canAttempt) {
+                notice.style.display = 'block';
+                text.textContent = '모든 레슨을 완료하셨나요? 퀴즈에 응시해보세요!';
+                link.href = `/quiz?courseId=${courseId}&quizId=${status.quizId}`;
+            } else if (status.quizStatusCode === 'RETRY_ALLOWED') {
+                notice.style.display = 'block';
+                text.textContent = '오답 확인 후 2차 시험에 응시할 수 있습니다.';
+                link.href = `/quiz?courseId=${courseId}&quizId=${status.quizId}`;
+                link.textContent = '2차 시험 응시';
+            }
+        } catch (e) {
+            console.error('Quiz status check error:', e);
+        }
     }
 
     // 초기화
     if (canAccess) {
         loadProgress();
+        checkQuizStatus();
 
         if (videoType === 'MP4' || videoType === 'HLS') {
             setupVideoPlayer();

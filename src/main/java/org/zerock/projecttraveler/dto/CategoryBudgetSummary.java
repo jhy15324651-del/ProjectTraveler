@@ -15,18 +15,21 @@ public class CategoryBudgetSummary {
     private PlannerItinerary.Category category;
     private String categoryName;
     private String categoryClassName;
+    private String categoryEmoji;
     private int amount;
     private int percent;
 
     public static CategoryBudgetSummary of(PlannerItinerary.Category category, int amount, int totalBudget) {
         String categoryName = getCategoryDisplayName(category);
         String categoryClassName = category != null ? category.name().toLowerCase() : "other";
+        String categoryEmoji = getCategoryEmoji(category);
         int percent = totalBudget > 0 ? Math.round((float) amount / totalBudget * 100) : 0;
 
         return CategoryBudgetSummary.builder()
                 .category(category)
                 .categoryName(categoryName)
                 .categoryClassName(categoryClassName)
+                .categoryEmoji(categoryEmoji)
                 .amount(amount)
                 .percent(percent)
                 .build();
@@ -41,6 +44,18 @@ public class CategoryBudgetSummary {
             case TRANSPORT -> "교통";
             case SHOPPING -> "쇼핑";
             case OTHER -> "기타";
+        };
+    }
+
+    private static String getCategoryEmoji(PlannerItinerary.Category category) {
+        if (category == null) return "📌";
+        return switch (category) {
+            case ATTRACTION -> "🏛️";
+            case RESTAURANT -> "🍽️";
+            case ACCOMMODATION -> "🛏️";
+            case TRANSPORT -> "🚗";
+            case SHOPPING -> "🛍️";
+            case OTHER -> "📌";
         };
     }
 }
