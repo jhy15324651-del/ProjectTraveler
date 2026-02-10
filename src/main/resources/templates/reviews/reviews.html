@@ -159,21 +159,58 @@
                 </div>
             </div>
 
-            <!-- region(tags) (multi) -->
+            <!-- region(tags) (multi / grouped) -->
             <div class="filter-row region-row">
                 <div class="filter-label">
                     지역
                     <div class="filter-hint multi">* 중복 선택 가능</div>
                 </div>
 
+                <!-- =========================
+                     1) 상위 지역 (드롭다운 트리거)
+                     ========================== -->
                 <div class="region-inline">
-                    <div class="filter-chips" data-key="region" data-mode="multi-toggle">
-                        <button type="button" class="chip" data-value="">전체</button>
-                        <button type="button" class="chip" data-value="도쿄">도쿄</button>
-                        <button type="button" class="chip" data-value="오사카">오사카</button>
-                        <button type="button" class="chip" data-value="교토">교토</button>
-                        <button type="button" class="chip" data-value="후쿠오카">후쿠오카</button>
-                        <button type="button" class="chip" data-value="삿포로">삿포로</button>
+                    <div class="filter-chips region-main" data-key="regionMain" data-mode="single">
+                        <!-- 지역 전체(전용 초기화) -->
+                        <button type="button"
+                                class="chip region-main-btn region-all"
+                                data-group=""
+                                th:classappend="${search == null || search.tags == null || #lists.isEmpty(search.tags)} ? ' active' : ''">
+                            전체
+                        </button>
+
+                        <!-- 상위 지역 -->
+                        <button type="button"
+                                class="chip region-main-btn"
+                                th:each="entry : ${regionGroups}"
+                                th:data-group="${entry.key}"
+                                th:text="${entry.key}">
+                            상위지역
+                        </button>
+                    </div>
+                </div>
+
+                <!-- =========================
+                     2) 세부 지역 (실제 필터 칩)
+                     ========================== -->
+                <div class="region-sub-wrap" id="regionSubWrap" style="display:none;">
+                    <div class="filter-chips region-sub"
+                         data-key="region"
+                         data-mode="multi-toggle">
+
+                        <!-- Thymeleaf 안전 반복 -->
+                        <th:block th:each="entry : ${regionGroups}">
+                            <button type="button"
+                                    class="chip"
+                                    th:each="sub : ${entry.value}"
+                                    th:data-group="${entry.key}"
+                                    th:data-value="${sub}"
+                                    th:text="${sub}"
+                                    style="display:none;">
+                                세부지역
+                            </button>
+                        </th:block>
+
                     </div>
                 </div>
 
@@ -181,6 +218,9 @@
                     * 지역 중복 선택 시 선택한 지역이 모두 포함된 게시글이 먼저 보입니다.
                 </div>
 
+                <!-- =========================
+                     3) hidden inputs (기존 유지)
+                     ========================== -->
                 <div id="tagInputs">
                     <input th:each="t : ${search != null ? search.tags : null}"
                            type="hidden" name="tags" th:value="${t}"/>
@@ -239,6 +279,10 @@
                     <h3 class="post-title" th:text="${post.title}">제목</h3>
 
                     <div class="post-meta">
+                        <span class="badge match"
+                              th:if="${post.regionMatchCount != null}"
+                              th:text="'📍선택지역 ' + ${post.regionMatchCount} + '개 포함'"></span>
+
                         <span class="badge"
                               th:if="${post.travelType != null}"
                               th:text="${post.travelType == 'solo' ? '혼자' :
