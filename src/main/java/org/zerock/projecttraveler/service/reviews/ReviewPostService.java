@@ -79,17 +79,42 @@ public class ReviewPostService {
 
     public Page<ReviewPost> search(ReviewPostSearchRequest req, Pageable pageable) {
 
-        Specification<ReviewPost> spec = alwaysTrue()
-                .and(ReviewPostSpecs.keyword(req.getQ()))
-                .and(ReviewPostSpecs.travelTypeEq(req.getTravelType()))
-                .and(ReviewPostSpecs.themeEq(req.getTheme()))
-                .and(ReviewPostSpecs.periodIn(req.getPeriods()))
-                .and(ReviewPostSpecs.levelIn(req.getLevels()))
-                .and(ReviewPostSpecs.regionTagsOr(req.getTags()))
-                .and(ReviewPostSpecs.budgetTotalBetween(req.getMinBudget(), req.getMaxBudget()));
+        boolean hasTags = req.getTags() != null && !req.getTags().isEmpty();
 
-        Page<ReviewPost> result = reviewPostRepository.findAll(spec, pageable);
-        result.getContent().forEach(this::fillThumbAndSummary);
+        Page<ReviewPost> result;
+
+        if (hasTags) {
+            result = reviewPostRepository.searchWithRegionPriority(req, pageable);
+        } else {
+            Specification<ReviewPost> spec = alwaysTrue()
+                    .and(ReviewPostSpecs.keyword(req.getQ()))
+                    .and(ReviewPostSpecs.travelTypeEq(req.getTravelType()))
+                    .and(ReviewPostSpecs.themeEq(req.getTheme()))
+                    .and(ReviewPostSpecs.periodIn(req.getPeriods()))
+                    .and(ReviewPostSpecs.levelIn(req.getLevels()))
+                    .and(ReviewPostSpecs.regionTagsOr(req.getTags()))
+                    .and(ReviewPostSpecs.budgetTotalBetween(req.getMinBudget(), req.getMaxBudget()));
+
+            result = reviewPostRepository.findAll(spec, pageable);
+        }
+
+        // ✅ 공통 가공
+        result.getContent().forEach(p -> {
+            fillThumbAndSummary(p);
+
+            // ✅ 지역 선택이 있을 때만 "일치 개수" 계산
+            if (hasTags) {
+                int cnt = 0;
+                List<String> postTags = p.getRegionTags();
+                for (String selected : req.getTags()) {
+                    if (postTags != null && postTags.contains(selected)) cnt++;
+                }
+                p.setRegionMatchCount(cnt);
+            } else {
+                p.setRegionMatchCount(null);
+            }
+        });
+
         return result;
     }
 

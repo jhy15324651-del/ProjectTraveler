@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
+    <title>여행지 정보</title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/info.css}">
+    <link rel="stylesheet" th:href="@{/css/style-sub.css}">
+
+    <!-- Quill -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+</head>
+
+<!-- ✅ isAdmin은 body data-admin에 유지 -->
+<body class="main-page" th:attr="data-admin=${isAdmin}">
+
+<div th:replace="fragments/main-header :: mainHeader"></div>
+
+<main class="container info-page">
+
+    <!-- HERO -->
+    <section class="page-hero">
+        <div class="page-heroBox">
+            <div class="page-heroBox__inner">
+                <h1 class="page-heroBox__title">여행지 정보</h1>
+                <p class="page-heroBox__desc">지역을 선택하면 맛집/명소/역사 정보를 확인할 수 있습니다.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- LEFT SIDEBAR + MAIN -->
+    <section class="info-layout info-layout--tabelog">
+
+        <!-- LEFT SIDEBAR -->
+        <aside class="info-sidebar info-sidebar--left">
+            <div class="info-sidebar__card">
+                <div class="info-sidebar__head">
+                    <h3 class="info-sidebar__title">지역으로 찾기</h3>
+                </div>
+
+                <div class="info-acc">
+                    <div class="info-acc__item"
+                         th:each="g : ${groups}"
+                         th:classappend="${g} == ${openGroup} ? ' is-open' : ''">
+
+                        <button class="info-acc__head" type="button">
+                            <span th:text="${g}">그룹</span>
+                            <span class="info-acc__chev">▾</span>
+                        </button>
+
+                        <div class="info-acc__body">
+                            <a class="info-sidebar__item"
+                               th:each="r : ${regions}"
+                               th:if="${r.group} == ${g}"
+                               th:text="${r.label}"
+                               th:href="@{/info(region=${r.key}, tab=${tab})}"
+                               th:classappend="${region} == ${r.key} ? ' is-active' : ''">
+                                지역
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <div class="info-main">
+            <section class="info-mainCard" th:attr="data-region=${region}">
+
+                <!-- 지역 헤더 -->
+                <header class="info-mainCard__header">
+                    <div class="info-mainCard__region">
+                        <h2 class="info-regionTitle" th:text="${regionTitle}">지역명</h2>
+                    </div>
+                    <p class="info-regionDesc" th:text="${regionDesc}">지역 설명</p>
+                </header>
+
+                <!-- Tabs -->
+                <nav class="info-tabs">
+                    <a class="info-tab"
+                       th:href="@{/info(region=${region}, tab='food')}"
+                       th:classappend="${tab}=='food' ? ' is-active' : ''"
+                       data-tab="food">맛집</a>
+
+                    <a class="info-tab"
+                       th:href="@{/info(region=${region}, tab='spot')}"
+                       th:classappend="${tab}=='spot' ? ' is-active' : ''"
+                       data-tab="spot">명소</a>
+
+                    <a class="info-tab"
+                       th:href="@{/info(region=${region}, tab='history')}"
+                       th:classappend="${tab}=='history' ? ' is-active' : ''"
+                       data-tab="history">역사</a>
+                </nav>
+
+                <!-- Panels -->
+                <div class="info-panelWrap">
+
+                    <!-- =========================
+                         FOOD
+                    ========================== -->
+                    <section class="info-panel"
+                             th:classappend="${tab}=='food' ? ' is-open' : ''"
+                             data-panel="food">
+
+                        <div class="info-panel__head">
+                            <h3 class="info-panel__title">추천 맛집</h3>
+
+                            <!-- ✅ 관리자만 버튼 노출 (JS는 .info-editBtn 기준으로 동작) -->
+                            <div class="info-panel__actions" sec:authorize="hasRole('ADMIN')">
+                                <button type="button" class="info-editBtn">✏️ 편집</button>
+                            </div>
+                        </div>
+
+                        <!-- ✅ 카드 Grid (더미 제거)
+                             - JS가 create/delete/reorder까지 처리하며,
+                               초기 카드 렌더링은 "서버 렌더" 또는 "JS 렌더" 중 하나로 가야 함.
+                             - 현재 제공된 최종 info.js는 "이미 카드가 DOM에 존재"하는 전제를 기본으로 삼고 있어.
+                               그래서 여기서는 서버 렌더(Thymeleaf) 방식으로 최종 정리해줄게.
+                         -->
+
+                        <div class="info-cardGrid" aria-live="polite">
+                            <!-- ✅ 서버에서 내려주는 cards 리스트 사용 (없으면 empty 표시) -->
+                            <th:block th:if="${cardsFood != null and #lists.size(cardsFood) > 0}">
+                                <article class="info-card"
+                                         th:each="c : ${cardsFood}"
+                                         th:attr="data-post=${c.postKey}">
+                                    <h4 class="info-card__name" th:text="${c.title}">제목</h4>
+                                    <p class="info-card__desc" th:text="${c.summary}">요약</p>
+                                </article>
+                            </th:block>
+
+                            <div class="info-empty"
+                                 th:if="${cardsFood == null or #lists.isEmpty(cardsFood)}">
+                                <p>등록된 정보가 없습니다.</p>
+                            </div>
+                        </div>
+
+                        <!-- ✅ 인라인 상세(공용 1개) -->
+                        <div class="info-inlineDetail" id="infoInlineDetail">
+                            <div class="info-inlineDetail__head">
+                                <div class="info-inlineDetail__meta">
+                                    <h4 class="info-inlineDetail__title" id="editTitle" contenteditable="false"></h4>
+                                    <p class="info-inlineDetail__summary" id="editSummary" contenteditable="false"></p>
+                                </div>
+
+                                <div class="info-inlineDetail__actions">
+                                    <div sec:authorize="hasRole('ADMIN')" class="info-inlineDetail__adminBtns">
+                                        <button type="button" class="info-btn info-btn--ghost" id="btnInlineEdit">✏️ 본문 편집</button>
+                                        <button type="button" class="info-btn info-btn--primary" id="btnSave" style="display:none;">저장</button>
+                                        <button type="button" class="info-btn info-btn--ghost" id="btnCancel" style="display:none;">취소</button>
+                                    </div>
+
+                                    <button type="button" class="info-btn info-btn--ghost" id="btnClose">닫기</button>
+                                </div>
+                            </div>
+
+                            <div class="info-inlineDetail__body">
+                                <!-- 보기 모드 -->
+                                <div class="info-content-view" id="infoContentView"></div>
+
+                                <!-- 편집 모드 -->
+                                <div class="info-content-editor" id="infoContentEditor" style="display:none;">
+                                    <div id="quillEditor" style="height: 280px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </section>
+
+                    <!-- =========================
+                         SPOT
+                    ========================== -->
+                    <section class="info-panel"
+                             th:classappend="${tab}=='spot' ? ' is-open' : ''"
+                             data-panel="spot">
+
+                        <div class="info-panel__head">
+                            <h3 class="info-panel__title">추천 명소</h3>
+
+                            <div class="info-panel__actions" sec:authorize="hasRole('ADMIN')">
+                                <button type="button" class="info-editBtn">✏️ 편집</button>
+                            </div>
+                        </div>
+
+                        <div class="info-cardGrid" aria-live="polite">
+                            <th:block th:if="${cardsSpot != null and #lists.size(cardsSpot) > 0}">
+                                <article class="info-card"
+                                         th:each="c : ${cardsSpot}"
+                                         th:attr="data-post=${c.postKey}">
+                                    <h4 class="info-card__name" th:text="${c.title}">제목</h4>
+                                    <p class="info-card__desc" th:text="${c.summary}">요약</p>
+                                </article>
+                            </th:block>
+
+                            <div class="info-empty"
+                                 th:if="${cardsSpot == null or #lists.isEmpty(cardsSpot)}">
+                                <p>등록된 정보가 없습니다.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- =========================
+                         HISTORY
+                    ========================== -->
+                    <section class="info-panel"
+                             th:classappend="${tab}=='history' ? ' is-open' : ''"
+                             data-panel="history">
+
+                        <div class="info-panel__head">
+                            <h3 class="info-panel__title">지역 역사</h3>
+
+                            <div class="info-panel__actions" sec:authorize="hasRole('ADMIN')">
+                                <button type="button" class="info-editBtn">✏️ 편집</button>
+                            </div>
+                        </div>
+
+                        <div class="info-cardGrid" aria-live="polite">
+                            <th:block th:if="${cardsHistory != null and #lists.size(cardsHistory) > 0}">
+                                <article class="info-card"
+                                         th:each="c : ${cardsHistory}"
+                                         th:attr="data-post=${c.postKey}">
+                                    <h4 class="info-card__name" th:text="${c.title}">제목</h4>
+                                    <p class="info-card__desc" th:text="${c.summary}">요약</p>
+                                </article>
+                            </th:block>
+
+                            <div class="info-empty"
+                                 th:if="${cardsHistory == null or #lists.isEmpty(cardsHistory)}">
+                                <p>등록된 정보가 없습니다.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </section>
+        </div>
+
+    </section>
+</main>
+
+<script th:src="@{/js/info.js}"></script>
+</body>
+</html>

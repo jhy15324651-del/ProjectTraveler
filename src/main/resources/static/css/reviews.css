@@ -60,6 +60,12 @@
     margin: 10px 0 18px;
 }
 
+.reviews .page-title-sub{
+    font-size: 24px;
+    font-weight: 800;
+    margin: 10px 0 14px;
+}
+
 .reviews .reviews-title-row{
     display: flex;
     align-items: center;
@@ -69,21 +75,23 @@
 }
 .reviews .reviews-title-row .page-title{ margin: 0; }
 
-/* write button (same feel as q-btn) */
+/* =========================
+   Write button
+========================= */
 .reviews .write-btn{
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    height: 38px;
-    padding: 0 14px;
+    height: 34px;
+    padding: 0 12px;
     border-radius: var(--rv-pill);
 
-    font-size: 0.86rem;
+    font-size: 0.82rem;
     font-weight: 800;
     line-height: 1;
-    text-decoration: none;
     white-space: nowrap;
+    text-decoration: none;
 
     border: 1px solid var(--rv-chip-border);
     background: var(--rv-chip-bg-active);
@@ -92,11 +100,13 @@
     box-shadow: var(--rv-shadow-btn);
     transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
 }
+
 .reviews .write-btn:hover{
     transform: translateY(-1px);
     box-shadow: var(--rv-shadow-btn-hover);
     filter: brightness(0.98);
 }
+
 .reviews .write-btn:active{
     transform: translateY(0);
     box-shadow: 0 1px 0 rgba(0,0,0,0.10);
@@ -119,7 +129,7 @@
     grid-template-columns: 90px 1fr;
     gap: 14px;
     align-items: center;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 
 .reviews .filter-label{
@@ -214,33 +224,18 @@
 
 /* =========================
    3) Budget (slider + reset icon + unlock button)
-   HTML assumptions:
-   - .filter-label.budget-label (left)
-   - .reviews-budget (right)
-   - .reviews-budget-line contains:
-       .reviews-budget-slider (relative)
-       #budgetTicks inside slider
-       #budgetRange inside track
-       #budgetMin/#budgetMax (range inputs)
-       .budget-unlock-btn (right)
-   - #budgetMinLabel/#budgetMaxLabel are positioned above the track
 ========================= */
 
-/* =========================
-   Budget reset button
-   - between [예산] label and slider start
-========================= */
 .reviews .budget-label{
     position: relative; /* 기준점 */
 }
 
-/* 예산 초기화 버튼 (슬라이더 시작점 왼쪽) */
+/* 예산 초기화 버튼 */
 .reviews .budget-reset-btn{
     all: unset;
     position: absolute;
 
-    /* ✅ 슬라이더 기준 위치 */
-    left: -42px;           /* 슬라이더 시작점 바로 앞 */
+    left: -42px;
     top: 50%;
     transform: translateY(-50%);
 
@@ -286,32 +281,28 @@
     gap: 0;
 }
 
-/* one line: slider + unlock */
 .reviews .reviews-budget-line{
     display: grid;
-    grid-template-columns: 1fr auto; /* (슬라이더영역) (버튼) */
-    align-items: center;            /* ✅ 버튼/슬라이더 세로 정렬 */
+    grid-template-columns: 1fr auto;
+    align-items: center;
     gap: 10px;
 }
 
-/* 슬라이더 영역: 텍스트가 위에 올라가므로 위 공간 확보 */
 .reviews .reviews-budget-slider{
     grid-column: 1;
     grid-row: 1;
 
     position: relative;
-    padding-top: 18px;   /* ✅ values 들어갈 공간 */
-    height: 54px;        /* 텍스트+트랙+틱 포함 높이 */
+    padding-top: 18px;
+    height: 54px;
 }
 
-/* values + slider를 같은 칸 표시(겹쳐서 배치) */
 .reviews .reviews-budget-values{
     grid-column: 1;
     grid-row: 1;
     align-self: start;
     justify-self: start;
 
-    /* ✅ 슬라이더 트랙(0 tick 시작점) 바로 위로 */
     margin: 0;
     padding: 0;
     font-size: 12px;
@@ -319,24 +310,18 @@
     line-height: 1.1;
     white-space: nowrap;
 
-    /* 슬라이더 내부 왼쪽 끝과 정확히 맞추기 */
     transform: translateY(-2px);
     z-index: 2;
 }
 
-/* =========================
-   예산 - 제한해제 버튼 (NEW: small / square / red outline toggle)
-========================= */
+/* 제한해제 버튼 */
 .reviews .budget-unlock-btn{
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    /* ✅ 크기 줄이기 */
     height: 32px;
     padding: 0 12px;
-
-    /* ✅ 사각형 박스 형태 */
     border-radius: 10px;
 
     font-size: 0.82rem;
@@ -344,14 +329,12 @@
     line-height: 1;
     white-space: nowrap;
 
-    /* ✅ 기본: 흰 배경 + 빨 테두리 + 빨 글자 */
     background: #fff;
     border: 1.5px solid #ef4444;
     color: #ef4444;
 
     cursor: pointer;
 
-    /* ✅ "살짝 튀어나오는" 버튼 연출 */
     box-shadow: 0 2px 0 rgba(239,68,68,0.25);
     transition: transform .12s ease, box-shadow .12s ease, background .12s ease, color .12s ease, filter .12s ease;
 }
@@ -367,7 +350,6 @@
     box-shadow: 0 1px 0 rgba(239,68,68,0.25);
 }
 
-/* ✅ 토글 ON (aria-pressed=true): 색 반전 */
 .reviews .budget-unlock-btn[aria-pressed="true"]{
     background: #ef4444;
     border-color: #ef4444;
@@ -381,12 +363,11 @@
     box-shadow: 0 4px 0 rgba(0,0,0,0.14), 0 0 0 3px rgba(239,68,68,0.18);
 }
 
-/* track */
 .reviews .reviews-budget-track{
     position: absolute;
     left: 0;
     right: 0;
-    top: 30px; /* padding-top(18) + 트랙 중심 대략 */
+    top: 30px;
     transform: translateY(-50%);
 
     height: 8px;
@@ -396,7 +377,6 @@
     overflow: hidden;
 }
 
-/* selected range */
 .reviews .reviews-budget-range{
     position: absolute;
     top: 0;
@@ -407,29 +387,26 @@
     background: linear-gradient(90deg, var(--rv-budget-range-from) 0%, var(--rv-budget-range-to) 100%);
 }
 
-/* overlapped range inputs (thumb-only interactions) */
 .reviews .reviews-budget-slider input[type="range"]{
     position: absolute;
     left: 0;
     right: 0;
-    top: 18px; /* 텍스트 아래로 */
+    top: 18px;
     width: 100%;
     height: 28px;
 
     background: transparent;
-    pointer-events: none; /* thumb only */
+    pointer-events: none;
     appearance: none;
     -webkit-appearance: none;
 }
 
-/* webkit track transparent */
 .reviews .reviews-budget-slider input[type="range"]::-webkit-slider-runnable-track{
     height: 8px;
     border-radius: var(--rv-pill);
     background: transparent;
 }
 
-/* webkit thumb */
 .reviews .reviews-budget-slider input[type="range"]::-webkit-slider-thumb{
     pointer-events: auto;
     -webkit-appearance: none;
@@ -449,7 +426,6 @@
     border-color: #e59642;
 }
 
-/* firefox */
 .reviews .reviews-budget-slider input[type="range"]::-moz-range-track{
     height: 8px;
     border-radius: var(--rv-pill);
@@ -470,12 +446,11 @@
     border-color: #e59642;
 }
 
-/* ticks (inside slider, aligned with slider width) */
 .reviews .reviews-budget-ticks{
     position: absolute;
     left: 0;
     right: 0;
-    top: 40px; /* 트랙 아래쪽 */
+    top: 40px;
     height: 22px;
     user-select: none;
 }
@@ -498,7 +473,7 @@
 
 
 /* =========================
-   4) Search Toolbar (bottom of filters)
+   4) Search Toolbar
 ========================= */
 .reviews .search-toolbar{
     display: grid;
@@ -508,7 +483,6 @@
     row-gap: 10px;
 }
 
-/* ✅ 드롭다운을 검색창 위로 */
 .reviews .q-stack{
     display: grid;
     grid-template-columns: 1fr auto auto;
@@ -517,7 +491,6 @@
     align-items: center;
 }
 
-/* summary box */
 .reviews .tag-summary-mini{
     flex: 1;
     min-width: 260px;
@@ -536,7 +509,6 @@
     font-size: 0.95rem;
 }
 
-/* summary chips */
 .reviews .tag-summary-mini .chip{
     display: inline-flex;
     align-items: center;
@@ -568,7 +540,6 @@
     color: #4b3a2a;
 }
 
-/* inputs */
 .reviews .q-field,
 .reviews .q-input{
     height: 38px;
@@ -592,7 +563,6 @@
     line-height: 1.2;
 }
 
-/* search button (same feel as write-btn) */
 .reviews .q-btn{
     height: 38px;
     padding: 0 14px;
@@ -623,17 +593,13 @@
     box-shadow: 0 1px 0 rgba(0,0,0,0.10);
 }
 
-/* =========================
-   Reset button (next to q-btn)
-   - secondary button + ↺ icon
-========================= */
 .reviews .btn-reset{
     display: inline-flex;
     align-items: center;
     justify-content: center;
     grid-column: 3;
 
-    height: 38px;                 /* q-btn과 동일 */
+    height: 38px;
     padding: 0 14px;
     border-radius: var(--rv-pill);
 
@@ -642,20 +608,17 @@
     line-height: 1;
     white-space: nowrap;
 
-    /* ✅ 검색(q-btn)과 확실히 구분: 아웃라인 + 연한 배경 */
-    background: #fff7ed;          /* 아주 연한 살구톤 */
+    background: #fff7ed;
     border: 1px solid #f0c38d;
-    color: #8b5e34;               /* 칩/텍스트 계열 */
+    color: #8b5e34;
 
     cursor: pointer;
     user-select: none;
 
-    /* ✅ q-btn보다 살짝 “덜 튀는” 그림자 */
     box-shadow: 0 2px 0 rgba(0,0,0,0.06);
     transition: transform .12s ease, box-shadow .12s ease, filter .12s ease, background .12s ease, border-color .12s ease, color .12s ease;
 }
 
-/* ↺ 아이콘 (HTML 수정 없이) */
 .reviews .btn-reset::before{
     content: "↺";
     margin-right: 8px;
@@ -669,7 +632,6 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 0 rgba(0,0,0,0.08);
 
-    /* hover 시 '리셋' 느낌 강화 */
     background: rgba(240, 179, 109, 0.16);
     border-color: var(--rv-chip-border);
     color: var(--rv-chip-text);
@@ -681,11 +643,11 @@
     box-shadow: 0 1px 0 rgba(0,0,0,0.06);
 }
 
-/* 키보드 포커스 접근성 */
 .reviews .btn-reset:focus-visible{
     outline: 3px solid rgba(240, 179, 109, 0.35);
     outline-offset: 2px;
 }
+
 
 /* =========================
    5) Post List (cards)
@@ -757,7 +719,6 @@
     align-items: center;
 }
 
-/* badges (same tone as summary chips) */
 .reviews .badge{
     display: inline-flex;
     align-items: center;
@@ -811,7 +772,6 @@
    6) Pagination (BOTTOM)
 ========================= */
 
-/* anchor offset (so header doesn't cover list) */
 .reviews #postList{
     scroll-margin-top: var(--rv-anchor-offset);
 }
@@ -888,22 +848,148 @@
     transform: none;
 }
 
-/* focus accessibility */
 .reviews a.reviews-page-btn:focus-visible{
     outline: 2px solid rgba(244, 177, 104, 0.65);
     outline-offset: 2px;
 }
 
-/* reviews 페이지 배경을 planner 톤(#FDF2F2)으로 맞춤 */
 body.reviews-page{
     background: linear-gradient(to bottom, #FDF2F2, var(--white));
 }
+
+.reviews-hero__titleRow{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.reviews .badge.match {
+    background: #fff3e0;
+    border: 1px dashed #eea95b;
+    color: #9a5a00;
+    font-weight: 700;
+}
+
+
+/* =========================
+   Region dropdown layout (FINAL)
+========================= */
+
+/* Region row: main chips are in 2nd column */
+.reviews .filter-row.region-row .region-inline{
+    grid-column: 2;
+}
+
+/* =================================================
+   1) 다른 필터칩 롤백 (지역 제외)
+================================================= */
+
+/* 기본 */
+.reviews .filter-chips:not(.region-main):not(.region-sub) .chip{
+    background: var(--rv-chip-bg-off);
+    border-color: var(--rv-chip-border-off);
+    color: var(--rv-chip-text-off);
+}
+
+/* hover */
+.reviews .filter-chips:not(.region-main):not(.region-sub) .chip:hover{
+    background: #fff7ed;
+    border-color: #f0c38d;
+}
+
+/* active */
+.reviews .filter-chips:not(.region-main):not(.region-sub) .chip.active{
+    background: var(--rv-chip-bg);
+    border-color: var(--rv-chip-border);
+    color: var(--rv-chip-text);
+}
+
+/* active hover */
+.reviews .filter-chips:not(.region-main):not(.region-sub) .chip.active:hover{
+    background: var(--rv-chip-bg-hover);
+}
+
+
+/* =================================================
+   2) 지역 상위칩(region-main)
+   - 상위칩은 "선택됨"이 보이도록 active 강조 유지
+   - 단, [전체]만 다른 필터의 [전체]와 동일하게
+================================================= */
+
+.reviews .filter-chips.region-main .chip{
+    background: var(--rv-chip-bg-off);
+    border-color: var(--rv-chip-border-off);
+    color: var(--rv-chip-text-off);
+}
+
+/* hover(살짝만) */
+.reviews .filter-chips.region-main .chip:hover{
+    background: rgba(246, 199, 146, 0.22);
+    border-color: rgba(217, 162, 106, 0.85);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.08);
+}
+
+/* ✅ 상위칩 active(선택됨) — 그룹 식별용 강조 */
+.reviews .filter-chips.region-main .chip.active{
+    background: var(--rv-chip-bg-active);
+    border-color: var(--rv-chip-border);
+    color: #fff;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.10);
+}
+
+/* active hover */
+.reviews .filter-chips.region-main .chip.active:hover{
+    background: var(--rv-chip-bg-hover);
+}
+
+/* ✅ [전체]만: 다른 필터의 [전체]와 동일한 active(살구색) */
+.reviews .filter-chips.region-main .chip.region-all.active{
+    background: var(--rv-chip-bg);
+    border-color: var(--rv-chip-border);
+    color: var(--rv-chip-text);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.10);
+}
+
+.reviews .filter-chips.region-main .chip.region-all.active:hover{
+    background: var(--rv-chip-bg-hover);
+}
+
+
+/* =================================================
+   3) 세부 지역 칩(region-sub) 레이아웃
+================================================= */
+
+/* 세부칩 컨테이너: 상위칩 바로 아래 */
+.reviews .filter-row.region-row #regionSubWrap{
+    grid-column: 2;
+    justify-self: start;
+    width: 100%;
+    margin-top: 6px;
+}
+
+/* 안내문 / hidden inputs도 동일 컬럼 */
+.reviews .filter-row.region-row .region-desc{ grid-column: 2; }
+.reviews .filter-row.region-row #tagInputs{ grid-column: 2; }
+
+/* 세부칩: 가로 + 줄바꿈 */
+.reviews .filter-chips.region-sub{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.reviews .filter-chips.region-sub .chip{
+    white-space: nowrap;
+}
+
 
 /* =========================
    7) Responsive
 ========================= */
 
-/* filter/search toolbar wrap */
 @media (max-width: 900px){
     .reviews .q-input{
         flex: 1;
@@ -914,7 +1000,6 @@ body.reviews-page{
     .reviews .tag-summary-mini{ flex-basis: 100%; }
 }
 
-/* pagination wrap + anchor offset */
 @media (max-width: 700px){
     .reviews{
         --rv-anchor-offset: 80px;
@@ -937,7 +1022,6 @@ body.reviews-page{
         width: 100%;
     }
 
-    /* budget: reduce min width pressure */
     .reviews .reviews-budget-slider{ min-width: 220px; }
     .reviews .budget-unlock-btn{
         padding: 7px 10px;
@@ -945,7 +1029,6 @@ body.reviews-page{
     }
 }
 
-/* post list: stack image on top */
 @media (max-width: 768px){
     .reviews .post-link{
         flex-direction: column;
