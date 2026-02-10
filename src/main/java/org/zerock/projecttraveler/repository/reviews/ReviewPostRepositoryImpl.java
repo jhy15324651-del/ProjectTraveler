@@ -47,6 +47,11 @@ public class ReviewPostRepositoryImpl implements ReviewPostRepositoryCustom {
         sql.append(" WHERE 1=1 ");
         countSql.append(" WHERE 1=1 ");
 
+// ✅ 소프트삭제 제외 (deleted = 0)
+        sql.append(" AND COALESCE(p.deleted, 0) = 0 ");
+        countSql.append(" AND COALESCE(p.deleted, 0) = 0 ");
+
+
         // ===== 2) 필터들 =====
 
         // (1) 키워드 q : 제목/내용

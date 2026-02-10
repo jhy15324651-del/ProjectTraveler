@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- ✅ CSRF -->
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>여행 후기 수정</title>
+
+    <!-- 공통 CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/reviews-post.css}">
+
+    <!-- ✅ Quill CSS (필수) -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+</head>
+
+<body class="main-page reviews-page">
+
+<!-- 헤더 -->
+<div th:replace="fragments/main-header :: mainHeader"></div>
+
+<!-- 수정 폼 fragment -->
+<main>
+    <div th:replace="reviews/reviews-edit :: reviewsEditContent"></div>
+</main>
+
+<!-- ✅ Quill JS (필수) -->
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+<!-- 공통 JS -->
+<script th:src="@{/js/main.js}"></script>
+
+<!-- ✅ 작성/수정 공용 JS (Quill 생성) -->
+<script th:src="@{/js/reviews-post.js}"></script>
+
+<!-- ✅ 수정 전용 JS (값 복원) -->
+<script th:src="@{/js/reviews-edit.js}"></script>
+
+</body>
+</html>

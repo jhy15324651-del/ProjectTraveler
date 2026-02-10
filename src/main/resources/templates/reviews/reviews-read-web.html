@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
     <title th:text="${post.title} + ' - 여행 후기'">여행 후기 상세</title>
 
     <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
     <link rel="stylesheet" th:href="@{/css/reviews-read.css}" href="/css/reviews-read.css">
+
 </head>
 
 <body class="main-page reviews-page">
@@ -17,5 +21,7 @@
 
 <script th:src="@{/js/main.js}" src="/js/main.js"></script>
 <script th:src="@{/js/reviews.js}" src="/js/reviews.js"></script>
+<script th:src="@{/js/reviews-read.js}" src="/js/reviews-read.js"></script>
+
 </body>
 </html>

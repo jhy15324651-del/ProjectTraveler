@@ -90,4 +90,8 @@ public class ReviewPostSpecs {
                 (levels == null || levels.isEmpty()) ? null : root.get("level").in(levels);
     }
 
+    public static Specification<ReviewPost> notDeleted() {
+        return (root, query, cb) -> cb.isFalse(root.get("deleted"));
+    }
+
 }

@@ -881,6 +881,53 @@ body.reviews-page{
     grid-column: 2;
 }
 
+/* =========================
+   Region 2x2 grid (REVIEWS page)
+========================= */
+.reviews .filter-row.region-row{
+    grid-template-rows: auto auto;   /* 상위 / 하위 */
+    gap: 10px 14px;
+    align-items: start;
+}
+
+/* 4칸 배치 */
+.reviews .region-left{
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.reviews .region-main-col{
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.reviews #regionSubLabel{
+    grid-column: 1;
+    grid-row: 2;
+
+    font-size: 11px;
+    font-weight: 600;
+    color: #9ca3af;
+    line-height: 1.2;
+    padding-top: 6px;
+    white-space: nowrap;
+}
+
+.reviews .region-sub-col{
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.reviews .filter-row.region-row .region-desc{
+    grid-column: 1 / -1; /* 아래로 한 줄 전체 */
+    margin-top: -2px;
+}
+
+.reviews .filter-row.region-row #tagInputs{
+    grid-column: 1 / -1; /* hidden도 충돌 없이 아래로 */
+}
+
+
 /* =================================================
    1) 다른 필터칩 롤백 (지역 제외)
 ================================================= */

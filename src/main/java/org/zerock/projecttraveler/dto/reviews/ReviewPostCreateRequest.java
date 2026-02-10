@@ -14,6 +14,8 @@ import java.util.List;
 @AllArgsConstructor
 public class ReviewPostCreateRequest {
 
+    private Long id; // ✅ 추가
+
     @NotBlank
     @Size(max = 200)
     private String title;
