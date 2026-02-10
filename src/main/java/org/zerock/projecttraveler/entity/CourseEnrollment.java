@@ -63,6 +63,21 @@ public class CourseEnrollment {
     @Column(name = "last_accessed_at")
     private LocalDateTime lastAccessedAt;
 
+    /**
+     * 퀴즈 상태 (NOT_STARTED, IN_PROGRESS, RETRY_ALLOWED, PASSED, RETAKE_REQUIRED)
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "quiz_status", length = 30)
+    @Builder.Default
+    private QuizStatus quizStatus = QuizStatus.NOT_STARTED;
+
+    /**
+     * 현재 퀴즈 사이클 (재수강 완료 시 증가)
+     */
+    @Column(name = "quiz_cycle", nullable = false)
+    @Builder.Default
+    private Integer quizCycle = 1;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -95,6 +110,17 @@ public class CourseEnrollment {
     public enum Source {
         USER_REQUEST,   // 사용자 직접 신청
         ADMIN_ASSIGN    // 관리자 배정
+    }
+
+    /**
+     * 퀴즈 응시 상태
+     */
+    public enum QuizStatus {
+        NOT_STARTED,      // 퀴즈 미응시
+        IN_PROGRESS,      // 응시 가능 (1차 시험 전)
+        RETRY_ALLOWED,    // 1차 실패, 2차 응시 가능
+        PASSED,           // 합격
+        RETAKE_REQUIRED   // 2차 실패, 재수강 필요 (퀴즈 잠금)
     }
 
     // 학습 가능한 상태인지 확인

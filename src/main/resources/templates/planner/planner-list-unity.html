@@ -60,9 +60,34 @@
             ? `${planner.startDate} ~ ${planner.endDate}`
             : '날짜 미정';
         const isPublic = planner.visibility === 'PUBLIC';
+        const isShared = planner.isShared === true;
+        const isOwner = planner.isOwner !== false;
+
+        // 공유받은 플래너의 경우 공유 배지 표시
+        const sharedBadge = isShared ? `
+            <div class="planner-card-shared-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                ${planner.sharedByName || '공유됨'}
+            </div>
+        ` : '';
+
+        // 삭제 버튼은 소유자만 표시
+        const deleteButton = isOwner ? `
+            <button type="button" class="btn-delete-planner" onclick="event.preventDefault(); deletePlanner(${planner.id})">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+            </button>
+        ` : '';
 
         return `
-            <a href="${detailBasePath}${planner.id}" class="planner-card">
+            <a href="${detailBasePath}${planner.id}" class="planner-card ${isShared ? 'shared' : ''}">
                 <div class="planner-card-image">
                     <img src="${coverImage}" alt="${planner.title}">
                     <div class="planner-card-visibility ${isPublic ? 'public' : 'private'}">
@@ -81,6 +106,7 @@
                             비공개
                         `}
                     </div>
+                    ${sharedBadge}
                 </div>
                 <div class="planner-card-content">
                     <h3 class="planner-card-title">${planner.title}</h3>
@@ -119,12 +145,7 @@
                                 ${planner.likeCount || 0}
                             </span>
                         </div>
-                        <button type="button" class="btn-delete-planner" onclick="event.preventDefault(); deletePlanner(${planner.id})">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="3 6 5 6 21 6"/>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                            </svg>
-                        </button>
+                        ${deleteButton}
                     </div>
                 </div>
             </a>
@@ -139,6 +160,8 @@
     function closeCreateModal() {
         document.getElementById('createModal').classList.remove('active');
         document.body.style.overflow = '';
+        // 커버 이미지 초기화
+        removeCoverImage();
     }
 
     function selectTemplate(element) {
@@ -149,18 +172,89 @@
         document.getElementById('plannerTemplate').value = element.dataset.template;
     }
 
+    // 커버 이미지 미리보기
+    function previewCoverImage(input) {
+        const preview = document.getElementById('coverImagePreview');
+        const removeBtn = document.getElementById('btnRemoveCover');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="썸네일 미리보기">`;
+                preview.classList.add('has-image');
+                removeBtn.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // 커버 이미지 삭제
+    function removeCoverImage() {
+        const input = document.getElementById('plannerCoverImage');
+        const preview = document.getElementById('coverImagePreview');
+        const removeBtn = document.getElementById('btnRemoveCover');
+        const urlInput = document.getElementById('plannerCoverImageUrl');
+
+        input.value = '';
+        urlInput.value = '';
+        preview.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <span>클릭하여 이미지 선택</span>
+        `;
+        preview.classList.remove('has-image');
+        removeBtn.style.display = 'none';
+    }
+
+    // 커버 이미지 업로드
+    async function uploadCoverImage() {
+        const fileInput = document.getElementById('plannerCoverImage');
+        if (!fileInput.files || !fileInput.files[0]) {
+            return null;
+        }
+
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+
+        const response = await fetch('/api/planner/upload-cover', {
+            method: 'POST',
+            headers: {
+                [csrfHeader]: csrfToken
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            return result.url;
+        } else {
+            throw new Error(result.error || '이미지 업로드 실패');
+        }
+    }
+
     async function submitCreatePlanner(event) {
         event.preventDefault();
 
-        const formData = {
-            title: document.getElementById('plannerTitle').value,
-            destination: document.getElementById('plannerDestination').value,
-            startDate: document.getElementById('plannerStartDate').value,
-            endDate: document.getElementById('plannerEndDate').value,
-            template: document.getElementById('plannerTemplate').value
-        };
-
         try {
+            // 커버 이미지 업로드 (선택된 경우)
+            let coverImageUrl = null;
+            const fileInput = document.getElementById('plannerCoverImage');
+            if (fileInput.files && fileInput.files[0]) {
+                coverImageUrl = await uploadCoverImage();
+            }
+
+            const formData = {
+                title: document.getElementById('plannerTitle').value,
+                destination: document.getElementById('plannerDestination').value,
+                startDate: document.getElementById('plannerStartDate').value,
+                endDate: document.getElementById('plannerEndDate').value,
+                template: document.getElementById('plannerTemplate').value,
+                coverImage: coverImageUrl
+            };
+
             const response = await fetch('/api/planner', {
                 method: 'POST',
                 headers: {
@@ -179,7 +273,7 @@
             }
         } catch (error) {
             console.error('Error creating planner:', error);
-            alert('플래너 생성 중 오류가 발생했습니다.');
+            alert('플래너 생성 중 오류가 발생했습니다: ' + error.message);
         }
     }
 

@@ -5,7 +5,7 @@
         <div class="planner-list-header">
             <div>
                 <h1>내 여행 플래너</h1>
-                <p>노션 스타일로 여행을 체계적으로 계획하세요</p>
+                <p>여행을 체계적으로 계획하세요</p>
             </div>
             <div class="planner-list-actions">
                 <a th:href="${isUnity == true} ? @{/planner-unity/explore} : @{/planner/explore}" class="btn-explore-planner">
@@ -113,6 +113,28 @@
                                 <input type="date" id="plannerEndDate" name="endDate" class="form-input" required>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- 썸네일 이미지 -->
+                    <div class="form-group">
+                        <label for="plannerCoverImage">썸네일 이미지 (선택)</label>
+                        <div class="cover-image-upload">
+                            <input type="file" id="plannerCoverImage" name="coverImage"
+                                   accept="image/jpeg,image/png,image/webp,image/gif"
+                                   onchange="previewCoverImage(this)" style="display: none;">
+                            <div class="cover-image-preview" id="coverImagePreview" onclick="document.getElementById('plannerCoverImage').click()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                                <span>클릭하여 이미지 선택</span>
+                            </div>
+                            <button type="button" class="btn-remove-cover" id="btnRemoveCover" onclick="removeCoverImage()" style="display: none;">
+                                이미지 삭제
+                            </button>
+                        </div>
+                        <input type="hidden" id="plannerCoverImageUrl" name="coverImageUrl" value="">
                     </div>
 
                     <!-- 템플릿 선택 -->

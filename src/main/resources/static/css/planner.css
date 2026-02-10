@@ -1363,15 +1363,20 @@
 .itinerary-cost {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     font-size: 14px;
     color: var(--dark-gray);
 }
 
-.itinerary-cost svg {
-    width: 16px;
-    height: 16px;
+.itinerary-cost .cost-label {
+    font-size: 12px;
+    font-weight: 600;
     color: var(--primary-red);
+}
+
+.itinerary-cost .cost-amount {
+    font-weight: 700;
+    color: #333;
 }
 
 .btn-delete-itinerary {
@@ -3323,5 +3328,277 @@
 
     .category-budget-amount {
         font-size: 13px;
+    }
+}
+
+/* ========================================
+   커버 이미지 업로드 스타일
+   ======================================== */
+
+.cover-image-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cover-image-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 150px;
+    background: var(--light-gray);
+    border: 2px dashed var(--border-gray);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    overflow: hidden;
+}
+
+.cover-image-preview:hover {
+    border-color: var(--primary-red);
+    background: rgba(193, 39, 45, 0.05);
+}
+
+.cover-image-preview svg {
+    width: 48px;
+    height: 48px;
+    color: #ccc;
+    transition: color 0.3s;
+}
+
+.cover-image-preview:hover svg {
+    color: var(--primary-red);
+}
+
+.cover-image-preview span {
+    font-size: 14px;
+    color: #999;
+    transition: color 0.3s;
+}
+
+.cover-image-preview:hover span {
+    color: var(--primary-red);
+}
+
+.cover-image-preview.has-image {
+    border-style: solid;
+    border-color: var(--primary-red);
+    padding: 0;
+}
+
+.cover-image-preview.has-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    max-height: 200px;
+}
+
+.btn-remove-cover {
+    padding: 8px 16px;
+    background: var(--white);
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    align-self: flex-start;
+}
+
+.btn-remove-cover:hover {
+    background: #dc3545;
+    color: var(--white);
+}
+
+/* 반응형 - 커버 이미지 업로드 */
+@media (max-width: 768px) {
+    .cover-image-preview {
+        min-height: 120px;
+    }
+
+    .cover-image-preview svg {
+        width: 40px;
+        height: 40px;
+    }
+
+    .cover-image-preview span {
+        font-size: 13px;
+    }
+}
+
+/* ========================================
+   일정 이미지 스타일
+   ======================================== */
+
+/* 일정 카드 내 이미지 표시 */
+.itinerary-image {
+    margin-top: 12px;
+    border-radius: 8px;
+    overflow: hidden;
+    max-height: 200px;
+}
+
+.itinerary-image img {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    object-fit: cover;
+    display: block;
+    border-radius: 8px;
+}
+
+/* 일정 이미지 업로드 영역 (모달 내) */
+.itinerary-image-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.itinerary-image-upload label {
+    font-weight: 600;
+    color: var(--dark-gray);
+    font-size: 14px;
+}
+
+.itinerary-image-preview {
+    width: 100%;
+    min-height: 120px;
+    max-height: 200px;
+    border: 2px dashed var(--border-gray);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    overflow: hidden;
+    background: var(--light-gray);
+}
+
+.itinerary-image-preview:hover {
+    border-color: var(--primary-red);
+    background: rgba(193, 39, 45, 0.05);
+}
+
+.itinerary-image-preview svg {
+    width: 48px;
+    height: 48px;
+    color: #999;
+    margin-bottom: 8px;
+}
+
+.itinerary-image-preview span {
+    font-size: 14px;
+    color: #999;
+}
+
+.itinerary-image-preview:hover svg,
+.itinerary-image-preview:hover span {
+    color: var(--primary-red);
+}
+
+.itinerary-image-preview.has-image {
+    border-style: solid;
+    border-color: var(--primary-red);
+    padding: 0;
+    min-height: 0;
+}
+
+.itinerary-image-preview.has-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    max-height: 200px;
+}
+
+.btn-remove-itinerary-image {
+    padding: 8px 16px;
+    background: var(--white);
+    color: #dc3545;
+    border: 1px solid #dc3545;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    align-self: flex-start;
+}
+
+.btn-remove-itinerary-image:hover {
+    background: #dc3545;
+    color: var(--white);
+}
+
+/* 반응형 - 일정 이미지 */
+@media (max-width: 768px) {
+    .itinerary-image {
+        max-height: 150px;
+    }
+
+    .itinerary-image img {
+        max-height: 150px;
+    }
+
+    .itinerary-image-preview {
+        min-height: 100px;
+    }
+
+    .itinerary-image-preview svg {
+        width: 36px;
+        height: 36px;
+    }
+
+    .itinerary-image-preview span {
+        font-size: 13px;
+    }
+}
+
+/* ========================================
+   공유 플래너 표시
+   ======================================== */
+
+/* 공유받은 플래너 카드 */
+.planner-card.shared {
+    border: 2px solid #4a90d9;
+}
+
+/* 공유 배지 */
+.planner-card-shared-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(74, 144, 217, 0.95);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+    z-index: 5;
+}
+
+.planner-card-shared-badge svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* 반응형 - 공유 배지 */
+@media (max-width: 768px) {
+    .planner-card-shared-badge {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+
+    .planner-card-shared-badge svg {
+        width: 12px;
+        height: 12px;
     }
 }

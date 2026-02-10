@@ -22,4 +22,15 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     Optional<Quiz> findByIdWithQuestionsAndOptions(@Param("quizId") Long quizId);
 
     boolean existsByCourseIdAndActiveTrue(Long courseId);
+
+    // 레슨별 퀴즈 조회
+    Optional<Quiz> findFirstByLessonIdAndActiveTrue(Long lessonId);
+
+    List<Quiz> findByLessonIdAndActiveTrue(Long lessonId);
+
+    boolean existsByLessonIdAndActiveTrue(Long lessonId);
+
+    // 강좌의 모든 퀴즈 조회 (레슨 정보 포함)
+    @Query("SELECT q FROM Quiz q LEFT JOIN FETCH q.lesson WHERE q.course.id = :courseId AND q.active = true ORDER BY q.lesson.sortOrder ASC NULLS FIRST")
+    List<Quiz> findAllByCourseIdWithLesson(@Param("courseId") Long courseId);
 }

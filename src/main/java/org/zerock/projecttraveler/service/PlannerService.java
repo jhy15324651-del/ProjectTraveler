@@ -36,6 +36,16 @@ public class PlannerService {
     public TravelPlanner createPlanner(Long userId, String title, String destination,
                                        LocalDate startDate, LocalDate endDate,
                                        TravelPlanner.Template template) {
+        return createPlanner(userId, title, destination, startDate, endDate, template, null);
+    }
+
+    /**
+     * 새 플래너 생성 (커버 이미지 포함)
+     */
+    @Transactional
+    public TravelPlanner createPlanner(Long userId, String title, String destination,
+                                       LocalDate startDate, LocalDate endDate,
+                                       TravelPlanner.Template template, String coverImage) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
@@ -46,6 +56,7 @@ public class PlannerService {
                 .startDate(startDate)
                 .endDate(endDate)
                 .template(template)
+                .coverImage(coverImage)
                 .visibility(TravelPlanner.Visibility.PRIVATE)
                 .build();
 
@@ -234,10 +245,10 @@ public class PlannerService {
     }
 
     /**
-     * 나에게 공유된 플래너 목록
+     * 나에게 공유된 플래너 목록 (플래너 정보 포함)
      */
     public List<PlannerShare> getSharedWithMe(Long userId) {
-        return shareRepository.findBySharedUserId(userId);
+        return shareRepository.findBySharedUserIdWithPlanner(userId);
     }
 
     // ==================== 일정 관리 ====================
@@ -263,7 +274,7 @@ public class PlannerService {
     public PlannerItinerary addItinerary(Long plannerId, Integer dayIndex, String time,
                                          String title, String location,
                                          PlannerItinerary.Category category,
-                                         String notes, Integer cost) {
+                                         String notes, Integer cost, String imageUrl) {
         TravelPlanner planner = plannerRepository.findById(plannerId)
                 .orElseThrow(() -> new IllegalArgumentException("플래너를 찾을 수 없습니다."));
 
@@ -280,6 +291,7 @@ public class PlannerService {
                 .category(category)
                 .notes(notes)
                 .cost(cost != null ? cost : 0)
+                .imageUrl(imageUrl)
                 .build();
 
         return itineraryRepository.save(itinerary);
@@ -291,7 +303,7 @@ public class PlannerService {
     @Transactional
     public PlannerItinerary updateItinerary(Long itineraryId, String time, String title,
                                             String location, PlannerItinerary.Category category,
-                                            String notes, Integer cost, Boolean completed) {
+                                            String notes, Integer cost, Boolean completed, String imageUrl) {
         PlannerItinerary itinerary = itineraryRepository.findById(itineraryId)
                 .orElseThrow(() -> new IllegalArgumentException("일정을 찾을 수 없습니다."));
 
@@ -302,6 +314,8 @@ public class PlannerService {
         if (notes != null) itinerary.setNotes(notes);
         if (cost != null) itinerary.setCost(cost);
         if (completed != null) itinerary.setCompleted(completed);
+        // imageUrl은 빈 문자열로 삭제 허용, null이면 업데이트 안함
+        if (imageUrl != null) itinerary.setImageUrl(imageUrl.isEmpty() ? null : imageUrl);
 
         return itinerary;
     }

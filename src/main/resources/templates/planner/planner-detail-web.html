@@ -32,9 +32,13 @@
         const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
 
         let selectedDay = 0;
-        let currentCurrency = '[[${currency}]]';
-        let currencySymbol = '[[${currencySymbol}]]';
         let itineraryCostTotal = [[${itineraryCostTotal}]];
+
+        // 통화 표시 관련 (내부 저장은 항상 KRW, 화면만 변환)
+        let displayCurrency = 'KRW';
+        const currencySymbols = { KRW: '₩', USD: '$', JPY: '¥' };
+        // 기본 환율 (API 호출 실패 시 사용)
+        let exchangeRates = { KRW: 1, USD: 0.00075, JPY: 0.11 };
 
         // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', function() {
@@ -47,7 +51,62 @@
 
             // 첫 번째 Day 탭 선택 상태 확인
             updateItineraryVisibility();
+
+            // 환율 정보 로드
+            loadExchangeRates();
         });
+
+        // 환율 정보 로드
+        async function loadExchangeRates() {
+            try {
+                const response = await fetch('/api/exchange-rates/today');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.rates) {
+                        exchangeRates = data.rates;
+                    }
+                }
+            } catch (error) {
+                console.log('환율 정보 로드 실패, 기본값 사용');
+            }
+        }
+
+        // KRW 금액을 선택된 통화로 변환하여 포맷팅
+        function formatCurrency(krwAmount, currency = displayCurrency) {
+            const symbol = currencySymbols[currency] || '₩';
+            const rate = exchangeRates[currency] || 1;
+            const converted = Math.round(krwAmount * rate);
+            return symbol + converted.toLocaleString();
+        }
+
+        // 통화 표시 전환 (DB 저장 없이 화면만 변경)
+        function switchDisplayCurrency(currency) {
+            displayCurrency = currency;
+
+            // 모든 금액 요소 업데이트
+            document.querySelectorAll('.currency-amount, .cost-amount').forEach(el => {
+                const krw = parseInt(el.dataset.krw) || 0;
+                el.textContent = formatCurrency(krw, currency);
+            });
+
+            // 총 예산 입력란 처리
+            const totalBudgetInput = document.getElementById('totalBudgetInput');
+            if (totalBudgetInput) {
+                if (currency === 'KRW') {
+                    // 원화일 때는 수정 가능
+                    totalBudgetInput.disabled = false;
+                    totalBudgetInput.style.opacity = '1';
+                } else {
+                    // 달러/엔일 때는 수정 불가
+                    totalBudgetInput.disabled = true;
+                    totalBudgetInput.style.opacity = '0.6';
+                }
+            }
+
+            // 통화 심볼은 항상 ₩ 유지 (내부 저장이 원화이므로)
+            const currencySymbolEl = document.getElementById('budgetCurrencySymbol');
+            if (currencySymbolEl) currencySymbolEl.textContent = '₩';
+        }
 
         // Day 탭 선택
         function selectDay(day) {
@@ -128,12 +187,90 @@
             document.getElementById('addItineraryModal').classList.add('active');
             document.body.style.overflow = 'hidden';
             document.getElementById('addItineraryForm').reset();
+            removeItineraryImage('add');
         }
 
         // 일정 추가 모달 닫기
         function closeAddItineraryModal() {
             document.getElementById('addItineraryModal').classList.remove('active');
             document.body.style.overflow = '';
+            removeItineraryImage('add');
+        }
+
+        // ==================== 일정 이미지 업로드 ====================
+
+        // 일정 이미지 미리보기
+        function previewItineraryImage(input, mode) {
+            const previewId = mode === 'add' ? 'addImagePreview' : 'editImagePreview';
+            const removeBtnId = mode === 'add' ? 'btnRemoveAddImage' : 'btnRemoveEditImage';
+            const preview = document.getElementById(previewId);
+            const removeBtn = document.getElementById(removeBtnId);
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="일정 이미지 미리보기">`;
+                    preview.classList.add('has-image');
+                    removeBtn.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // 일정 이미지 삭제
+        function removeItineraryImage(mode) {
+            const inputId = mode === 'add' ? 'itineraryImage' : 'editItineraryImage';
+            const previewId = mode === 'add' ? 'addImagePreview' : 'editImagePreview';
+            const removeBtnId = mode === 'add' ? 'btnRemoveAddImage' : 'btnRemoveEditImage';
+            const urlInputId = mode === 'add' ? 'itineraryImageUrl' : 'editItineraryImageUrl';
+
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+            const removeBtn = document.getElementById(removeBtnId);
+            const urlInput = document.getElementById(urlInputId);
+
+            if (input) input.value = '';
+            if (urlInput) urlInput.value = '';
+            if (preview) {
+                preview.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    <span>클릭하여 이미지 선택</span>
+                `;
+                preview.classList.remove('has-image');
+            }
+            if (removeBtn) removeBtn.style.display = 'none';
+        }
+
+        // 일정 이미지 업로드
+        async function uploadItineraryImage(mode) {
+            const inputId = mode === 'add' ? 'itineraryImage' : 'editItineraryImage';
+            const fileInput = document.getElementById(inputId);
+
+            if (!fileInput.files || !fileInput.files[0]) {
+                return null;
+            }
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            const response = await fetch('/api/planner/upload-itinerary-image', {
+                method: 'POST',
+                headers: {
+                    [csrfHeader]: csrfToken
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                return result.url;
+            } else {
+                throw new Error(result.error || '이미지 업로드 실패');
+            }
         }
 
         // 일정 추가 제출
@@ -146,17 +283,25 @@
                 return;
             }
 
-            const data = {
-                dayIndex: selectedDay,
-                time: document.getElementById('itineraryTime').value || null,
-                title: title,
-                location: document.getElementById('itineraryLocation').value || null,
-                category: document.getElementById('itineraryCategory').value,
-                notes: document.getElementById('itineraryNotes').value || null,
-                cost: parseInt(document.getElementById('itineraryCost').value) || 0
-            };
-
             try {
+                // 이미지 업로드 (선택된 경우)
+                let imageUrl = null;
+                const fileInput = document.getElementById('itineraryImage');
+                if (fileInput.files && fileInput.files[0]) {
+                    imageUrl = await uploadItineraryImage('add');
+                }
+
+                const data = {
+                    dayIndex: selectedDay,
+                    time: document.getElementById('itineraryTime').value || null,
+                    title: title,
+                    location: document.getElementById('itineraryLocation').value || null,
+                    category: document.getElementById('itineraryCategory').value,
+                    notes: document.getElementById('itineraryNotes').value || null,
+                    cost: parseInt(document.getElementById('itineraryCost').value) || 0,
+                    imageUrl: imageUrl
+                };
+
                 const response = await fetch(`/api/planner/${plannerId}/itinerary`, {
                     method: 'POST',
                     headers: {
@@ -177,7 +322,7 @@
                 }
             } catch (error) {
                 console.error('Error adding itinerary:', error);
-                alert('일정 추가 중 오류가 발생했습니다.');
+                alert('일정 추가 중 오류가 발생했습니다: ' + error.message);
             }
         }
 
@@ -544,12 +689,27 @@
             document.getElementById('editItineraryNotes').value = notesEl ? notesEl.textContent.trim() : '';
 
             // 비용 추출
-            const costEl = card.querySelector('.itinerary-cost span');
+            const costEl = card.querySelector('.cost-amount');
             if (costEl) {
-                const costText = costEl.textContent.replace(/[^\d]/g, '');
-                document.getElementById('editItineraryCost').value = costText || 0;
+                const krw = costEl.dataset.krw || costEl.textContent.replace(/[^\d]/g, '');
+                document.getElementById('editItineraryCost').value = krw || 0;
             } else {
                 document.getElementById('editItineraryCost').value = 0;
+            }
+
+            // 이미지 추출 및 미리보기 설정
+            const imageEl = card.querySelector('.itinerary-image img');
+            const preview = document.getElementById('editImagePreview');
+            const removeBtn = document.getElementById('btnRemoveEditImage');
+            const urlInput = document.getElementById('editItineraryImageUrl');
+
+            if (imageEl && imageEl.src) {
+                preview.innerHTML = `<img src="${imageEl.src}" alt="일정 이미지">`;
+                preview.classList.add('has-image');
+                removeBtn.style.display = 'block';
+                urlInput.value = imageEl.getAttribute('src');
+            } else {
+                removeItineraryImage('edit');
             }
 
             document.getElementById('editItineraryModal').classList.add('active');
@@ -560,6 +720,7 @@
         function closeEditItineraryModal() {
             document.getElementById('editItineraryModal').classList.remove('active');
             document.body.style.overflow = '';
+            removeItineraryImage('edit');
         }
 
         // 일정 수정 제출
@@ -572,16 +733,31 @@
                 return;
             }
 
-            const data = {
-                time: document.getElementById('editItineraryTime').value || null,
-                title: title,
-                location: document.getElementById('editItineraryLocation').value || null,
-                category: document.getElementById('editItineraryCategory').value,
-                notes: document.getElementById('editItineraryNotes').value || null,
-                cost: parseInt(document.getElementById('editItineraryCost').value) || 0
-            };
-
             try {
+                // 이미지 처리
+                let imageUrl = document.getElementById('editItineraryImageUrl').value || null;
+                const fileInput = document.getElementById('editItineraryImage');
+
+                // 새 이미지가 선택된 경우 업로드
+                if (fileInput.files && fileInput.files[0]) {
+                    imageUrl = await uploadItineraryImage('edit');
+                }
+                // 이미지가 삭제된 경우 (미리보기가 없고 hidden input도 비어있음)
+                const preview = document.getElementById('editImagePreview');
+                if (!preview.classList.contains('has-image')) {
+                    imageUrl = '';  // 빈 문자열로 삭제 요청
+                }
+
+                const data = {
+                    time: document.getElementById('editItineraryTime').value || null,
+                    title: title,
+                    location: document.getElementById('editItineraryLocation').value || null,
+                    category: document.getElementById('editItineraryCategory').value,
+                    notes: document.getElementById('editItineraryNotes').value || null,
+                    cost: parseInt(document.getElementById('editItineraryCost').value) || 0,
+                    imageUrl: imageUrl
+                };
+
                 const response = await fetch(`/api/planner/itinerary/${itineraryId}`, {
                     method: 'PUT',
                     headers: {
@@ -602,60 +778,8 @@
                 }
             } catch (error) {
                 console.error('Error updating itinerary:', error);
-                alert('일정 수정 중 오류가 발생했습니다.');
+                alert('일정 수정 중 오류가 발생했습니다: ' + error.message);
             }
-        }
-
-        // ==================== 통화 변경 기능 ====================
-
-        // 통화 업데이트
-        async function updateCurrency(currency) {
-            if (!canEdit) return;
-
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/currency`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify({ currency: currency })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    currentCurrency = currency;
-                    // 통화 기호 업데이트
-                    const symbols = { 'KRW': '₩', 'USD': '$', 'JPY': '¥' };
-                    currencySymbol = symbols[currency] || '₩';
-
-                    // UI 업데이트
-                    updateCurrencyDisplay();
-                } else {
-                    alert('통화 변경에 실패했습니다.');
-                    // 라디오 버튼 원복
-                    location.reload();
-                }
-            } catch (error) {
-                console.error('Error updating currency:', error);
-                alert('통화 변경 중 오류가 발생했습니다.');
-                location.reload();
-            }
-        }
-
-        // 통화 표시 업데이트
-        function updateCurrencyDisplay() {
-            // 예산 요약 통화 기호
-            const budgetCurrencyEl = document.getElementById('budgetCurrencySymbol');
-            if (budgetCurrencyEl) budgetCurrencyEl.textContent = currencySymbol;
-
-            // 모달의 통화 기호
-            const editCurrencyEl = document.getElementById('editCostCurrency');
-            if (editCurrencyEl) editCurrencyEl.textContent = currencySymbol;
-
-            // 예산 요약 업데이트
-            updateBudgetSummaryWithItinerary();
         }
 
         // ==================== 예산 요약 업데이트 (일정비용 기반) ====================
@@ -663,25 +787,36 @@
         // 예산 요약 UI 업데이트 (일정 예상비용 기반)
         function updateBudgetSummaryWithItinerary() {
             const totalBudget = parseInt(document.getElementById('totalBudgetInput')?.value) || 0;
-
-            // 총 사용 금액 = 일정 예상비용
             const remaining = totalBudget - itineraryCostTotal;
 
-            // 요약 업데이트
+            // 요약 업데이트 (data-krw 속성도 업데이트)
             const summaryDetail = document.getElementById('budgetSummaryDetail');
             if (summaryDetail) {
-                summaryDetail.textContent = `사용: ${currencySymbol}${itineraryCostTotal.toLocaleString()} | 남음: ${currencySymbol}${remaining.toLocaleString()}`;
+                summaryDetail.dataset.usedKrw = itineraryCostTotal;
+                summaryDetail.dataset.remainingKrw = remaining;
+                const usedSpan = summaryDetail.querySelector('.currency-amount:first-of-type');
+                const remainingSpan = summaryDetail.querySelector('.currency-amount:last-of-type');
+                if (usedSpan) {
+                    usedSpan.dataset.krw = itineraryCostTotal;
+                    usedSpan.textContent = formatCurrency(itineraryCostTotal);
+                }
+                if (remainingSpan) {
+                    remainingSpan.dataset.krw = remaining;
+                    remainingSpan.textContent = formatCurrency(remaining);
+                }
             }
 
             // 상세 내역 업데이트
             const itineraryCostDisplay = document.getElementById('itineraryCostTotalDisplay');
             if (itineraryCostDisplay) {
-                itineraryCostDisplay.textContent = `${currencySymbol}${itineraryCostTotal.toLocaleString()}`;
+                itineraryCostDisplay.dataset.krw = itineraryCostTotal;
+                itineraryCostDisplay.textContent = formatCurrency(itineraryCostTotal);
             }
 
             const remainingDisplay = document.getElementById('remainingBudgetDisplay');
             if (remainingDisplay) {
-                remainingDisplay.textContent = `${currencySymbol}${remaining.toLocaleString()}`;
+                remainingDisplay.dataset.krw = remaining;
+                remainingDisplay.textContent = formatCurrency(remaining);
                 remainingDisplay.classList.toggle('negative', remaining < 0);
             }
         }
@@ -700,18 +835,31 @@
                     // 요약 업데이트
                     const summaryDetail = document.getElementById('budgetSummaryDetail');
                     if (summaryDetail) {
-                        summaryDetail.textContent = `사용: ${currencySymbol}${result.usedEstimated.toLocaleString()} | 남음: ${currencySymbol}${remaining.toLocaleString()}`;
+                        summaryDetail.dataset.usedKrw = result.usedEstimated;
+                        summaryDetail.dataset.remainingKrw = remaining;
+                        const usedSpan = summaryDetail.querySelector('.currency-amount:first-of-type');
+                        const remainingSpan = summaryDetail.querySelector('.currency-amount:last-of-type');
+                        if (usedSpan) {
+                            usedSpan.dataset.krw = result.usedEstimated;
+                            usedSpan.textContent = formatCurrency(result.usedEstimated);
+                        }
+                        if (remainingSpan) {
+                            remainingSpan.dataset.krw = remaining;
+                            remainingSpan.textContent = formatCurrency(remaining);
+                        }
                     }
 
                     // 상세 내역 업데이트
                     const itineraryCostDisplay = document.getElementById('itineraryCostTotalDisplay');
                     if (itineraryCostDisplay) {
-                        itineraryCostDisplay.textContent = `${currencySymbol}${result.usedEstimated.toLocaleString()}`;
+                        itineraryCostDisplay.dataset.krw = result.usedEstimated;
+                        itineraryCostDisplay.textContent = formatCurrency(result.usedEstimated);
                     }
 
                     const remainingDisplay = document.getElementById('remainingBudgetDisplay');
                     if (remainingDisplay) {
-                        remainingDisplay.textContent = `${currencySymbol}${remaining.toLocaleString()}`;
+                        remainingDisplay.dataset.krw = remaining;
+                        remainingDisplay.textContent = formatCurrency(remaining);
                         remainingDisplay.classList.toggle('negative', remaining < 0);
                     }
 
@@ -741,8 +889,8 @@
             listEl.innerHTML = categories.map(cat => `
                 <div class="category-budget-item">
                     <div class="category-budget-item-header">
-                        <span class="category-budget-name ${cat.categoryClassName}">${cat.categoryName}</span>
-                        <span class="category-budget-amount">${currencySymbol}${cat.amount.toLocaleString()}</span>
+                        <span class="category-budget-name ${cat.categoryClassName}">${cat.categoryEmoji} ${cat.categoryName}</span>
+                        <span class="category-budget-amount currency-amount" data-krw="${cat.amount}">${formatCurrency(cat.amount)}</span>
                     </div>
                     <div class="category-budget-bar">
                         <div class="category-budget-fill ${cat.categoryClassName}" style="width: ${Math.min(cat.percent, 100)}%"></div>

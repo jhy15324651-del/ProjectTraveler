@@ -26,6 +26,20 @@ public class QuizAttempt {
     @JoinColumn(name = "quiz_id", nullable = false)
     private Quiz quiz;
 
+    /**
+     * 현재 사이클 내 시도 번호 (1 또는 2)
+     */
+    @Column(name = "attempt_no", nullable = false)
+    @Builder.Default
+    private Integer attemptNo = 1;
+
+    /**
+     * 재수강 사이클 번호 (1부터 시작, 재수강 완료 시 증가)
+     */
+    @Column(name = "cycle", nullable = false)
+    @Builder.Default
+    private Integer cycle = 1;
+
     @Column(name = "total_questions", nullable = false)
     private Integer totalQuestions;
 

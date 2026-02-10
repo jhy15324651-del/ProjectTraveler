@@ -1,6 +1,7 @@
 package org.zerock.projecttraveler.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.zerock.projecttraveler.entity.LessonProgress;
@@ -36,4 +37,21 @@ public interface LessonProgressRepository extends JpaRepository<LessonProgress, 
     // 사용자별 완료한 총 레슨 수
     @Query("SELECT COUNT(lp) FROM LessonProgress lp WHERE lp.user.id = :userId AND lp.completed = true")
     long countCompletedByUserId(@Param("userId") Long userId);
+
+    // 강좌의 모든 레슨 진도 초기화 (2차 시험 실패 시 사용)
+    @Modifying
+    @Query("UPDATE LessonProgress lp SET lp.watchedSec = 0, lp.lastPositionSec = 0, lp.completed = false, lp.completedAt = null " +
+           "WHERE lp.user.id = :userId AND lp.course.id = :courseId")
+    int resetProgressByUserIdAndCourseId(@Param("userId") Long userId, @Param("courseId") Long courseId);
+
+    // 특정 레슨 진도 초기화
+    @Modifying
+    @Query("UPDATE LessonProgress lp SET lp.watchedSec = 0, lp.lastPositionSec = 0, lp.completed = false, lp.completedAt = null " +
+           "WHERE lp.user.id = :userId AND lp.lesson.id = :lessonId")
+    int resetProgressByUserIdAndLessonId(@Param("userId") Long userId, @Param("lessonId") Long lessonId);
+
+    // 레슨 진도 삭제 (완전 초기화용)
+    @Modifying
+    @Query("DELETE FROM LessonProgress lp WHERE lp.user.id = :userId AND lp.course.id = :courseId")
+    int deleteByUserIdAndCourseId(@Param("userId") Long userId, @Param("courseId") Long courseId);
 }

@@ -26,5 +26,13 @@ public class WebConfig implements WebMvcConfigurer {
         // ✅ 여행 후기 이미지 파일 서빙 (추가)
         registry.addResourceHandler("/uploads/reviews/**")
                 .addResourceLocations("file:" + imageUploadPath + "/reviews/");
+
+        // ✅ 플래너 썸네일 이미지 파일 서빙
+        registry.addResourceHandler("/uploads/planners/**")
+                .addResourceLocations("file:" + imageUploadPath + "/planners/");
+
+        // ✅ 일정 이미지 파일 서빙
+        registry.addResourceHandler("/uploads/itineraries/**")
+                .addResourceLocations("file:" + imageUploadPath + "/itineraries/");
     }
 }
