@@ -17,8 +17,11 @@ import org.zerock.projecttraveler.repository.*;
 import org.zerock.projecttraveler.security.SecurityUtils;
 import org.zerock.projecttraveler.service.CourseService;
 
-import java.util.ArrayList;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin/quiz")
@@ -59,9 +62,13 @@ public class AdminQuizController {
      * 퀴즈 상세 (문제 관리)
      */
     @GetMapping("/{quizId}")
+    @Transactional(readOnly = true)
     public String quizDetailPage(@PathVariable Long quizId, Model model) {
         Quiz quiz = quizRepository.findByIdWithQuestionsAndOptions(quizId)
                 .orElseThrow(() -> new IllegalArgumentException("퀴즈를 찾을 수 없습니다."));
+
+        // options를 미리 초기화 (MultipleBagFetchException 방지)
+        quiz.getQuestions().forEach(q -> q.getOptions().size());
 
         model.addAttribute("quiz", quiz);
         model.addAttribute("course", quiz.getCourse());
@@ -80,7 +87,7 @@ public class AdminQuizController {
      */
     @PostMapping("/api")
     @ResponseBody
-    public ResponseEntity<ApiResponse<Quiz>> createQuiz(@Valid @RequestBody QuizRequest request) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> createQuiz(@Valid @RequestBody QuizRequest request) {
         try {
             Course course = courseService.findById(request.getCourseId())
                     .orElseThrow(() -> new IllegalArgumentException("강좌를 찾을 수 없습니다."));
@@ -105,7 +112,10 @@ public class AdminQuizController {
             log.info("Quiz created: id={}, title={}, courseId={}, lessonId={}",
                     saved.getId(), saved.getTitle(), course.getId(), request.getLessonId());
 
-            return ResponseEntity.ok(ApiResponse.success("퀴즈가 생성되었습니다.", saved));
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("id", saved.getId());
+            data.put("title", saved.getTitle());
+            return ResponseEntity.ok(ApiResponse.success("퀴즈가 생성되었습니다.", data));
         } catch (Exception e) {
             log.error("Failed to create quiz", e);
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
@@ -117,7 +127,7 @@ public class AdminQuizController {
      */
     @PutMapping("/api/{quizId}")
     @ResponseBody
-    public ResponseEntity<ApiResponse<Quiz>> updateQuiz(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> updateQuiz(
             @PathVariable Long quizId,
             @Valid @RequestBody QuizRequest request) {
         try {
@@ -139,7 +149,11 @@ public class AdminQuizController {
             quiz.setTimeLimitSec(request.getTimeLimitSec());
 
             Quiz saved = quizRepository.save(quiz);
-            return ResponseEntity.ok(ApiResponse.success("퀴즈가 수정되었습니다.", saved));
+
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("id", saved.getId());
+            data.put("title", saved.getTitle());
+            return ResponseEntity.ok(ApiResponse.success("퀴즈가 수정되었습니다.", data));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
@@ -170,7 +184,7 @@ public class AdminQuizController {
      */
     @PostMapping("/api/{quizId}/questions")
     @ResponseBody
-    public ResponseEntity<ApiResponse<QuizQuestion>> addQuestion(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> addQuestion(
             @PathVariable Long quizId,
             @Valid @RequestBody QuestionRequest request) {
         try {
@@ -205,7 +219,11 @@ public class AdminQuizController {
             }
 
             log.info("Question added: quizId={}, questionId={}", quizId, saved.getId());
-            return ResponseEntity.ok(ApiResponse.success("문제가 추가되었습니다.", saved));
+
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("id", saved.getId());
+            data.put("question", saved.getQuestion());
+            return ResponseEntity.ok(ApiResponse.success("문제가 추가되었습니다.", data));
         } catch (Exception e) {
             log.error("Failed to add question", e);
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
@@ -217,7 +235,7 @@ public class AdminQuizController {
      */
     @PutMapping("/api/questions/{questionId}")
     @ResponseBody
-    public ResponseEntity<ApiResponse<QuizQuestion>> updateQuestion(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> updateQuestion(
             @PathVariable Long questionId,
             @Valid @RequestBody QuestionRequest request) {
         try {
@@ -256,7 +274,10 @@ public class AdminQuizController {
                 }
             }
 
-            return ResponseEntity.ok(ApiResponse.success("문제가 수정되었습니다.", saved));
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("id", saved.getId());
+            data.put("question", saved.getQuestion());
+            return ResponseEntity.ok(ApiResponse.success("문제가 수정되었습니다.", data));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
@@ -291,7 +312,7 @@ public class AdminQuizController {
      */
     @PostMapping("/api/questions/{questionId}/options")
     @ResponseBody
-    public ResponseEntity<ApiResponse<QuizOption>> addOption(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> addOption(
             @PathVariable Long questionId,
             @Valid @RequestBody OptionRequest request) {
         try {
@@ -309,7 +330,11 @@ public class AdminQuizController {
                     .build();
 
             QuizOption saved = optionRepository.save(option);
-            return ResponseEntity.ok(ApiResponse.success("선택지가 추가되었습니다.", saved));
+
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("id", saved.getId());
+            data.put("content", saved.getContent());
+            return ResponseEntity.ok(ApiResponse.success("선택지가 추가되었습니다.", data));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }
@@ -320,7 +345,7 @@ public class AdminQuizController {
      */
     @PutMapping("/api/options/{optionId}")
     @ResponseBody
-    public ResponseEntity<ApiResponse<QuizOption>> updateOption(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> updateOption(
             @PathVariable Long optionId,
             @Valid @RequestBody OptionRequest request) {
         try {
@@ -336,7 +361,11 @@ public class AdminQuizController {
             }
 
             QuizOption saved = optionRepository.save(option);
-            return ResponseEntity.ok(ApiResponse.success("선택지가 수정되었습니다.", saved));
+
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("id", saved.getId());
+            data.put("content", saved.getContent());
+            return ResponseEntity.ok(ApiResponse.success("선택지가 수정되었습니다.", data));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
         }

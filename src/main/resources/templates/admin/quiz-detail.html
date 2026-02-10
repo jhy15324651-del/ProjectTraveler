@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${quiz.title + ' - 문제 관리'}">문제 관리 - 관리자</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <style>
+        .admin-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .admin-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+        .admin-subtitle { color: #666; margin-bottom: 30px; }
+        .admin-nav { margin-bottom: 30px; display: flex; gap: 15px; flex-wrap: wrap; }
+        .admin-nav a { padding: 10px 20px; background: #f5f5f5; border-radius: 8px; text-decoration: none; color: #333; }
+        .admin-nav a.active { background: var(--primary-red); color: white; }
+
+        .quiz-info-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .quiz-info h2 { margin: 0 0 10px 0; font-size: 20px; }
+        .quiz-info p { color: #666; margin: 0 0 15px 0; }
+        .quiz-meta { display: flex; gap: 15px; flex-wrap: wrap; }
+        .quiz-meta-item { padding: 4px 12px; background: #f5f5f5; border-radius: 20px; font-size: 13px; }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-title { font-size: 18px; font-weight: 600; }
+        .btn-add { background: var(--primary-red); color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+        .btn-add:hover { background: #b71c1c; }
+
+        .question-list { display: flex; flex-direction: column; gap: 20px; }
+        .question-card { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .question-header { padding: 20px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #eee; }
+        .question-number { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: var(--primary-red); color: white; border-radius: 50%; font-weight: 600; font-size: 14px; margin-right: 12px; flex-shrink: 0; }
+        .question-text { font-size: 16px; font-weight: 600; flex: 1; line-height: 1.5; }
+        .question-type-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; margin-left: 10px; white-space: nowrap; }
+        .type-mc { background: #e3f2fd; color: #1565c0; }
+        .type-tf { background: #fff3e0; color: #e65100; }
+        .type-sa { background: #f3e5f5; color: #7b1fa2; }
+        .question-points { font-size: 12px; color: #666; margin-top: 4px; }
+        .question-actions { display: flex; gap: 8px; flex-shrink: 0; margin-left: 15px; }
+        .btn-edit { background: #2196f3; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-delete { background: #f44336; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-add-option { background: #4caf50; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+        .options-list { padding: 15px 20px; }
+        .option-item { display: flex; align-items: center; gap: 12px; padding: 10px 15px; margin-bottom: 8px; border-radius: 8px; background: #f9f9f9; }
+        .option-item:last-child { margin-bottom: 0; }
+        .option-item.correct { background: #e8f5e9; border: 1px solid #a5d6a7; }
+        .option-marker { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+        .option-item.correct .option-marker { background: #4caf50; border-color: #4caf50; color: white; }
+        .option-content { flex: 1; font-size: 14px; }
+        .option-actions { display: flex; gap: 6px; }
+        .btn-sm { padding: 4px 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-sm-edit { background: #e3f2fd; color: #1565c0; }
+        .btn-sm-delete { background: #ffebee; color: #c62828; }
+        .btn-sm-correct { background: #e8f5e9; color: #2e7d32; }
+
+        .no-options { padding: 20px; text-align: center; color: #999; font-size: 14px; }
+
+        .empty-state { padding: 60px 20px; text-align: center; color: #666; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+
+        /* 모달 */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary-red); }
+        .form-group .help-text { font-size: 12px; color: #666; margin-top: 5px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-submit { flex: 1; padding: 12px; background: var(--primary-red); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-cancel { flex: 1; padding: 12px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+        /* 동적 선택지 폼 */
+        .options-form-list { margin-top: 10px; }
+        .option-form-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 10px; background: #f9f9f9; border-radius: 8px; }
+        .option-form-item input[type="text"] { flex: 1; }
+        .option-form-item label.correct-label { display: flex; align-items: center; gap: 5px; font-size: 13px; white-space: nowrap; cursor: pointer; font-weight: normal; }
+        .option-form-item label.correct-label input[type="checkbox"] { width: auto; }
+        .btn-remove-option { background: #ffebee; color: #c62828; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-add-option-form { background: #e3f2fd; color: #1565c0; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-top: 5px; }
+    </style>
+</head>
+<body class="main-page">
+<div th:replace="~{fragments/main-header :: mainHeader}"></div>
+
+<div class="admin-container">
+    <h1 class="admin-title">문제 관리</h1>
+    <p class="admin-subtitle">퀴즈의 문제와 선택지를 관리합니다.</p>
+
+    <div class="admin-nav">
+        <a th:href="@{/admin/courses}">강좌 관리</a>
+        <a th:href="@{/admin/courses/{id}(id=${course.id})}">레슨 관리</a>
+        <a th:href="@{/admin/quiz/course/{id}(id=${course.id})}">퀴즈 관리</a>
+        <a href="#" class="active">문제 관리</a>
+    </div>
+
+    <!-- 퀴즈 정보 -->
+    <div class="quiz-info-card">
+        <div class="quiz-info">
+            <h2 th:text="${quiz.title}">퀴즈 제목</h2>
+            <p th:if="${quiz.description != null}" th:text="${quiz.description}">퀴즈 설명</p>
+            <div class="quiz-meta">
+                <span class="quiz-meta-item" th:text="'합격 기준: ' + ${quiz.passingScore} + '%'">합격 기준: 80%</span>
+                <span class="quiz-meta-item" th:text="'문제 수: ' + ${quiz.questions.size()} + '문제'">문제 수: 0문제</span>
+                <span class="quiz-meta-item" th:if="${quiz.timeLimitSec != null}" th:text="'제한 시간: ' + ${quiz.timeLimitSec / 60} + '분'">제한 시간: 30분</span>
+                <span class="quiz-meta-item" th:text="'강좌: ' + ${course.title}">강좌명</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 문제 목록 -->
+    <div class="section-header">
+        <span class="section-title">문제 목록</span>
+        <button class="btn-add" onclick="openAddQuestionModal()">+ 새 문제 추가</button>
+    </div>
+
+    <div class="question-list" th:if="${!quiz.questions.isEmpty()}">
+        <div th:each="question : ${quiz.questions}" class="question-card">
+            <div class="question-header">
+                <div style="display:flex; align-items:flex-start; flex:1;">
+                    <span class="question-number" th:text="${question.sortOrder}">1</span>
+                    <div style="flex:1;">
+                        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
+                            <span class="question-text" th:text="${question.question}">문제 내용</span>
+                            <span class="question-type-badge"
+                                  th:classappend="${question.questionType.name() == 'MULTIPLE_CHOICE' ? 'type-mc' : (question.questionType.name() == 'TRUE_FALSE' ? 'type-tf' : 'type-sa')}"
+                                  th:text="${question.questionType.name() == 'MULTIPLE_CHOICE' ? '객관식' : (question.questionType.name() == 'TRUE_FALSE' ? 'O/X' : '주관식')}">
+                                객관식
+                            </span>
+                        </div>
+                        <div class="question-points" th:text="'배점: ' + ${question.points} + '점'">배점: 1점</div>
+                    </div>
+                </div>
+                <div class="question-actions">
+                    <button class="btn-add-option"
+                            th:data-question-id="${question.id}"
+                            onclick="openAddOptionModal(this)">+ 선택지</button>
+                    <button class="btn-edit"
+                            th:data-id="${question.id}"
+                            th:data-question="${question.question}"
+                            th:data-type="${question.questionType.name()}"
+                            th:data-sort-order="${question.sortOrder}"
+                            th:data-points="${question.points}"
+                            onclick="openEditQuestionModal(this)">수정</button>
+                    <button class="btn-delete"
+                            th:data-id="${question.id}"
+                            onclick="deleteQuestion(this)">삭제</button>
+                </div>
+            </div>
+
+            <!-- 선택지 목록 -->
+            <div class="options-list" th:if="${!question.options.isEmpty()}">
+                <div th:each="option, stat : ${question.options}"
+                     class="option-item"
+                     th:classappend="${option.isCorrect ? 'correct' : ''}">
+                    <div class="option-marker" th:text="${option.isCorrect ? '✓' : stat.index + 1}">1</div>
+                    <div class="option-content" th:text="${option.content}">선택지 내용</div>
+                    <div class="option-actions">
+                        <button class="btn-sm btn-sm-edit"
+                                th:data-id="${option.id}"
+                                th:data-content="${option.content}"
+                                th:data-correct="${option.isCorrect}"
+                                th:data-sort-order="${option.sortOrder}"
+                                th:data-question-id="${question.id}"
+                                onclick="openEditOptionModal(this)">수정</button>
+                        <button class="btn-sm btn-sm-delete"
+                                th:data-id="${option.id}"
+                                onclick="deleteOption(this)">삭제</button>
+                    </div>
+                </div>
+            </div>
+            <div class="no-options" th:if="${question.options.isEmpty()}">
+                등록된 선택지가 없습니다. "선택지" 버튼을 클릭하여 추가하세요.
+            </div>
+        </div>
+    </div>
+
+    <div class="empty-state" th:if="${quiz.questions.isEmpty()}">
+        <p>등록된 문제가 없습니다.</p>
+        <p>"새 문제 추가" 버튼을 클릭하여 문제를 등록하세요.</p>
+    </div>
+</div>
+
+<!-- 문제 추가/수정 모달 -->
+<div class="modal-overlay" id="questionModal">
+    <div class="modal">
+        <h3 class="modal-title" id="qModalTitle">새 문제 추가</h3>
+        <form id="questionForm">
+            <input type="hidden" id="questionId" value="">
+
+            <div class="form-group">
+                <label for="questionText">문제 내용 *</label>
+                <textarea id="questionText" rows="3" required placeholder="문제를 입력하세요"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="questionType">문제 유형</label>
+                <select id="questionType" onchange="toggleOptionsForm()">
+                    <option value="MULTIPLE_CHOICE">객관식</option>
+                    <option value="TRUE_FALSE">O/X (참/거짓)</option>
+                    <option value="SHORT_ANSWER">주관식</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="questionPoints">배점</label>
+                <input type="number" id="questionPoints" min="1" value="1">
+            </div>
+
+            <div class="form-group">
+                <label for="questionSortOrder">순서</label>
+                <input type="number" id="questionSortOrder" min="1" value="1">
+            </div>
+
+            <!-- 선택지 입력 (객관식/O/X일 때만 표시) -->
+            <div class="form-group" id="optionsFormGroup">
+                <label>선택지</label>
+                <p class="help-text">문제 생성 시 선택지도 함께 추가됩니다. 정답에 체크해주세요.</p>
+                <div class="options-form-list" id="optionsFormList">
+                    <!-- 동적으로 추가됨 -->
+                </div>
+                <button type="button" class="btn-add-option-form" onclick="addOptionFormItem()">+ 선택지 추가</button>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeQuestionModal()">취소</button>
+                <button type="submit" class="btn-submit" id="qSubmitBtn">추가</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 선택지 추가/수정 모달 -->
+<div class="modal-overlay" id="optionModal">
+    <div class="modal">
+        <h3 class="modal-title" id="oModalTitle">선택지 추가</h3>
+        <form id="optionForm">
+            <input type="hidden" id="optionId" value="">
+            <input type="hidden" id="optionQuestionId" value="">
+
+            <div class="form-group">
+                <label for="optionContent">선택지 내용 *</label>
+                <input type="text" id="optionContent" required placeholder="선택지 내용을 입력하세요">
+            </div>
+
+            <div class="form-group">
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="optionCorrect" style="width:auto;">
+                    <span>정답 여부</span>
+                </label>
+                <p class="help-text">이 선택지가 정답이면 체크해주세요</p>
+            </div>
+
+            <div class="form-group">
+                <label for="optionSortOrder">순서</label>
+                <input type="number" id="optionSortOrder" min="1" value="1">
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeOptionModal()">취소</button>
+                <button type="submit" class="btn-submit" id="oSubmitBtn">추가</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const quizId = /*[[${quiz.id}]]*/ 0;
+    const courseId = /*[[${course.id}]]*/ 0;
+    const totalQuestions = /*[[${quiz.questions.size()}]]*/ 0;
+    let editingQuestionId = null;
+    let editingOptionId = null;
+
+    // ===== 문제 관련 =====
+
+    function openAddQuestionModal() {
+        editingQuestionId = null;
+        document.getElementById('qModalTitle').textContent = '새 문제 추가';
+        document.getElementById('qSubmitBtn').textContent = '추가';
+        document.getElementById('questionForm').reset();
+        document.getElementById('questionSortOrder').value = totalQuestions + 1;
+        document.getElementById('questionPoints').value = 1;
+        document.getElementById('questionType').value = 'MULTIPLE_CHOICE';
+
+        // 기본 선택지 4개 추가
+        const optionsList = document.getElementById('optionsFormList');
+        optionsList.innerHTML = '';
+        for (let i = 0; i < 4; i++) {
+            addOptionFormItem();
+        }
+
+        toggleOptionsForm();
+        document.getElementById('questionModal').classList.add('active');
+    }
+
+    function openEditQuestionModal(button) {
+        editingQuestionId = button.dataset.id;
+        document.getElementById('qModalTitle').textContent = '문제 수정';
+        document.getElementById('qSubmitBtn').textContent = '수정';
+        document.getElementById('questionId').value = button.dataset.id;
+        document.getElementById('questionText').value = button.dataset.question || '';
+        document.getElementById('questionType').value = button.dataset.type || 'MULTIPLE_CHOICE';
+        document.getElementById('questionSortOrder').value = button.dataset.sortOrder || 1;
+        document.getElementById('questionPoints').value = button.dataset.points || 1;
+
+        // 수정 시에는 선택지 폼 숨김 (개별 선택지 관리 사용)
+        document.getElementById('optionsFormGroup').style.display = 'none';
+
+        document.getElementById('questionModal').classList.add('active');
+    }
+
+    function closeQuestionModal() {
+        document.getElementById('questionModal').classList.remove('active');
+    }
+
+    function toggleOptionsForm() {
+        const type = document.getElementById('questionType').value;
+        const optionsGroup = document.getElementById('optionsFormGroup');
+
+        if (editingQuestionId) {
+            optionsGroup.style.display = 'none';
+            return;
+        }
+
+        if (type === 'SHORT_ANSWER') {
+            optionsGroup.style.display = 'none';
+        } else if (type === 'TRUE_FALSE') {
+            optionsGroup.style.display = 'none';
+        } else {
+            optionsGroup.style.display = 'block';
+        }
+    }
+
+    let optionFormCounter = 0;
+
+    function addOptionFormItem() {
+        optionFormCounter++;
+        const list = document.getElementById('optionsFormList');
+        const item = document.createElement('div');
+        item.className = 'option-form-item';
+        item.innerHTML = `
+            <input type="text" placeholder="선택지 ${list.children.length + 1}" class="opt-content" required>
+            <label class="correct-label">
+                <input type="checkbox" class="opt-correct" style="width:auto;">
+                정답
+            </label>
+            <button type="button" class="btn-remove-option" onclick="this.parentElement.remove()">X</button>
+        `;
+        list.appendChild(item);
+    }
+
+    document.getElementById('questionModal').addEventListener('click', function(e) {
+        if (e.target === this) closeQuestionModal();
+    });
+
+    document.getElementById('questionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const questionText = document.getElementById('questionText').value.trim();
+        const questionType = document.getElementById('questionType').value;
+        const sortOrder = parseInt(document.getElementById('questionSortOrder').value) || 1;
+        const points = parseInt(document.getElementById('questionPoints').value) || 1;
+
+        if (!questionText) {
+            alert('문제 내용을 입력해주세요.');
+            return;
+        }
+
+        // 선택지 수집 (새 문제 추가 시)
+        let options = null;
+        if (!editingQuestionId) {
+            if (questionType === 'TRUE_FALSE') {
+                options = [
+                    { content: 'O (참)', isCorrect: true, sortOrder: 1 },
+                    { content: 'X (거짓)', isCorrect: false, sortOrder: 2 }
+                ];
+            } else if (questionType === 'MULTIPLE_CHOICE') {
+                options = [];
+                const items = document.querySelectorAll('#optionsFormList .option-form-item');
+                items.forEach(function(item, idx) {
+                    const content = item.querySelector('.opt-content').value.trim();
+                    const isCorrect = item.querySelector('.opt-correct').checked;
+                    if (content) {
+                        options.push({ content: content, isCorrect: isCorrect, sortOrder: idx + 1 });
+                    }
+                });
+
+                if (options.length < 2) {
+                    alert('객관식 문제는 최소 2개의 선택지가 필요합니다.');
+                    return;
+                }
+
+                if (!options.some(function(o) { return o.isCorrect; })) {
+                    alert('최소 1개의 정답을 선택해주세요.');
+                    return;
+                }
+            }
+        }
+
+        const submitBtn = document.getElementById('qSubmitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '처리 중...';
+
+        try {
+            let url, method;
+            if (editingQuestionId) {
+                url = '/admin/quiz/api/questions/' + editingQuestionId;
+                method = 'PUT';
+            } else {
+                url = '/admin/quiz/api/' + quizId + '/questions';
+                method = 'POST';
+            }
+
+            const body = {
+                question: questionText,
+                questionType: questionType,
+                sortOrder: sortOrder,
+                points: points
+            };
+
+            if (options) {
+                body.options = options;
+            }
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                location.reload();
+            } else {
+                alert(result.message || '저장에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('서버 오류가 발생했습니다.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = editingQuestionId ? '수정' : '추가';
+        }
+    });
+
+    async function deleteQuestion(button) {
+        if (!confirm('이 문제를 삭제하시겠습니까?\n연결된 선택지도 함께 삭제됩니다.')) return;
+
+        const questionId = button.dataset.id;
+
+        try {
+            const response = await fetch('/admin/quiz/api/questions/' + questionId, { method: 'DELETE' });
+            const result = await response.json();
+
+            if (result.success) {
+                location.reload();
+            } else {
+                alert(result.message || '삭제에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('서버 오류가 발생했습니다.');
+        }
+    }
+
+    // ===== 선택지 관련 =====
+
+    function openAddOptionModal(button) {
+        editingOptionId = null;
+        document.getElementById('oModalTitle').textContent = '선택지 추가';
+        document.getElementById('oSubmitBtn').textContent = '추가';
+        document.getElementById('optionForm').reset();
+        document.getElementById('optionQuestionId').value = button.dataset.questionId;
+        document.getElementById('optionSortOrder').value = 1;
+        document.getElementById('optionModal').classList.add('active');
+    }
+
+    function openEditOptionModal(button) {
+        editingOptionId = button.dataset.id;
+        document.getElementById('oModalTitle').textContent = '선택지 수정';
+        document.getElementById('oSubmitBtn').textContent = '수정';
+        document.getElementById('optionId').value = button.dataset.id;
+        document.getElementById('optionQuestionId').value = button.dataset.questionId;
+        document.getElementById('optionContent').value = button.dataset.content || '';
+        document.getElementById('optionCorrect').checked = button.dataset.correct === 'true';
+        document.getElementById('optionSortOrder').value = button.dataset.sortOrder || 1;
+        document.getElementById('optionModal').classList.add('active');
+    }
+
+    function closeOptionModal() {
+        document.getElementById('optionModal').classList.remove('active');
+    }
+
+    document.getElementById('optionModal').addEventListener('click', function(e) {
+        if (e.target === this) closeOptionModal();
+    });
+
+    document.getElementById('optionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const content = document.getElementById('optionContent').value.trim();
+        const isCorrect = document.getElementById('optionCorrect').checked;
+        const sortOrder = parseInt(document.getElementById('optionSortOrder').value) || 1;
+        const questionId = document.getElementById('optionQuestionId').value;
+
+        if (!content) {
+            alert('선택지 내용을 입력해주세요.');
+            return;
+        }
+
+        const submitBtn = document.getElementById('oSubmitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '처리 중...';
+
+        try {
+            let url, method;
+            if (editingOptionId) {
+                url = '/admin/quiz/api/options/' + editingOptionId;
+                method = 'PUT';
+            } else {
+                url = '/admin/quiz/api/questions/' + questionId + '/options';
+                method = 'POST';
+            }
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: content,
+                    isCorrect: isCorrect,
+                    sortOrder: sortOrder
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                location.reload();
+            } else {
+                alert(result.message || '저장에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('서버 오류가 발생했습니다.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = editingOptionId ? '수정' : '추가';
+        }
+    });
+
+    async function deleteOption(button) {
+        if (!confirm('이 선택지를 삭제하시겠습니까?')) return;
+
+        const optionId = button.dataset.id;
+
+        try {
+            const response = await fetch('/admin/quiz/api/options/' + optionId, { method: 'DELETE' });
+            const result = await response.json();
+
+            if (result.success) {
+                location.reload();
+            } else {
+                alert(result.message || '삭제에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('서버 오류가 발생했습니다.');
+        }
+    }
+</script>
+</body>
+</html>

@@ -149,6 +149,12 @@
                 <button class="complete-btn" id="completeBtn" onclick="markComplete()">
                     레슨 완료하기
                 </button>
+
+                <!-- 퀴즈 안내 -->
+                <div id="quizNotice" style="display: none; margin-top: 15px; padding: 14px 18px; background: #fff3e0; border-radius: 8px; text-align: center;">
+                    <span id="quizNoticeText" style="font-size: 14px; color: #e65100;"></span>
+                    <a id="quizNoticeLink" href="#" style="display: block; margin-top: 8px; padding: 10px; background: var(--primary-red); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">퀴즈 응시하기</a>
+                </div>
             </div>
         </div>
 
@@ -433,9 +439,43 @@
         }
     }
 
+    // 퀴즈 상태 확인
+    async function checkQuizStatus() {
+        try {
+            const res = await fetch(`/api/quiz/status/${courseId}`);
+            const data = await res.json();
+            if (!data.success || !data.data) return;
+
+            const status = data.data;
+            const notice = document.getElementById('quizNotice');
+            const text = document.getElementById('quizNoticeText');
+            const link = document.getElementById('quizNoticeLink');
+
+            if (status.quizStatusCode === 'PASSED') {
+                notice.style.display = 'block';
+                notice.style.background = '#e8f5e9';
+                text.style.color = '#2e7d32';
+                text.textContent = '퀴즈 합격 완료 (' + status.bestScore + '점)';
+                link.style.display = 'none';
+            } else if (status.canAttempt) {
+                notice.style.display = 'block';
+                text.textContent = '모든 레슨을 완료하셨나요? 퀴즈에 응시해보세요!';
+                link.href = `/quiz?courseId=${courseId}&quizId=${status.quizId}`;
+            } else if (status.quizStatusCode === 'RETRY_ALLOWED') {
+                notice.style.display = 'block';
+                text.textContent = '오답 확인 후 2차 시험에 응시할 수 있습니다.';
+                link.href = `/quiz?courseId=${courseId}&quizId=${status.quizId}`;
+                link.textContent = '2차 시험 응시';
+            }
+        } catch (e) {
+            console.error('Quiz status check error:', e);
+        }
+    }
+
     // 초기화
     if (canAccess) {
         loadProgress();
+        checkQuizStatus();
 
         if (videoType === 'MP4' || videoType === 'HLS') {
             setupVideoPlayer();

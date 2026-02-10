@@ -420,6 +420,25 @@ public class MainPageController {
 
 
     /**
+     * 퀴즈 응시 페이지
+     */
+    @GetMapping("/quiz")
+    public String quiz(
+            @RequestParam Long courseId,
+            @RequestParam(required = false) Long quizId,
+            Model model) {
+        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
+
+        model.addAttribute("activePage", "quiz");
+        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
+        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
+        model.addAttribute("courseId", courseId);
+        model.addAttribute("quizId", quizId);
+
+        return "quiz";
+    }
+
+    /**
      * 레슨 시청 페이지
      */
     @GetMapping("/lesson")
