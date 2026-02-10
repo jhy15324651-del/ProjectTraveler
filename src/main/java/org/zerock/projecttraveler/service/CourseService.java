@@ -108,6 +108,12 @@ public class CourseService {
                     .orElseThrow(() -> new IllegalArgumentException("유닛을 찾을 수 없습니다."));
         }
 
+        // sortOrder가 0 이하이면 기존 레슨 수 + 1로 자동 설정
+        if (sortOrder <= 0) {
+            List<Lesson> existing = lessonRepository.findByCourseIdOrderBySortOrderAsc(courseId);
+            sortOrder = existing.size() + 1;
+        }
+
         Lesson lesson = Lesson.builder()
                 .course(course)
                 .unit(unit)
