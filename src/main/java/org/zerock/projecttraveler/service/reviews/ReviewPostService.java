@@ -8,6 +8,7 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.zerock.projecttraveler.dto.reviews.ReviewPostCreateRequest;
 import org.zerock.projecttraveler.dto.reviews.ReviewPostSearchRequest;
 import org.zerock.projecttraveler.entity.User;
@@ -30,6 +31,7 @@ public class ReviewPostService {
         if (!cond) throw new IllegalArgumentException(msg);
     }
 
+    @Transactional
     public Long create(ReviewPostCreateRequest request) {
 
         require(request.getTravelType() != null && !request.getTravelType().isBlank(), "여행 유형을 선택해주세요.");
@@ -39,10 +41,36 @@ public class ReviewPostService {
         require(request.getRegionTags() != null && !request.getRegionTags().isEmpty(), "지역을 1개 이상 선택해주세요.");
 
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
         User writer = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalStateException("로그인 사용자 정보를 찾을 수 없습니다: " + username));
 
+        // ✅ id가 있으면 수정
+        if (request.getId() != null) {
+            ReviewPost post = reviewPostRepository.findById(request.getId())
+                    .orElseThrow(() -> new NoSuchElementException("ReviewPost not found: " + request.getId()));
+
+            // ✅ 작성자만 수정 가능
+            if (post.getWriter() == null || !post.getWriter().getId().equals(writer.getId())) {
+                throw new IllegalArgumentException("수정 권한이 없습니다.");
+            }
+
+            // ✅ 값 반영
+            post.setTitle(request.getTitle());
+            post.setContent(request.getContent());
+            post.setTravelType(request.getTravelType());
+            post.setTheme(request.getTheme());
+            post.setPeriod(request.getPeriod());
+            post.setLevel(request.getLevel());
+            post.setRegionTags(request.getRegionTags());
+            post.setBudgetFlight(request.getBudgetFlight());
+            post.setBudgetLodging(request.getBudgetLodging());
+            post.setBudgetFood(request.getBudgetFood());
+            post.setBudgetExtra(request.getBudgetExtra());
+
+            return post.getId();
+        }
+
+        // ✅ id 없으면 신규 생성
         ReviewPost post = ReviewPost.builder()
                 .writer(writer)
                 .title(request.getTitle())
@@ -60,6 +88,7 @@ public class ReviewPostService {
 
         return reviewPostRepository.save(post).getId();
     }
+
 
 
     /** * 최신순 목록 조회 (+ 썸네일/요약 추출) */
@@ -87,6 +116,7 @@ public class ReviewPostService {
             result = reviewPostRepository.searchWithRegionPriority(req, pageable);
         } else {
             Specification<ReviewPost> spec = alwaysTrue()
+                    .and(ReviewPostSpecs.notDeleted())
                     .and(ReviewPostSpecs.keyword(req.getQ()))
                     .and(ReviewPostSpecs.travelTypeEq(req.getTravelType()))
                     .and(ReviewPostSpecs.themeEq(req.getTheme()))
@@ -124,6 +154,10 @@ public class ReviewPostService {
         ReviewPost post = reviewPostRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("ReviewPost not found: " + id));
 
+        if (Boolean.TRUE.equals(post.isDeleted())) {
+            throw new NoSuchElementException("삭제된 게시글입니다: " + id);
+        }
+
         fillThumbAndSummary(post);
         return post;
     }
@@ -156,4 +190,13 @@ public class ReviewPostService {
         String src = img.attr("src");
         return (src == null || src.isBlank()) ? null : src;
     }
+
+    @Transactional
+    public void softDelete(Long id) {
+        ReviewPost post = reviewPostRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("게시글 없음: " + id));
+
+        post.setDeleted(true); // 또는 setIsDeleted(true) - 네 필드명에 맞춰서
+    }
+
 }

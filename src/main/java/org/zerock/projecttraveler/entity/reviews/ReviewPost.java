@@ -98,4 +98,9 @@ public class ReviewPost {
     @Transient
     private Integer regionMatchCount;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean deleted = false;
+
+
 }

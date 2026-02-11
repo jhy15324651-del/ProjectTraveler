@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================
     // ✅ Quill 초기화 + 이미지 업로드
     // =========================
-    let quill = null;
+    window.quill = null;
 
     const editorEl = qs("#editor");
     const contentHidden = qs("#content");
@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
             };
         }
 
-        quill = new Quill("#editor", {
+        window.quill = new Quill("#editor", {
             theme: "snow",
             placeholder: "여행 중 느낀 점, 팁, 추천 코스를 자유롭게 작성해 주세요",
             modules: {

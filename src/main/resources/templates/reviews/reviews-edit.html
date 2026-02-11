@@ -1,28 +1,49 @@
-<!-- templates/reviews/reviews-post.html -->
-<div th:fragment="postContent" class="container reviews-post">
+<!-- templates/reviews/reviews-edit.html -->
+<div th:fragment="reviewsEditContent" class="container reviews-post">
 
     <div class="reviews-post-title-row">
-        <h1 class="page-title">✈️ 이번 여행은...</h1>
+        <h1 class="page-title">✏️ 후기 다듬기!</h1>
 
-        <!-- 목록으로 -->
+        <!-- 상세로 돌아가기 -->
         <a class="back-btn"
-           th:href="${isUnity == true} ? @{/reviews-unity} : @{/reviews}">
+           th:href="${isUnity == true}
+                ? @{/reviews-unity/{id}(id=${request.id})}
+                : @{/reviews/{id}(id=${request.id})}">
             ← 돌아가기
         </a>
     </div>
 
-    <!-- create: POST /reviews -->
+    <!-- ✅ 수정도 POST /reviews 그대로 사용 -->
     <form id="postForm" method="post" th:action="@{/reviews}" th:object="${request}">
 
-        <!-- 유니티 분기용 (컨트롤러: @RequestParam fromUnity) -->
+        <!-- ✅ Spring Security CSRF -->
+        <input type="hidden"
+               th:if="${_csrf != null}"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}"/>
+
+        <!-- ✅ 수정 필수: id 전달 -->
+        <input type="hidden" th:field="*{id}">
+
+        <!-- 유니티 분기용 -->
         <input type="hidden" name="fromUnity" th:value="${isUnity == true} ? '1' : '0'" value="0"/>
+
+        <!-- ✅ JS 복원 힌트(단일 선택) -->
+        <input type="hidden" id="initTravelType" th:value="*{travelType}">
+        <input type="hidden" id="initTheme"      th:value="*{theme}">
+        <input type="hidden" id="initPeriod"     th:value="*{period}">
+        <input type="hidden" id="initLevel"      th:value="*{level}">
+
+        <!-- ✅ JS 복원 힌트(지역 다중) : request.regionTags 배열을 data-*로 심기 -->
+        <div id="initRegionTags"
+             th:attr="data-tags=${request.regionTags != null ? #strings.arrayJoin(request.regionTags, ',') : ''}"
+             style="display:none;"></div>
 
         <!-- 제목 -->
         <section class="write-section">
             <label class="write-label">제목</label>
             <input type="text"
                    class="write-input"
-                   placeholder="여행 후기를 한 줄로 요약해 주세요"
                    th:field="*{title}">
         </section>
 
@@ -59,14 +80,10 @@
                     <span class="unit">만 원</span>
                 </div>
             </div>
-
-            <!-- budgetTotal은 DTO에 없으니 제거 -->
-            <!-- <input type="hidden" name="budgetTotal" id="budgetTotal" value="0"> -->
         </section>
 
         <!-- 태그 선택 -->
         <section class="write-section">
-
             <!-- 여행 유형 (단일) -->
             <div class="filter-row">
                 <div>
@@ -135,24 +152,17 @@
                 <input type="hidden" th:field="*{level}">
             </div>
 
-            <!-- 지역 (다중 / 드롭다운) -->
+            <!-- 지역 (다중) -->
             <div class="filter-row region-row">
-
-                <!-- (1) 좌상: 지역 + 힌트 -->
                 <div class="region-left">
                     <div class="filter-label">지역</div>
                     <div class="filter-hint multi">중복 선택 가능</div>
                 </div>
 
-                <!-- (2) 우상: 상위 지역 칩 -->
                 <div class="region-main-col">
                     <div class="filter-chips region-main">
-                        <!-- 전체(지역 초기화용) : ↺ -->
-                        <button type="button"
-                                class="chip region-main-btn region-all"
-                                data-group="">↺</button>
+                        <button type="button" class="chip region-main-btn region-all" data-group="">↺</button>
 
-                        <!-- 상위 지역 -->
                         <button type="button"
                                 class="chip region-main-btn"
                                 th:each="entry : ${regionGroups}"
@@ -163,16 +173,13 @@
                     </div>
                 </div>
 
-                <!-- (3) 좌하: “하위 지역 선택” (드롭다운 열릴 때만 표시) -->
                 <div class="region-sub-left" id="regionSubLabel" style="display:none;">
                     * 세부 지역 선택
                 </div>
 
-                <!-- (4) 우하: 하위 지역 칩(드롭다운) -->
                 <div class="region-sub-col">
                     <div class="region-sub-wrap" id="regionSubWrap" style="display:none;">
                         <div class="filter-chips region-sub" data-key="region" data-mode="multi">
-
                             <th:block th:each="entry : ${regionGroups}">
                                 <button type="button"
                                         class="chip"
@@ -184,21 +191,17 @@
                                     세부지역
                                 </button>
                             </th:block>
-
                         </div>
                     </div>
                 </div>
 
-                <!-- hidden inputs (JS가 regionTags 생성) -->
+                <!-- ✅ JS가 regionTags inputs 생성 -->
                 <div class="region-inputs" id="regionInputs"></div>
             </div>
 
-
-            <!-- 선택 요약 -->
             <div class="tag-summary-mini" id="miniSummary">
                 <span class="empty">선택된 조건 없음</span>
             </div>
-
         </section>
 
         <!-- 내용 -->
@@ -210,7 +213,7 @@
 
         <!-- 제출 -->
         <section class="write-section">
-            <button type="submit" class="submit-btn">여행 후기 등록</button>
+            <button type="submit" class="submit-btn">수정 저장</button>
         </section>
 
     </form>

@@ -536,12 +536,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // 9) Region Group Dropdown (main -> sub)
     // =====================================================
     const regionSubWrap  = document.getElementById("regionSubWrap");
+    const regionSubLabel = document.getElementById("regionSubLabel"); // ✅ 추가
     const regionSubGroup = document.querySelector(".filter-chips.region-sub[data-key='region']");
     const regionSubChips = document.querySelectorAll(".filter-chips.region-sub .chip");
     const regionMainBtns = document.querySelectorAll(".region-main-btn");
 
     function closeRegionDropdown() {
         if (regionSubWrap) regionSubWrap.style.display = "none";
+        if (regionSubLabel) regionSubLabel.style.display = "none"; // ✅ 추가
         regionSubChips.forEach((ch) => (ch.style.display = "none"));
     }
 
@@ -549,12 +551,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!regionSubWrap) return;
 
         regionSubWrap.style.display = "block";
+        if (regionSubLabel) regionSubLabel.style.display = "block"; // ✅ 추가
 
         regionSubChips.forEach((ch) => {
             const g = ch.getAttribute("data-group");
             ch.style.display = (g === group) ? "" : "none";
         });
     }
+
+    closeRegionDropdown();
 
     /**
      * ✅ "지역만" 초기화
