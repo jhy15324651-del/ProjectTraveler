@@ -99,16 +99,14 @@ public class MainPageController {
     }
 
     /**
-     * 나의 강의실
+     * 마이페이지 (통합 대시보드: 온라인학습 + 출석체크 + 나의 강의실)
      */
-    @GetMapping("/my-classroom")
-    public String myClassroom(Model model) {
+    @GetMapping("/mypage")
+    public String mypage(Model model) {
         Long userId = SecurityUtils.getCurrentUserIdOrThrow();
         CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
 
-        // 학습 요약 정보
-        MyLearningSummaryDto summary = dashboardService.getMyLearningSummary(userId);
-
+        // === 온라인학습 데이터 ===
         // 수강 중인 강좌 (진도 정보 포함)
         List<CourseEnrollment> inProgressEnrollments = enrollmentService.findInProgressEnrollments(userId);
         List<EnrollmentDto> inProgress = inProgressEnrollments.stream()
@@ -121,6 +119,17 @@ public class MainPageController {
                 .map(enrollmentService::toEnrollmentDtoWithProgress)
                 .collect(Collectors.toList());
 
+        // 학습 요약 정보
+        MyLearningSummaryDto summary = dashboardService.getMyLearningSummary(userId);
+
+        // === 출석 데이터 ===
+        var stats = attendanceService.getStats(userId);
+        var monthlyView = attendanceService.getMonthlyView(userId,
+                java.time.LocalDate.now().getYear(),
+                java.time.LocalDate.now().getMonthValue());
+        var recentHistory = attendanceService.getRecentHistory(userId, 30);
+
+        // === 나의 강의실 데이터 ===
         // 승인 대기 중인 강좌
         List<CourseEnrollment> pendingEnrollments = enrollmentService.findPendingEnrollments(userId);
         List<EnrollmentDto> pending = pendingEnrollments.stream()
@@ -131,80 +140,23 @@ public class MainPageController {
         var certificates = certificateService.getMyCertificates(userId);
         int certificateCount = certificateService.getCertificateCount(userId);
 
-        model.addAttribute("activePage", "myClassroom");
+        model.addAttribute("activePage", "mypage");
         model.addAttribute("username", user != null ? user.getFullName() : "사용자");
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
-        model.addAttribute("summary", summary);
+        // 온라인학습
         model.addAttribute("inProgressCourses", inProgress);
         model.addAttribute("completedCourses", completed);
+        model.addAttribute("summary", summary);
+        // 출석
+        model.addAttribute("stats", stats);
+        model.addAttribute("monthlyView", monthlyView);
+        model.addAttribute("recentHistory", recentHistory);
+        // 나의 강의실
         model.addAttribute("pendingCourses", pending);
         model.addAttribute("certificates", certificates);
         model.addAttribute("certificateCount", certificateCount);
 
-        return "my-classroom";
-    }
-
-    /**
-     * 출석 체크 페이지
-     */
-    @GetMapping("/attendance")
-    public String attendance(Model model) {
-        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
-        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
-
-        // 출석 통계
-        var stats = attendanceService.getStats(userId);
-
-        // 이번 달 출석 현황
-        var monthlyView = attendanceService.getMonthlyView(userId,
-                java.time.LocalDate.now().getYear(),
-                java.time.LocalDate.now().getMonthValue());
-
-        // 최근 출석 기록
-        var recentHistory = attendanceService.getRecentHistory(userId, 30);
-
-        model.addAttribute("activePage", "attendance");
-        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
-        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
-        model.addAttribute("stats", stats);
-        model.addAttribute("monthlyView", monthlyView);
-        model.addAttribute("recentHistory", recentHistory);
-
-        return "attendance";
-    }
-
-    /**
-     * 온라인 학습 (내 수강 목록)
-     * 역할: 현재 수강 중인 강좌 목록과 진도율 표시
-     */
-    @GetMapping("/online-learning")
-    public String onlineLearning(Model model) {
-        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
-        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
-
-        // 수강 중인 강좌 (진도 정보 포함)
-        List<CourseEnrollment> inProgressEnrollments = enrollmentService.findInProgressEnrollments(userId);
-        List<EnrollmentDto> inProgress = inProgressEnrollments.stream()
-                .map(enrollmentService::toEnrollmentDtoWithProgress)
-                .collect(Collectors.toList());
-
-        // 완료된 강좌
-        List<CourseEnrollment> completedEnrollments = enrollmentService.findCompletedEnrollments(userId);
-        List<EnrollmentDto> completed = completedEnrollments.stream()
-                .map(enrollmentService::toEnrollmentDtoWithProgress)
-                .collect(Collectors.toList());
-
-        // 학습 요약 정보
-        MyLearningSummaryDto summary = dashboardService.getMyLearningSummary(userId);
-
-        model.addAttribute("activePage", "online-learning");
-        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
-        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
-        model.addAttribute("inProgressCourses", inProgress);
-        model.addAttribute("completedCourses", completed);
-        model.addAttribute("summary", summary);
-
-        return "online-learning";
+        return "mypage/dashboard";
     }
 
     /**
