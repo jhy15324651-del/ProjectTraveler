@@ -13,8 +13,22 @@
 <!-- 헤더 없음 (유니티) -->
 
 <!-- 플래너 랜딩 콘텐츠 -->
-<div th:replace="planner/planner :: plannerContent"></div>
-
 <script th:src="@{/js/main.js}" src="/js/main.js"></script>
+
+<script th:src="@{/js/unity-bridge.js}"></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    // Thymeleaf를 통해 세션의 User 엔티티에서 fullName을 가져옵니다
+    const fullName = [[${session.user != null ? session.user.fullName : 'Guest'}]];
+
+    // 페이지가 로드되면 유니티 인스턴스에 이름을 전달합니다
+    window.onload = function() {
+        if (typeof sendUserInfoToUnity === 'function') {
+            sendUserInfoToUnity(fullName);
+        }
+    };
+    /*]]>*/
+</script>
 </body>
 </html>
