@@ -40,9 +40,17 @@ public class SecurityConfig {
 
                         // ✅ 권장: CSP로 허용할 출처만 지정 (유니티 WebGL 주소를 여기에)
                         .contentSecurityPolicy(csp -> csp
-                                .policyDirectives("frame-ancestors 'self' http://127.0.0.1:8080 http://192.168.0.46:8080;")
+                                .policyDirectives(
+                                        "frame-ancestors 'self' " +
+                                                "http://127.0.0.1:8080 " +
+                                                "https://localhost:8443 " +
+                                                "https://127.0.0.1:8443 " +
+                                                "https://192.168.0.32:8443 " +
+                                                "http://192.168.0.32:8080"
+                                )
                         )
                 )
+
             // CSRF 설정
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/api/**", "/admin/courses/api/**", "/admin/enrollments/api/**", "/admin/quiz/api/**") // API는 CSRF 비활성화
