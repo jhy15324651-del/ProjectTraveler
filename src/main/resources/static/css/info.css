@@ -5,13 +5,17 @@
    - cards rendered from DB
    - inline detail (view + quill)
 ================================ */
+
+/* =================================
+   A) PAGE BACKGROUND
+================================= */
 body.main-page{
     background: rgba(239, 68, 68, 0.06);
 }
 
-/* =========================
+/* =================================
    0) PAGE TOKENS + BASE TYPO
-========================= */
+================================= */
 .info-page{
     width: min(1200px, 92%);
     margin: 0 auto;
@@ -56,9 +60,9 @@ body.main-page{
 .info-page p{ margin: 0; color: var(--if-subtext); }
 .info-page a{ color: inherit; }
 
-/* =========================
+/* =================================
    1) HERO (re-style like reviews header)
-========================= */
+================================= */
 .info-hero{
     /* box 느낌 제거 */
     border: 0;
@@ -89,9 +93,9 @@ body.main-page{
     color: var(--if-subtext);
 }
 
-/* =========================
+/* =================================
    2) LAYOUT
-========================= */
+================================= */
 .info-layout{
     display: grid;
     grid-template-columns: 300px 1fr;
@@ -99,9 +103,9 @@ body.main-page{
     align-items: start;
 }
 
-/* =========================
+/* =================================
    3) SIDEBAR
-========================= */
+================================= */
 .info-sidebar--left{
     position: sticky;
     top: 110px;
@@ -125,6 +129,7 @@ body.main-page{
     font-weight: 900;
 }
 
+/* Accordion */
 .info-acc{
     display: grid;
     gap: 10px;
@@ -176,15 +181,15 @@ body.main-page{
 .info-acc__item.is-open .info-acc__body{
     padding: 10px 10px 12px;
 
-     /* 지역 개수가 늘어날때마다 적절히 늘려줄것!!!!!!!!!!!!!! */
+    /* 지역 개수가 늘어날때마다 적절히 늘려줄것!!!!!!!!!!!!!! */
     max-height: 520px;
 
     opacity: 1;
     transform: translateY(0);
 }
-
 .info-acc__item.is-open .info-acc__chev{ transform: rotate(180deg); }
 
+/* Sidebar items */
 .info-sidebar__item{
     display: block;
     text-decoration: none;
@@ -203,9 +208,9 @@ body.main-page{
     border-color: rgba(239,68,68,0.35);
 }
 
-/* =========================
+/* =================================
    4) MAIN CARD
-========================= */
+================================= */
 .info-main{ min-width: 0; }
 
 .info-mainCard{
@@ -233,9 +238,9 @@ body.main-page{
 .info-regionTitle{ font-size: 24px; font-weight: 900; }
 .info-regionDesc{ color: var(--if-subtext); line-height: 1.55; }
 
-/* =========================
+/* =================================
    5) TABS
-========================= */
+================================= */
 .info-tabs{
     display: flex;
     gap: 18px;
@@ -267,9 +272,9 @@ body.main-page{
     border-radius: 999px;
 }
 
-/* =========================
+/* =================================
    6) PANELS + HEAD
-========================= */
+================================= */
 .info-panel{ display: none; }
 .info-panel.is-open{ display: block; }
 
@@ -291,9 +296,9 @@ body.main-page{
     gap: 8px;
 }
 
-/* =========================
+/* =================================
    7) BUTTONS (admin + inline)
-========================= */
+================================= */
 .info-editBtn,
 .info-addBtn,
 .info-btn{
@@ -337,53 +342,41 @@ body.main-page{
     color: var(--if-accent);
 }
 
-/* =========================
+/* =================================
    8) CARD LIST (vertical)
-========================= */
+   - 중복 선언 제거 후 최종 적용값 통합본
+   - before 하이라이트 라인 없음(요청 반영)
+   - 카드/썸네일 최종 기준:
+     * 카드 min-height: 160px
+     * thumb: flex 0 0 200px / width 200px / height 220px
+================================= */
 .info-cardGrid{
     display: grid;
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: 24px; /* 카드 간격 넓힘 */
     padding: 0 6px 6px;
 }
 
 .info-card{
     background: var(--if-soft);
     border: 1px solid var(--if-border);
-    border-radius: var(--if-radius-md);
-    padding: 16px;
+    border-radius: 18px;
+
+    padding: 18px 18px;
+    min-height: 160px;
+
     position: relative;
     overflow: hidden;
     cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    gap: 24px;
 }
+
 .info-card:hover{
     background: #fff;
     border-color: rgba(17,24,39,0.14);
-}
-.info-card::before{
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 14px;
-    width: 4px;
-    height: 42px;
-    border-radius: 999px;
-    background: var(--if-accent2);
-    opacity: 0.9;
-}
-.info-card__name{
-    margin: 0 0 8px;
-    padding-left: 8px;
-    font-size: 15px;
-    font-weight: 900;
-    color: var(--if-text);
-}
-.info-card__desc{
-    margin: 0;
-    padding-left: 8px;
-    font-size: 13px;
-    color: var(--if-subtext);
-    line-height: 1.55;
 }
 
 .info-card.is-open{
@@ -391,6 +384,67 @@ body.main-page{
     background: rgba(239,68,68,0.04);
 }
 
+/* Thumbnail */
+.info-card__thumb{
+    flex: 0 0 180px;
+    width: 180px;
+    height: 180px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #f3f4f6;
+    position: relative; /* 📷 버튼 위치용 */
+}
+
+.info-card__thumb img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Thumb edit button */
+.info-thumbEdit{
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 6px;
+    font-size: 12px;
+    cursor: pointer;
+}
+.info-thumbEdit:hover{
+    background: rgba(0,0,0,0.8);
+}
+
+/* Card text area */
+.info-card__body{
+    flex: 1;
+    min-width: 0;
+}
+
+.info-card__name{
+    margin: 0 0 12px;
+    padding-left: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--if-text);
+    line-height: 1.3;
+    white-space: normal;
+}
+
+.info-card__desc{
+    margin: 0;
+    padding-left: 0;
+    font-size: 15px;
+    color: #6b7280;
+    line-height: 1.7;
+    white-space: normal;
+}
+
+/* Empty state */
 .info-empty{
     padding: 18px 10px;
     color: var(--if-subtext);
@@ -399,9 +453,11 @@ body.main-page{
     border-radius: var(--if-radius-md);
 }
 
-/* =========================
+/* =================================
    9) INLINE DETAIL (view + quill)
-========================= */
+================================= */
+
+/* 기본 박스 스타일 (열림/닫힘 애니메이션 아래에서 컨트롤) */
 .info-inlineDetail{
     border: 1px solid var(--if-border);
     background: #fff;
@@ -486,14 +542,13 @@ body.main-page{
     border: 1px solid var(--if-border);
 }
 
-/* 혹시 iframe이 width/height를 들고 와도 반응형으로 보정 */
+/* iframe responsive guard */
 .info-content-view iframe,
 .ql-editor iframe{
     width: 100%;
     max-width: 100%;
     border: 0;
 }
-
 
 /* View content typography */
 .info-content-view{
@@ -517,7 +572,7 @@ body.main-page{
     text-decoration: underline;
 }
 
-/* ✅ 핵심: 이미지가 페이지 밖으로 튀어나가지 않게 */
+/* 이미지 overflow 방지 */
 .info-content-view img{
     max-width: 100%;
     height: auto;
@@ -556,8 +611,6 @@ body.main-page{
     border: 0;
     border-radius: 14px;
 }
-
-/* 지도처럼 높이 필요한 경우 기본 높이 */
 .info-content-view iframe[src*="google.com/maps/embed"]{
     height: 320px;
 }
@@ -568,15 +621,13 @@ body.main-page{
     border: 0;
     border-radius: 14px;
 }
-
 .ql-editor iframe[src*="google.com/maps/embed"]{
     height: 320px;
 }
 
-
-/* =========================
+/* =================================
    10) RESPONSIVE
-========================= */
+================================= */
 @media (max-width: 1020px){
     .info-layout{ grid-template-columns: 1fr; }
     .info-sidebar--left{ position: static; top: auto; order: -1; }

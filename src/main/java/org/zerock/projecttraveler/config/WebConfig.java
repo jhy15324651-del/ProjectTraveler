@@ -34,5 +34,16 @@ public class WebConfig implements WebMvcConfigurer {
         // ✅ 일정 이미지 파일 서빙
         registry.addResourceHandler("/uploads/itineraries/**")
                 .addResourceLocations("file:" + imageUploadPath + "/itineraries/");
+
+        // ⭐ info 썸네일 (🔥 추가 핵심)
+        registry.addResourceHandler("/uploads/info-thumbnail/**")
+                .addResourceLocations("file:" + ensureSlash(imageUploadPath) + "info-thumbnail/");
+    }
+
+    private String ensureSlash(String path) {
+        if (!path.endsWith("/") && !path.endsWith("\\")) {
+            return path + "/";
+        }
+        return path;
     }
 }

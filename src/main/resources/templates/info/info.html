@@ -134,9 +134,19 @@
                                 <article class="info-card"
                                          th:each="c : ${cardsFood}"
                                          th:attr="data-post=${c.postKey}">
-                                    <h4 class="info-card__name" th:text="${c.title}">제목</h4>
-                                    <p class="info-card__desc" th:text="${c.summary}">요약</p>
+
+                                    <div class="info-card__thumb">
+                                        <img th:src="${#strings.isEmpty(c.thumbnailUrl) ? '/images/thumb-default.png' : c.thumbnailUrl}"
+                                             alt="썸네일">
+                                    </div>
+
+                                    <div class="info-card__body">
+                                        <h4 class="info-card__name" th:text="${c.title}">제목</h4>
+                                        <p class="info-card__desc" th:text="${c.summary}">요약</p>
+                                    </div>
+
                                 </article>
+
                             </th:block>
 
                             <div class="info-empty"
@@ -197,10 +207,20 @@
                                 <article class="info-card"
                                          th:each="c : ${cardsSpot}"
                                          th:attr="data-post=${c.postKey}">
-                                    <h4 class="info-card__name" th:text="${c.title}">제목</h4>
-                                    <p class="info-card__desc" th:text="${c.summary}">요약</p>
+
+                                    <div class="info-card__thumb">
+                                        <img th:src="${#strings.isEmpty(c.thumbnailUrl) ? '/images/thumb-default.png' : c.thumbnailUrl}"
+                                             alt="썸네일">
+                                    </div>
+
+                                    <div class="info-card__body">
+                                        <h4 class="info-card__name" th:text="${c.title}">제목</h4>
+                                        <p class="info-card__desc" th:text="${c.summary}">요약</p>
+                                    </div>
+
                                 </article>
                             </th:block>
+
 
                             <div class="info-empty"
                                  th:if="${cardsSpot == null or #lists.isEmpty(cardsSpot)}">
@@ -229,8 +249,17 @@
                                 <article class="info-card"
                                          th:each="c : ${cardsHistory}"
                                          th:attr="data-post=${c.postKey}">
-                                    <h4 class="info-card__name" th:text="${c.title}">제목</h4>
-                                    <p class="info-card__desc" th:text="${c.summary}">요약</p>
+
+                                    <div class="info-card__thumb">
+                                        <img th:src="${#strings.isEmpty(c.thumbnailUrl) ? '/images/thumb-default.png' : c.thumbnailUrl}"
+                                             alt="썸네일">
+                                    </div>
+
+                                    <div class="info-card__body">
+                                        <h4 class="info-card__name" th:text="${c.title}">제목</h4>
+                                        <p class="info-card__desc" th:text="${c.summary}">요약</p>
+                                    </div>
+
                                 </article>
                             </th:block>
 

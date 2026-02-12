@@ -21,4 +21,7 @@ public class InfoPostUpsertRequest {
 
     // ✅ 추가: Quill HTML 그대로 저장
     private String contentHtml;
+
+    private String thumbnailUrl;
+
 }

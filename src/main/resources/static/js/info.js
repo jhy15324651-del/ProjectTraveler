@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // 추가 버튼 (패널 헤더 액션영역이 있다면 거기에 붙이는 게 자연스럽지만, 없으면 편집버튼 옆에 삽입)
+        // 추가 버튼
         let addBtn = panel.querySelector(".info-addBtn");
         if (!addBtn) {
             addBtn = document.createElement("button");
@@ -138,7 +138,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         contentHtml: ""
                     });
 
-                    // create 응답이 {postKey:"..."} 라는 전제 (다르면 아래 normalizePostKey에서 커버)
                     const postKey = normalizePostKey(created);
                     if (!postKey) throw new Error("create api: postKey missing");
 
@@ -148,14 +147,22 @@ document.addEventListener("DOMContentLoaded", () => {
                     const card = document.createElement("article");
                     card.className = "info-card";
                     card.dataset.post = postKey;
+
+                    // ✅ THUMB FIX: 새 카드도 thumb 구조로 생성
                     card.innerHTML = `
-            <h4 class="info-card__name">새 항목</h4>
-            <p class="info-card__desc"></p>
+            <div class="info-card__thumb">
+              <img src="/images/thumb-default.png" alt="썸네일">
+            </div>
+            <div class="info-card__body">
+              <h4 class="info-card__name">새 항목</h4>
+              <p class="info-card__desc"></p>
+            </div>
           `;
                     grid.appendChild(card);
 
                     makeCardEditable(card);
                     attachCardControls(card, panel);
+                    attachThumbnailEditor(card); // ✅ THUMB FIX: 새 카드에도 카메라 버튼
                 } catch (err) {
                     console.error(err);
                     alert("추가 실패(콘솔 확인)");
@@ -167,6 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
         panel.querySelectorAll(".info-card").forEach((card) => {
             makeCardEditable(card);
             attachCardControls(card, panel);
+            attachThumbnailEditor(card); // ✅ THUMB FIX
         });
 
         // 커서
@@ -190,6 +198,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         panel.querySelectorAll(".info-cardCtrl").forEach((c) => c.remove());
 
+        // ✅ THUMB FIX: 편집 종료 시 카메라 버튼 제거
+        panel.querySelectorAll(".info-thumbEdit").forEach((b) => b.remove());
+
         panel.querySelector(".info-cancelBtn")?.remove();
         panel.querySelector(".info-addBtn")?.remove();
     }
@@ -198,8 +209,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const original = panel.dataset.originalHtml;
         if (!original) return;
 
-        // 인라인 상세가 패널 안에 있었다면 같이 날아갈 수 있음.
-        // (현재 구조는 #infoInlineDetail이 panel 내부일 수 있으므로) rollback 전에 닫아줌
         closeInlineDetail(true);
 
         panel.innerHTML = original;
@@ -212,6 +221,68 @@ document.addEventListener("DOMContentLoaded", () => {
         card.querySelectorAll(".info-card__name, .info-card__desc").forEach((node) => {
             node.setAttribute("contenteditable", "true");
             node.setAttribute("spellcheck", "false");
+        });
+    }
+
+    // ✅ THUMB FIX: 편집모드에서만 썸네일 변경 버튼 + 업로드 후 DB 저장 + 완료 저장 시 덮어쓰기 방지용 dataset.thumb 저장
+    function attachThumbnailEditor(card) {
+        if (card.querySelector(".info-thumbEdit")) return;
+
+        const thumb = card.querySelector(".info-card__thumb");
+        if (!thumb) return;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "info-thumbEdit";
+        btn.textContent = "📷";
+        btn.title = "썸네일 변경";
+
+        thumb.appendChild(btn);
+
+        btn.addEventListener("click", async (e) => {
+            e.stopPropagation();
+
+            const postKey = card.dataset.post;
+            if (!postKey) return;
+
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = "image/*";
+            input.click();
+
+            input.onchange = async () => {
+                const file = input.files?.[0];
+                if (!file) return;
+
+                try {
+                    const url = await uploadInfoImage(file);
+
+                    // 카드 이미지 즉시 반영
+                    const img = thumb.querySelector("img");
+                    if (img) img.src = url;
+
+                    // ✅ THUMB FIX: 완료 저장(savePanelCards)에서 썸네일이 덮어써지지 않게 카드에 저장
+                    card.dataset.thumb = url;
+
+                    // 서버 저장(즉시)
+                    const regionKey = getRegionKey();
+                    const tabType = mapTabType(card.closest(".info-panel")?.dataset?.panel);
+
+                    const title = card.querySelector(".info-card__name")?.textContent?.trim() || "";
+                    const summary = card.querySelector(".info-card__desc")?.textContent?.trim() || "";
+
+                    await savePostToServer(postKey, {
+                        regionKey,
+                        tabType,
+                        title,
+                        summary,
+                        thumbnailUrl: url
+                    });
+                } catch (err) {
+                    console.error(err);
+                    alert("썸네일 업로드 실패");
+                }
+            };
         });
     }
 
@@ -298,10 +369,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const panel = card.closest(".info-panel");
         if (!panel) return;
 
-        // 카드 편집중이면 상세 열기 금지
         if (panel.classList.contains("is-editing")) return;
-
-        // 카드 컨트롤 클릭은 무시
         if (e.target.closest(".info-cardCtrl")) return;
 
         const postKey = card.dataset.post;
@@ -359,10 +427,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const inline = document.getElementById("infoInlineDetail");
         if (!inline) return;
 
-        inline.classList.remove("is-open"); // 혹시 남아있을까봐
+        inline.classList.remove("is-open");
         card.insertAdjacentElement("afterend", inline);
-
-        // 애니메이션을 확실히 시작시키기 위해 한 프레임 뒤에 open
         requestAnimationFrame(() => inline.classList.add("is-open"));
 
         card.classList.add("is-open");
@@ -498,7 +564,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const payload = { regionKey, tabType, title, summary, contentHtml };
             await savePostToServer(current.postKey, payload);
 
-            // ✅ 카드 목록 UI 즉시 반영
             if (current.card) {
                 const nameEl = current.card.querySelector(".info-card__name");
                 const descEl = current.card.querySelector(".info-card__desc");
@@ -551,22 +616,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const toolbar = current.quill.getModule("toolbar");
         toolbar.addHandler("image", () => selectLocalImageAndUpload());
 
-        // 🗺 지도 버튼 추가 (iframe 코드만 받음)
         addMapButtonToQuillToolbar(toolbar, current.quill);
 
         function addMapButtonToQuillToolbar(toolbar, quill) {
-            // 중복 추가 방지
             const container = toolbar?.container;
             if (!container) return;
             if (container.querySelector(".ql-infomap")) return;
 
             const btn = document.createElement("button");
             btn.type = "button";
-            btn.className = "ql-infomap"; // quill 스타일을 따라가게 ql- prefix
-            btn.innerHTML = "🗺";         // 아이콘(원하면 텍스트로 바꿔도 됨)
+            btn.className = "ql-infomap";
+            btn.innerHTML = "🗺";
             btn.title = "지도 추가(iframe)";
 
-            // 툴바 맨 끝에 붙이기
             container.appendChild(btn);
 
             btn.addEventListener("click", () => {
@@ -575,34 +637,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const src = extractIframeSrc(raw);
                 if (!src) {
-                    alert("iframe 코드에서 src를 찾지 못했습니다. (예: <iframe src=\"...\"></iframe>)");
+                    alert('iframe 코드에서 src를 찾지 못했습니다. (예: <iframe src="..."></iframe>)');
                     return;
                 }
-
-                // (선택) 안전하게 Google Maps embed만 허용하고 싶으면 아래 주석 해제
-                // if (!src.includes("google.com/maps/embed")) {
-                //     alert("구글 지도 embed 주소가 아닙니다.");
-                //     return;
-                // }
 
                 insertMapIframe(quill, src);
             });
         }
 
         function extractIframeSrc(iframeCode) {
-            // src="..." 또는 src='...'
             const m = String(iframeCode).match(/src\s*=\s*["']([^"']+)["']/i);
             return m ? m[1] : null;
         }
 
         function insertMapIframe(quill, src) {
             const safeSrc = String(src).trim();
-
-            // 현재 커서 위치에 삽입 (없으면 끝에 삽입)
             const range = quill.getSelection(true);
             const index = range ? range.index : quill.getLength();
 
-            // 반응형/스타일을 위한 wrapper 클래스 포함
             const html = `
 <div class="info-map">
   <iframe
@@ -691,11 +743,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /* ==========================
        Panel save: upsert + reorder
+       - ✅ 완료 저장 시 썸네일도 함께 저장(덮어쓰기 방지)
     ========================== */
+
+    /** card DOM에서 thumbnailUrl을 안전하게 뽑는다 */
+    function getCardThumbnailUrl(card) {
+        // 1) dataset 우선 (업로드 직후 여기에 심어두면 가장 안정적)
+        const ds = (card.dataset.thumb || "").trim();
+        if (ds) return normalizeToPath(ds);
+
+        // 2) img src에서 추출
+        const img = card.querySelector(".info-card__thumb img");
+        const src = (img?.getAttribute("src") || "").trim();
+        if (!src) return "";
+
+        // 기본 이미지면 빈값(서버가 "빈값이면 무시"하도록 설계하는 걸 추천)
+        if (src.includes("/images/thumb-default.png")) return "";
+
+        return normalizeToPath(src);
+    }
+
+    /** 절대경로(http://localhost:8080/...)면 pathname만 남기고, 상대경로면 그대로 */
+    function normalizeToPath(urlOrPath) {
+        const v = String(urlOrPath || "").trim();
+        if (!v) return "";
+
+        if (v.startsWith("http://") || v.startsWith("https://")) {
+            try {
+                return new URL(v).pathname; // "/uploads/info-thumbnail/xxx.png"
+            } catch (_) {
+                return v;
+            }
+        }
+        return v;
+    }
+
     function buildUpsertRequestFromCard(card, regionKey, tabType) {
         const title = card.querySelector(".info-card__name")?.textContent?.trim() || "";
         const summary = card.querySelector(".info-card__desc")?.textContent?.trim() || "";
-        return { regionKey, tabType, title, summary }; // ✅ 본문은 건드리지 않음
+
+        const thumbnailUrl = getCardThumbnailUrl(card);
+
+        return { regionKey, tabType, title, summary, thumbnailUrl };
     }
 
     async function savePanelCards(panel) {
@@ -706,6 +795,7 @@ document.addEventListener("DOMContentLoaded", () => {
         for (const card of cards) {
             const postKey = card.dataset.post;
             if (!postKey) continue;
+
             const payload = buildUpsertRequestFromCard(card, regionKey, tabType);
             await savePostToServer(postKey, payload);
         }
@@ -842,7 +932,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function normalizePostKey(obj) {
-        // 응답 DTO가 {postKey}, {key}, {id} 등으로 올 수 있으니 안전장치
         if (!obj) return null;
         return obj.postKey || obj.key || obj.id || null;
     }
