@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지 - 일본 여행 LMS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <style>
+        .mypage-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+
+        /* ===== 탭 네비게이션 ===== */
+        .mypage-tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 32px;
+        }
+
+        .mypage-tab {
+            padding: 14px 28px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #888;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: -2px;
+        }
+
+        .mypage-tab:hover {
+            color: #e63946;
+        }
+
+        .mypage-tab.active {
+            color: #e63946;
+            border-bottom-color: #e63946;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ===== 학습 통계 카드 ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .stat-value.progress-value {
+            color: #e63946;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        /* ===== 강좌 카드 그리드 ===== */
+        .course-section {
+            margin-bottom: 48px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title-sub {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .section-count {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .course-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .course-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .course-thumbnail {
+            position: relative;
+            height: 180px;
+            background-size: cover;
+            background-position: center;
+            background-color: #f0f0f0;
+        }
+
+        .course-category {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(255,255,255,0.95);
+            color: #333;
+        }
+
+        .course-progress-badge {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            width: 56px;
+            height: 56px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: #e63946;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .course-progress-badge.completed {
+            background: #4caf50;
+            color: white;
+        }
+
+        .course-body {
+            padding: 20px;
+        }
+
+        .course-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .course-meta {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .course-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .progress-bar-container {
+            background: #eee;
+            border-radius: 4px;
+            height: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e63946, #ff6b6b);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-bar-fill.completed {
+            background: linear-gradient(90deg, #4caf50, #81c784);
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+
+        .course-action {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            text-align: center;
+            background: #e63946;
+            color: white;
+            border-radius: 8px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .course-action:hover {
+            background: #d62839;
+        }
+
+        .course-action.completed-action {
+            background: #4caf50;
+        }
+
+        .course-action.completed-action:hover {
+            background: #43a047;
+        }
+
+        /* ===== 빈 상태 ===== */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: #f9f9f9;
+            border-radius: 12px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-desc {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-action {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #e63946;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* ===== 출석 관련 ===== */
+        .checkin-area {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .btn-checkin {
+            padding: 18px 50px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-checkin.active {
+            background: #e63946;
+            color: white;
+        }
+
+        .btn-checkin.active:hover {
+            background: #d62839;
+        }
+
+        .btn-checkin.done {
+            background: #e0e0e0;
+            color: #999;
+            cursor: default;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .calendar-header {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .calendar-day {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-weight: 600;
+        }
+
+        /* ===== 테이블 ===== */
+        .table-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+
+        .table-section h3 {
+            margin-bottom: 20px;
+            color: #1a1a2e;
+            font-size: 18px;
+        }
+
+        .table-section table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table-section th,
+        .table-section td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .table-section th {
+            font-weight: 600;
+            color: #666;
+            font-size: 13px;
+            background: #fafafa;
+        }
+
+        .table-section td {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-complete {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .badge-progress {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .badge-pending {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        /* ===== 수료증 카드 ===== */
+        .cert-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .cert-card {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff 100%);
+            border: 1px solid #e0d5b8;
+            border-radius: 12px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cert-mark {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 48px;
+            height: 48px;
+            background: #ffd700;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+        }
+    </style>
+</head>
+<body class="main-page">
+
+<div th:replace="fragments/main-header :: mainHeader"></div>
+
+<div class="mypage-container">
+    <!-- 페이지 헤더 -->
+    <div class="page-header">
+        <h1 class="page-title">마이페이지</h1>
+        <p class="page-subtitle">나의 수강 현황, 출석, 강의실을 한눈에 확인하세요</p>
+    </div>
+
+    <!-- 탭 네비게이션 -->
+    <div class="mypage-tabs">
+        <button class="mypage-tab active" data-tab="online-learning">온라인학습</button>
+        <button class="mypage-tab" data-tab="attendance">출석체크</button>
+        <button class="mypage-tab" data-tab="classroom">나의 강의실</button>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 탭 1: 온라인학습 -->
+    <!-- ============================================================ -->
+    <div id="tab-online-learning" class="tab-content active">
+
+        <!-- 학습 통계 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">수강 중인 강좌</div>
+                <div class="stat-value" th:text="${summary.inProgressCourseCount}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">완료한 강좌</div>
+                <div class="stat-value" th:text="${summary.completedCourseCount}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">평균 진도율</div>
+                <div class="stat-value progress-value" th:text="${summary.averageProgressPercent + '%'}">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">총 학습 시간</div>
+                <div class="stat-value" th:text="${summary.totalLearningTimeFormatted}">0분</div>
+            </div>
+        </div>
+
+        <!-- 수강 중인 강좌 -->
+        <section class="course-section">
+            <div class="section-header">
+                <h2 class="section-title-sub">수강 중인 강좌</h2>
+                <span class="section-count" th:text="${#lists.size(inProgressCourses) + '개'}">0개</span>
+            </div>
+
+            <div th:if="${#lists.isEmpty(inProgressCourses)}" class="empty-state">
+                <div class="empty-state-icon">📚</div>
+                <div class="empty-state-title">수강 중인 강좌가 없습니다</div>
+                <div class="empty-state-desc">새로운 강좌를 탐색하고 학습을 시작해보세요</div>
+                <a th:href="@{/learning}" class="empty-state-action">강좌 둘러보기</a>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(inProgressCourses)}" class="course-grid">
+                <div th:each="enrollment : ${inProgressCourses}" class="course-card">
+                    <div class="course-thumbnail"
+                         th:style="'background-image: url(' + ${enrollment.courseThumbnailUrl != null ? enrollment.courseThumbnailUrl : 'https://images.unsplash.com/photo-1528164344705-47542687000d?w=800'} + ');'">
+                        <span class="course-category" th:text="${enrollment.courseCategory}">카테고리</span>
+                        <div class="course-progress-badge" th:text="${enrollment.progressPercent + '%'}">0%</div>
+                    </div>
+                    <div class="course-body">
+                        <h3 class="course-title" th:text="${enrollment.courseTitle}">강좌명</h3>
+                        <div class="course-meta">
+                            <span class="course-meta-item">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                <span th:text="${enrollment.totalWatchedFormatted}">0분</span>
+                            </span>
+                            <span class="course-meta-item" th:if="${enrollment.lastAccessedAt != null}">
+                                최근: <span th:text="${#temporals.format(enrollment.lastAccessedAt, 'MM/dd')}"></span>
+                            </span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" th:style="'width: ' + ${enrollment.progressPercent} + '%'"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span th:text="'진도율 ' + ${enrollment.progressPercent} + '%'">진도율 0%</span>
+                            <span th:text="${enrollment.statusDisplayName}">수강 중</span>
+                        </div>
+                        <a th:href="@{/lesson(courseId=${enrollment.courseId})}" class="course-action">이어서 학습하기</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 완료한 강좌 -->
+        <section th:if="${!#lists.isEmpty(completedCourses)}" class="course-section">
+            <div class="section-header">
+                <h2 class="section-title-sub">완료한 강좌</h2>
+                <span class="section-count" th:text="${#lists.size(completedCourses) + '개'}">0개</span>
+            </div>
+
+            <div class="course-grid">
+                <div th:each="enrollment : ${completedCourses}" class="course-card">
+                    <div class="course-thumbnail"
+                         th:style="'background-image: url(' + ${enrollment.courseThumbnailUrl != null ? enrollment.courseThumbnailUrl : 'https://images.unsplash.com/photo-1528164344705-47542687000d?w=800'} + ');'">
+                        <span class="course-category" th:text="${enrollment.courseCategory}">카테고리</span>
+                        <div class="course-progress-badge completed">완료</div>
+                    </div>
+                    <div class="course-body">
+                        <h3 class="course-title" th:text="${enrollment.courseTitle}">강좌명</h3>
+                        <div class="course-meta">
+                            <span class="course-meta-item">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                <span th:text="${enrollment.totalWatchedFormatted}">0분</span>
+                            </span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill completed" style="width: 100%"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span>학습 완료</span>
+                            <span th:text="${enrollment.statusDisplayName}">완료</span>
+                        </div>
+                        <a th:href="@{/lesson(courseId=${enrollment.courseId})}" class="course-action completed-action">복습하기</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 탭 2: 출석체크 -->
+    <!-- ============================================================ -->
+    <div id="tab-attendance" class="tab-content">
+
+        <!-- 출석 통계 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">총 출석일</div>
+                <div class="stat-number" th:text="${stats.totalDays}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">연속 출석일</div>
+                <div class="stat-number" th:text="${stats.consecutiveDays}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">이번 달 출석</div>
+                <div class="stat-number" th:text="${stats.thisMonthDays}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">출석률</div>
+                <div class="stat-number" th:text="${stats.attendanceRate + '%'}">0%</div>
+            </div>
+        </div>
+
+        <!-- 출석 체크 버튼 -->
+        <div class="checkin-area">
+            <button th:if="${!stats.checkedInToday}" id="checkInBtn" class="btn-checkin active" onclick="checkAttendance()">
+                오늘 출석하기
+            </button>
+            <button th:if="${stats.checkedInToday}" class="btn-checkin done" disabled>
+                오늘 출석 완료
+            </button>
+            <p id="checkInMessage" style="margin-top: 20px; font-size: 16px; color: #666;"
+               th:if="${stats.checkedInToday}">오늘 출석을 완료했습니다!</p>
+        </div>
+
+        <!-- 이번 달 출석 캘린더 -->
+        <div class="table-section">
+            <h3 th:text="${monthlyView.year + '년 ' + monthlyView.month + '월 출석 현황'}">이번 달 출석 현황</h3>
+
+            <div class="calendar-grid calendar-header">
+                <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+            </div>
+
+            <div class="calendar-grid">
+                <th:block th:each="dayInfo : ${monthlyView.days}">
+                    <div class="calendar-day"
+                         th:style="(${dayInfo.today} ? 'border: 2px solid #e63946;' : '') +
+                            (${dayInfo.attended} ? 'background: #e63946; color: white;' :
+                             (${dayInfo.future} ? 'background: #f5f5f5; color: #ccc;' : 'background: #eee; color: #666;'))"
+                         th:text="${dayInfo.day}">1</div>
+                </th:block>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; gap: 20px; justify-content: center; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 20px; background: #e63946; border-radius: 4px;"></div>
+                    <span>출석</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 20px; background: #eee; border-radius: 4px;"></div>
+                    <span>미출석</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 20px; background: #f5f5f5; border-radius: 4px;"></div>
+                    <span>미래</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 최근 출석 기록 -->
+        <div class="table-section">
+            <h3>최근 출석 기록</h3>
+
+            <div th:if="${#lists.isEmpty(recentHistory)}" style="text-align: center; padding: 40px; color: #666;">
+                <p>아직 출석 기록이 없습니다.</p>
+            </div>
+
+            <table th:unless="${#lists.isEmpty(recentHistory)}">
+                <thead>
+                    <tr>
+                        <th>날짜</th>
+                        <th>출석 시간</th>
+                        <th>상태</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="record : ${recentHistory}">
+                        <td th:text="${#temporals.format(record.attendDate, 'yyyy-MM-dd (E)')}">2026-01-28 (화)</td>
+                        <td th:text="${record.createdAt != null ? #temporals.format(record.createdAt, 'HH:mm') : '-'}">09:30</td>
+                        <td><span class="badge badge-complete">출석</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 탭 3: 나의 강의실 -->
+    <!-- ============================================================ -->
+    <div id="tab-classroom" class="tab-content">
+
+        <!-- 학습 통계 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">수강 중인 강좌</div>
+                <div class="stat-number" th:text="${summary != null ? summary.inProgressCourseCount : 0}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">완료한 강좌</div>
+                <div class="stat-number" th:text="${summary != null ? summary.completedCourseCount : 0}">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">평균 진도율</div>
+                <div class="stat-number" th:text="${summary != null ? summary.averageProgressPercent + '%' : '0%'}">0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">총 학습 시간</div>
+                <div class="stat-number" th:text="${summary != null ? summary.totalLearningTimeFormatted : '0분'}">0분</div>
+            </div>
+        </div>
+
+        <!-- 수강 중인 강좌 (테이블) -->
+        <div class="table-section">
+            <h3>수강 중인 강좌</h3>
+
+            <div th:if="${#lists.isEmpty(inProgressCourses)}" style="text-align: center; padding: 40px; color: #666;">
+                <p>수강 중인 강좌가 없습니다.</p>
+                <a th:href="@{/learning}" style="color: #e63946;">강좌 둘러보기 →</a>
+            </div>
+
+            <table th:unless="${#lists.isEmpty(inProgressCourses)}">
+                <thead>
+                    <tr>
+                        <th>강좌명</th>
+                        <th>카테고리</th>
+                        <th>진도율</th>
+                        <th>마지막 학습일</th>
+                        <th>상태</th>
+                        <th>액션</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="enrollment : ${inProgressCourses}">
+                        <td><strong th:text="${enrollment.courseTitle}">강좌명</strong></td>
+                        <td th:text="${enrollment.courseCategory}">카테고리</td>
+                        <td>
+                            <div class="progress-bar-container" style="margin-bottom: 4px;">
+                                <div class="progress-bar-fill" th:style="'width: ' + ${enrollment.progressPercent} + '%;'"></div>
+                            </div>
+                            <span style="font-size: 12px; color: #666;" th:text="${enrollment.progressPercent + '%'}">0%</span>
+                        </td>
+                        <td th:text="${enrollment.lastAccessedAt != null ? #temporals.format(enrollment.lastAccessedAt, 'yyyy-MM-dd') : '-'}">-</td>
+                        <td><span class="badge badge-progress" th:text="${enrollment.statusDisplayName}">진행 중</span></td>
+                        <td>
+                            <a th:href="@{/lesson(courseId=${enrollment.courseId})}"
+                               class="course-action" style="display: inline-block; width: auto; padding: 6px 16px; font-size: 13px;">
+                                이어하기
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 완료한 강좌 (테이블) -->
+        <div class="table-section">
+            <h3>완료한 강좌</h3>
+
+            <div th:if="${#lists.isEmpty(completedCourses)}" style="text-align: center; padding: 40px; color: #666;">
+                <p>아직 완료한 강좌가 없습니다.</p>
+            </div>
+
+            <table th:unless="${#lists.isEmpty(completedCourses)}">
+                <thead>
+                    <tr>
+                        <th>강좌명</th>
+                        <th>카테고리</th>
+                        <th>완료일</th>
+                        <th>학습 시간</th>
+                        <th>상태</th>
+                        <th>액션</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="enrollment : ${completedCourses}">
+                        <td><strong th:text="${enrollment.courseTitle}">강좌명</strong></td>
+                        <td th:text="${enrollment.courseCategory}">카테고리</td>
+                        <td th:text="${enrollment.lastAccessedAt != null ? #temporals.format(enrollment.lastAccessedAt, 'yyyy-MM-dd') : '-'}">-</td>
+                        <td th:text="${enrollment.totalWatchedFormatted}">0분</td>
+                        <td><span class="badge badge-complete">완료</span></td>
+                        <td>
+                            <a th:href="@{/lesson(courseId=${enrollment.courseId})}"
+                               class="course-action completed-action" style="display: inline-block; width: auto; padding: 6px 16px; font-size: 13px;">
+                                복습하기
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 승인 대기 중인 강좌 -->
+        <div th:if="${!#lists.isEmpty(pendingCourses)}" class="table-section">
+            <h3>승인 대기 중</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>강좌명</th>
+                        <th>카테고리</th>
+                        <th>신청일</th>
+                        <th>상태</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="enrollment : ${pendingCourses}">
+                        <td><strong th:text="${enrollment.courseTitle}">강좌명</strong></td>
+                        <td th:text="${enrollment.courseCategory}">카테고리</td>
+                        <td th:text="${enrollment.requestedAt != null ? #temporals.format(enrollment.requestedAt, 'yyyy-MM-dd') : '-'}">-</td>
+                        <td><span class="badge badge-pending">승인 대기</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 수료증 -->
+        <div class="table-section">
+            <h3>
+                수료증
+                <span th:if="${certificateCount > 0}" style="font-size: 14px; color: #666; font-weight: normal;"
+                      th:text="'(' + ${certificateCount} + '개)'"></span>
+            </h3>
+
+            <div th:if="${#lists.isEmpty(certificates)}" style="text-align: center; padding: 40px; color: #666; background: #f9f9f9; border-radius: 8px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">🏆</div>
+                <p style="margin-bottom: 8px;">아직 발급받은 수료증이 없습니다.</p>
+                <p style="font-size: 14px;">승인형 강좌를 수강하고 진도율 90% + 퀴즈 90% 이상 달성 시 수료증이 발급됩니다.</p>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(certificates)}" class="cert-grid">
+                <div th:each="cert : ${certificates}" class="cert-card">
+                    <div class="cert-mark">🎓</div>
+                    <div style="margin-bottom: 16px;">
+                        <h4 style="font-size: 18px; font-weight: 600; color: #333; margin-bottom: 8px; padding-right: 60px;"
+                            th:text="${cert.courseTitle}">강좌명</h4>
+                        <p style="font-size: 12px; color: #888;" th:text="'발급번호: ' + ${cert.certificateNumber}">CERT-XXXXXXXX</p>
+                    </div>
+                    <div style="display: flex; gap: 20px; margin-bottom: 16px; font-size: 14px;">
+                        <div>
+                            <span style="color: #666;">진도율</span>
+                            <strong style="display: block; color: #4caf50;" th:text="${cert.progressPercent + '%'}">100%</strong>
+                        </div>
+                        <div>
+                            <span style="color: #666;">퀴즈</span>
+                            <strong style="display: block; color: #2196f3;" th:text="${cert.quizPercent + '%'}">100%</strong>
+                        </div>
+                        <div>
+                            <span style="color: #666;">발급일</span>
+                            <strong style="display: block; color: #333;" th:text="${cert.issuedAt}">2024.01.01</strong>
+                        </div>
+                    </div>
+                    <a th:href="@{/lesson(courseId=${cert.courseId})}"
+                       style="display: block; padding: 10px; text-align: center; background: #f5f5f5; color: #333; border-radius: 6px; text-decoration: none; font-size: 14px;">
+                        복습하기
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/main.js}" src="/js/main.js"></script>
+<script th:src="@{/js/attendance.js}" src="/js/attendance.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const tabs = document.querySelectorAll(".mypage-tab");
+        const contents = document.querySelectorAll(".tab-content");
+
+        function activateTab(tabName) {
+            tabs.forEach(t => t.classList.remove("active"));
+            contents.forEach(c => c.classList.remove("active"));
+
+            const activeTab = document.querySelector(`.mypage-tab[data-tab="${tabName}"]`);
+            const activeContent = document.getElementById(`tab-${tabName}`);
+
+            if (activeTab) activeTab.classList.add("active");
+            if (activeContent) activeContent.classList.add("active");
+        }
+
+        // 탭 클릭 이벤트
+        tabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                const tabName = tab.dataset.tab;
+                activateTab(tabName);
+                history.replaceState(null, "", `/mypage#${tabName}`);
+            });
+        });
+
+        // URL 해시로 탭 결정
+        function activateFromHash() {
+            const hash = location.hash.replace("#", "");
+            if (hash && document.getElementById(`tab-${hash}`)) {
+                activateTab(hash);
+            }
+        }
+
+        // 초기 로드 시
+        activateFromHash();
+
+        // 해시 변경 시 (서브내비 클릭 등)
+        window.addEventListener("hashchange", activateFromHash);
+    });
+</script>
+</body>
+</html>

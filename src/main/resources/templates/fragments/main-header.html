@@ -16,6 +16,7 @@
             <span class="user-name" id="userName"
                   th:text="${username != null ? username : '사용자'}">사용자</span>
 
+            <a class="btn-logout" th:href="@{/mypage}" href="/mypage">마이페이지</a>
             <!-- 일단 링크로(나중에 Security 붙이면 조정) -->
             <a class="btn-logout" th:href="@{/login}" href="/login">로그아웃</a>
         </div>
@@ -24,13 +25,13 @@
     <!-- 2차 탭바 -->
     <div class="subnav">
         <div class="subnav-inner">
-            <a th:href="@{/online-learning}" href="/online-learning"
+            <a th:href="@{/mypage}" href="/mypage"
                class="subnav-item" data-subnav="online-learning">온라인학습</a>
 
-            <a th:href="@{/attendance}" href="/attendance"
+            <a th:href="@{/mypage#attendance}" href="/mypage#attendance"
                class="subnav-item" data-subnav="attendance">출석체크</a>
 
-            <a th:href="@{/my-classroom}" href="/my-classroom"
+            <a th:href="@{/mypage#classroom}" href="/mypage#classroom"
                class="subnav-item" data-subnav="my-classroom">나의 강의실</a>
         </div>
     </div>
