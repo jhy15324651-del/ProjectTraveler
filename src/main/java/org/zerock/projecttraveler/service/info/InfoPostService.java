@@ -39,6 +39,12 @@ public class InfoPostService {
         post.setSummary(req.getSummary());
         post.setContentHtml(req.getContentHtml());
 
+        // ✅ THUMB FIX 1) thumbnailUrl 저장
+        // - null/빈문자열이면 기존 값 유지 (완료 저장에서 빈값 덮어쓰기 방지)
+        if (req.getThumbnailUrl() != null && !req.getThumbnailUrl().trim().isEmpty()) {
+            post.setThumbnailUrl(req.getThumbnailUrl().trim());
+        }
+
         infoPostRepository.save(post);
     }
 
@@ -142,6 +148,8 @@ public class InfoPostService {
                         .title(p.getTitle())
                         .summary(p.getSummary())
                         .sortOrder(p.getSortOrder())
+                        // ✅ THUMB FIX 2) 카드 DTO에 thumbnailUrl 내려주기
+                        .thumbnailUrl(p.getThumbnailUrl())
                         .build())
                 .toList();
     }
@@ -150,8 +158,6 @@ public class InfoPostService {
         InfoPost post = infoPostRepository.findByPostKey(postKey)
                 .orElseThrow(() -> new IllegalArgumentException("postKey not found: " + postKey));
 
-        return InfoPostDto.from(post); // 또는 직접 생성
+        return InfoPostDto.from(post);
     }
-
-
 }

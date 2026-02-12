@@ -39,4 +39,9 @@ public class InfoPost {
     // ✅ 정렬용 (등록순 + 관리자 reorder)
     @Column(nullable = false)
     private Integer sortOrder;
+
+    @Column(name = "thumbnail_url", length = 500)
+    private String thumbnailUrl;
+
+
 }

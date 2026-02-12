@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
         group.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
     }
 
+    // ✅ "전체" 칩 활성화: 기본은 data-value="" 기반
     function setAllActive(group) {
         const allBtn = group.querySelector('.chip[data-value=""]');
         if (allBtn) allBtn.classList.add("active");
@@ -199,8 +200,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 버튼/상태 hidden (HTML 기준)
     const resetBtn      = document.getElementById("budgetResetBtn");
-    const unlockBtn     = document.getElementById("budgetUnlockBtn");     // ✅ 핵심: HTML은 UnlockBtn
-    const hiddenUnlimit = document.getElementById("f_budgetUnlimit");     // ✅ hidden 상태
+    const unlockBtn     = document.getElementById("budgetUnlockBtn"); // HTML: budgetUnlockBtn
+    const hiddenUnlimit = document.getElementById("f_budgetUnlimit"); // hidden 상태
 
     // 기본값 / 제한해제 max
     const DEFAULT_MIN = 0;
@@ -218,15 +219,11 @@ document.addEventListener("DOMContentLoaded", () => {
     function setUnlocked(on) {
         if (hiddenUnlimit) hiddenUnlimit.value = on ? "1" : "0";
         if (unlockBtn) unlockBtn.setAttribute("aria-pressed", on ? "true" : "false");
-        // 버튼 텍스트는 취향 (원하면 유지)
-        // unlockBtn.textContent = on ? "제한해제됨" : "제한해제";
     }
 
     // tick step 자동 계산(대략 10칸)
     function calcTickStep(max) {
-        // max=5,000,000이면 500,000 정도 나오게
         const rough = max / 10;
-        // 보기 좋게 10만 단위로 반올림
         return Math.max(100000, Math.round(rough / 100000) * 100000);
     }
 
@@ -273,25 +270,20 @@ document.addEventListener("DOMContentLoaded", () => {
         let minVal = parseInt(minInput.value, 10);
         let maxVal = parseInt(maxInput.value, 10);
 
-        // NaN 방지
         if (!Number.isFinite(minVal)) minVal = DEFAULT_MIN;
         if (!Number.isFinite(maxVal)) maxVal = parseInt(maxInput.max || String(DEFAULT_MAX), 10);
 
-        // 교차 방지
         if (minVal > maxVal) {
             minVal = maxVal;
             minInput.value = String(minVal);
         }
 
-        // 라벨
         if (minLabel) minLabel.textContent = formatWon(minVal);
         if (maxLabel) maxLabel.textContent = formatWon(maxVal);
 
-        // hidden
         if (hiddenMin) hiddenMin.value = String(minVal);
         if (hiddenMax) hiddenMax.value = String(maxVal);
 
-        // range bar (%는 maxInput.max 기준)
         if (rangeBar) {
             const min = parseInt(minInput.min, 10);
             const max = parseInt(maxInput.max, 10);
@@ -304,7 +296,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (reset) resetPage();
-
         renderMiniSummary();
     }
 
@@ -317,7 +308,6 @@ document.addEventListener("DOMContentLoaded", () => {
         maxInput.max = String(newMax);
 
         if (clamp && !unlocked) {
-            // 잠금으로 돌아갈 때 현재 값이 500만 넘으면 500만으로 clamp
             const curMin = parseInt(minInput.value || "0", 10);
             const curMax = parseInt(maxInput.value || "0", 10);
 
@@ -330,7 +320,65 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =====================================================
-    // 5) 초기 로드: URL 기반 복원 + budget + summary
+    // 5) Region Group Dropdown (main -> sub)  ✅ 먼저 선언(초기화에서 사용)
+    // =====================================================
+    const regionSubWrap  = document.getElementById("regionSubWrap");
+    const regionSubLabel = document.getElementById("regionSubLabel");
+    const regionSubGroup = document.querySelector(".filter-chips.region-sub[data-key='region']");
+    const regionSubChips = document.querySelectorAll(".filter-chips.region-sub .chip");
+    const regionMainBtns = document.querySelectorAll(".region-main-btn");
+
+    function closeRegionDropdown() {
+        if (regionSubWrap)  regionSubWrap.style.display  = "none";
+        if (regionSubLabel) regionSubLabel.style.display = "none";
+        regionSubChips.forEach((ch) => (ch.style.display = "none"));
+    }
+
+    function openRegionDropdown(group) {
+        if (!regionSubWrap) return;
+
+        regionSubWrap.style.display = "block";
+        if (regionSubLabel) regionSubLabel.style.display = "block";
+
+        regionSubChips.forEach((ch) => {
+            const g = ch.getAttribute("data-group");
+            ch.style.display = (g === group) ? "" : "none";
+        });
+    }
+
+    function setRegionMainActive(group) {
+        regionMainBtns.forEach((b) => b.classList.remove("active"));
+        const target = [...regionMainBtns].find((b) => (b.getAttribute("data-group") || "") === (group || ""));
+        if (target) target.classList.add("active");
+    }
+
+    /**
+     * ✅ "지역만" 초기화 (완전)
+     * - 하위 active 해제
+     * - hidden tags 제거
+     * - 드롭다운/라벨 닫기
+     * - 상위 "전체" active
+     * - page=0 + summary 갱신
+     *
+     * ⚠️ 하위(group=data-key="region")에는 "전체" 칩이 HTML에 없으므로
+     *     setAllActive(regionSubGroup)는 의미가 없거나 부작용 가능 → 사용하지 않음
+     */
+    function resetRegionOnly() {
+        if (regionSubGroup) {
+            clearGroupActive(regionSubGroup);
+        }
+
+        syncMultiHiddenInputs("region", []);
+        closeRegionDropdown();
+
+        setRegionMainActive("");
+
+        resetPage();
+        renderMiniSummary();
+    }
+
+    // =====================================================
+    // 6) 초기 로드: URL 기반 복원 + budget + summary
     // =====================================================
     restoreSingle("travelType", "travelType");
     restoreSingle("theme", "theme");
@@ -339,13 +387,29 @@ document.addEventListener("DOMContentLoaded", () => {
     restoreMulti("level", "levels");
     restoreMulti("region", "tags");
 
-    // budget unlock 상태 (URL param or hidden)
-    // - HTML에서 th:value="${param.budgetUnlimit}" 로 들어오므로 hidden 값을 신뢰
+    // Region: 첫 태그 기준으로 상위칩/드롭다운 자동 오픈
+    closeRegionDropdown();
+    const initialTags = document.querySelectorAll("#tagInputs input[type='hidden']");
+    if (initialTags.length > 0) {
+        const firstTag = (initialTags[0].value || "").trim();
+        if (firstTag) {
+            const firstChip = [...regionSubChips].find((ch) => ch.dataset.value === firstTag);
+            const g = firstChip?.getAttribute("data-group");
+            if (g) {
+                openRegionDropdown(g);
+                setRegionMainActive(g);
+            }
+        }
+    } else {
+        setRegionMainActive("");
+    }
+
+    // budget unlock 상태 (hidden 값을 신뢰)
     const unlockedInit = isUnlocked();
     setUnlocked(unlockedInit);
     applyMaxLimit(unlockedInit, { clamp: false });
 
-    // budget 값: 숫자일 때만 반영 (빈값이면 유지)
+    // budget 값: 숫자일 때만 반영
     if (minInput && maxInput) {
         const minQ = toIntOrNull(params.get("minBudget"));
         const maxQ = toIntOrNull(params.get("maxBudget"));
@@ -353,7 +417,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (maxQ !== null) maxInput.value = String(maxQ);
     }
 
-    // ticks + sync
     renderBudgetTicks();
     syncBudget({ reset: false });
 
@@ -364,14 +427,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (sizeHidden && params.get("size") !== null) sizeHidden.value = params.get("size");
 
     // =====================================================
-    // 6) Chip click handlers (single / multi 공통)
+    // 7) Chip click handlers (single / multi 공통)
+    // - regionMain(상위) / region(하위)는 별도 로직이 있으니 제외
     // =====================================================
     document.querySelectorAll(".filter-chips").forEach((group) => {
         const key = group.dataset.key;
         const mode = group.dataset.mode;
 
-        // ✅ 방어: key/mode 없는 filter-chips는 처리 대상 아님
         if (!key || !mode) return;
+        if (key === "regionMain") return; // ✅ 상위 지역 제외
+        if (key === "region") return;     // ✅ 하위 지역 제외(아래 전용 핸들러)
 
         group.addEventListener("click", (e) => {
             const btn = e.target.closest(".chip");
@@ -431,20 +496,61 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // =====================================================
-    // 7) Budget events (slider + buttons)
+    // 8) Region events (main -> sub + sub multi)
     // =====================================================
-    // budget sliders
+    // 8-1) 상위지역 버튼 클릭 핸들링
+    regionMainBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const group = btn.getAttribute("data-group") || "";
+
+            setRegionMainActive(group);
+
+            // 상위 "전체" 클릭 = 지역만 초기화
+            if (group === "") {
+                resetRegionOnly();
+                return;
+            }
+
+            openRegionDropdown(group);
+        });
+    });
+
+    // 8-2) 세부지역 칩 클릭 (multi-toggle)
+    if (regionSubGroup) {
+        regionSubGroup.addEventListener("click", (e) => {
+            const btn = e.target.closest(".chip");
+            if (!btn) return;
+
+            // 하위칩은 data-value가 반드시 있음(HTML 기준)
+            const val = (btn.getAttribute("data-value") || "").trim();
+            if (!val) return;
+
+            btn.classList.toggle("active");
+
+            const selected = [...regionSubGroup.querySelectorAll(".chip.active")]
+                .map((c) => (c.getAttribute("data-value") || "").trim())
+                .filter((v) => v);
+
+            syncMultiHiddenInputs("region", selected);
+
+            resetPage();
+            renderMiniSummary();
+        });
+    }
+
+    // =====================================================
+    // 9) Budget events (slider + buttons)
+    // =====================================================
     if (minInput && maxInput) {
         minInput.addEventListener("input", () => syncBudget({ reset: true }));
         maxInput.addEventListener("input", () => syncBudget({ reset: true }));
     }
 
-    // Budget reset button (↺)
     if (resetBtn) {
         resetBtn.addEventListener("click", () => {
             if (!minInput || !maxInput) return;
 
-            const curMax = parseInt(maxInput.max, 10); // 잠금/해제 상태에 따른 현재 max
+            const curMax = parseInt(maxInput.max, 10);
             minInput.value = String(DEFAULT_MIN);
             maxInput.value = String(curMax);
 
@@ -452,23 +558,21 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Budget unlock toggle
     if (unlockBtn) {
-        // 초기 aria
         unlockBtn.setAttribute("aria-pressed", isUnlocked() ? "true" : "false");
 
         unlockBtn.addEventListener("click", () => {
             const next = !isUnlocked();
             setUnlocked(next);
             applyMaxLimit(next, { clamp: true });
-
             resetPage();
         });
     }
 
     // =====================================================
-    // 8) 전체 초기화 버튼 (검색 버튼 오른쪽)
-    // - URL submit은 하지 않고, 화면/hidden/요약만 초기화
+    // 10) 전체 초기화 버튼 (검색 버튼 오른쪽)
+    // - 화면/hidden/요약만 초기화 (submit 안함)
+    // ✅ region은 resetRegionOnly()로 완전 초기화
     // =====================================================
     const allResetBtn = document.getElementById("btnReset");
 
@@ -489,28 +593,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (hidden) hidden.value = "";
             });
 
-            // 3) multi 그룹: 전체로 + hidden list 비우기
-            ["period", "level", "region"].forEach((key) => {
+            // 3) multi 그룹(period/level): 전체로 + hidden list 비우기
+            ["period", "level"].forEach((key) => {
                 const group = document.querySelector(`.filter-chips[data-key="${key}"]`);
                 if (!group) return;
 
                 clearGroupActive(group);
                 setAllActive(group);
 
-                // hidden inputs 제거
                 syncMultiHiddenInputs(key, []);
             });
 
-            // 4) budget: 잠금 상태로 되돌리고 (0~500만), 값도 초기화
+            // 3-1) region: 상위/하위/hidden/드롭다운까지 완전 초기화
+            resetRegionOnly();
+
+            // 4) budget: 잠금 상태로 + 값 초기화(0~500만)
             setUnlocked(false);
-            applyMaxLimit(false, { clamp: false }); // max를 500만으로 돌리고 ticks 갱신
+            applyMaxLimit(false, { clamp: false });
 
             if (minInput && maxInput) {
                 minInput.value = String(DEFAULT_MIN);
                 maxInput.value = String(DEFAULT_MAX);
             }
 
-            // hidden도 맞추고, 라벨/레인지바/요약까지 싱크
             syncBudget({ reset: false });
 
             // 5) 검색 타입/검색어 초기화
@@ -526,126 +631,18 @@ document.addEventListener("DOMContentLoaded", () => {
             // 6) 요약 갱신
             renderMiniSummary();
 
-            // 7) (선택) 초기화 즉시 서버에 GET 요청해서 URL도 깨끗하게 만들고 싶으면 submit
-            // - "초기상태로 되돌리는" 의미에 가장 충실함
+            // (선택) URL까지 깨끗하게 만들려면 submit
             // filterForm.submit();
         });
     }
 
     // =====================================================
-    // 9) Region Group Dropdown (main -> sub)
-    // =====================================================
-    const regionSubWrap  = document.getElementById("regionSubWrap");
-    const regionSubLabel = document.getElementById("regionSubLabel"); // ✅ 추가
-    const regionSubGroup = document.querySelector(".filter-chips.region-sub[data-key='region']");
-    const regionSubChips = document.querySelectorAll(".filter-chips.region-sub .chip");
-    const regionMainBtns = document.querySelectorAll(".region-main-btn");
-
-    function closeRegionDropdown() {
-        if (regionSubWrap) regionSubWrap.style.display = "none";
-        if (regionSubLabel) regionSubLabel.style.display = "none"; // ✅ 추가
-        regionSubChips.forEach((ch) => (ch.style.display = "none"));
-    }
-
-    function openRegionDropdown(group) {
-        if (!regionSubWrap) return;
-
-        regionSubWrap.style.display = "block";
-        if (regionSubLabel) regionSubLabel.style.display = "block"; // ✅ 추가
-
-        regionSubChips.forEach((ch) => {
-            const g = ch.getAttribute("data-group");
-            ch.style.display = (g === group) ? "" : "none";
-        });
-    }
-
-    closeRegionDropdown();
-
-    /**
-     * ✅ "지역만" 초기화
-     * - 세부지역 active 해제
-     * - hidden tags 제거
-     * - 세부 패널 닫기
-     * - page=0 + summary 갱신
-     */
-    function resetRegionOnly() {
-        // 1) 세부 chips active 제거 + "전체" active로
-        if (regionSubGroup) {
-            clearGroupActive(regionSubGroup);
-            setAllActive(regionSubGroup);
-        }
-
-        // 2) hidden tags 제거 (region = tags)
-        syncMultiHiddenInputs("region", []);
-
-        // 3) 드롭다운 닫기
-        closeRegionDropdown();
-
-        // 4) page reset + 요약
-        resetPage();
-        renderMiniSummary();
-    }
-
-    // 1) 상위지역 버튼 클릭 핸들링
-    regionMainBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-            const group = btn.getAttribute("data-group") || "";
-
-            // ✅ 클릭한 상위칩 active 표시
-            setRegionMainActive(group);
-
-            // 상위 "전체" 클릭 = 지역만 초기화 + 원래 UI로
-            if (group === "") {
-                resetRegionOnly();
-                return;
-            }
-
-            // 해당 그룹의 세부 태그만 열기
-            openRegionDropdown(group);
-        });
-    });
-
-    function setRegionMainActive(group) {
-        // group: "" | "홋카이도" | "혼슈" ...
-        regionMainBtns.forEach((b) => b.classList.remove("active"));
-
-        const target = [...regionMainBtns].find((b) => (b.getAttribute("data-group") || "") === (group || ""));
-        if (target) target.classList.add("active");
-    }
-
-    // 2) 페이지 로드 시(= URL 복원 후) tags가 있다면: 첫 태그가 속한 그룹을 열어준다.
-    const initialTags = document.querySelectorAll("#tagInputs input[type='hidden']");
-    if (initialTags.length > 0) {
-        const firstTag = (initialTags[0].value || "").trim();
-        if (firstTag) {
-            const firstChip = [...regionSubChips].find((ch) => ch.dataset.value === firstTag);
-            const g = firstChip?.getAttribute("data-group");
-            if (g) {
-                openRegionDropdown(g);
-                setRegionMainActive(g); // ✅ 검색 후에도 상위칩 표시 유지
-            }
-        }
-    } else {
-        // ✅ 선택된 세부태그가 없으면 "전체"를 active로
-        setRegionMainActive("");
-    }
-
-    // 3) 전체 초기화 버튼(btnReset)과 연동: 드롭다운도 확실히 닫아주기
-    const allResetBtn2 = document.getElementById("btnReset");
-    if (allResetBtn2) {
-        allResetBtn2.addEventListener("click", () => {
-            closeRegionDropdown();
-        });
-    }
-
-    // =====================================================
-    // 10) Smooth scroll to #postList (search/paging 공통) - FIX
+    // 11) Smooth scroll to #postList (search/paging 공통) - FIX
     // =====================================================
     function smoothToPostList() {
         const el = document.getElementById("postList");
         if (!el) return;
 
-        // header 가림 보정 (CSS 토큰 있으면 사용)
         const offset =
             parseInt(
                 getComputedStyle(document.querySelector(".reviews") || document.documentElement)
@@ -654,39 +651,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const y = el.getBoundingClientRect().top + window.pageYOffset - offset;
 
-        // 해시 점프로 이미 도착했을 가능성이 높아서,
-        // 살짝 위로 한번 옮긴 다음 smooth로 내려오게 만들어 "스르륵" 보이게 함
         window.scrollTo({ top: Math.max(0, y - 60), behavior: "auto" });
         requestAnimationFrame(() => {
             window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
         });
     }
 
-    // ✅ 페이지네이션 링크의 '#postList' 진입도 스무스 처리
+    // ✅ 페이지네이션 '#postList' 진입도 스무스 처리
     if (window.location.hash === "#postList") {
-        // 브라우저 기본 앵커 점프/재점프 방지: URL에서 hash 제거
         history.replaceState(null, "", window.location.pathname + window.location.search);
-
-        // 그 다음 스무스 스크롤
         requestAnimationFrame(() => smoothToPostList());
     }
 
     // ✅ 검색으로 넘어온 경우에도 스무스 스크롤
     if (sessionStorage.getItem("rv_scroll_to_postlist") === "1") {
         sessionStorage.removeItem("rv_scroll_to_postlist");
-
-        requestAnimationFrame(() => {
-            smoothToPostList();
-        });
+        requestAnimationFrame(() => smoothToPostList());
     }
 
     // =====================================================
-    // 11) 검색 submit: hash 붙이지 않고, 로드 후 스무스 스크롤만
+    // 12) 검색 submit: hash 붙이지 않고, 로드 후 스무스 스크롤만
     // =====================================================
     filterForm.addEventListener("submit", (e) => {
         e.preventDefault();
 
-        // ✅ 이번 로드에서 스크롤하겠다는 플래그만 저장
         sessionStorage.setItem("rv_scroll_to_postlist", "1");
 
         const url = new URL(window.location.pathname, window.location.origin);
@@ -699,7 +687,6 @@ document.addEventListener("DOMContentLoaded", () => {
             url.searchParams.append(k, s);
         }
 
-        // ✅ hash는 붙이지 않는다 (브라우저 점프 방지)
         window.location.href = url.toString();
     });
 });
