@@ -30,8 +30,7 @@ public class ReviewPost {
     private String title;
 
     // Quill HTML 저장
-    @Lob
-    @Column(name="content", columnDefinition="LONGTEXT")
+    @Column(nullable = false, columnDefinition = "LONGTEXT") // 명시적으로 LONGTEXT 지정
     private String content;
 
     // 단일 선택 메타데이터

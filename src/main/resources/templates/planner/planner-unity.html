@@ -13,8 +13,26 @@
 <!-- 헤더 없음 (유니티) -->
 
 <!-- 플래너 랜딩 콘텐츠 -->
-<div th:replace="planner/planner :: plannerContent"></div>
-
 <script th:src="@{/js/main.js}" src="/js/main.js"></script>
+
+<script th:src="@{/js/unity-bridge.js}"></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    // ✅ 1. 주석 문법을 사용하여 IDE 에러를 방지하고, 타임리프가 없을 때의 기본값("Guest")을 설정합니다.
+    //의 fullName 필드를 세션에서 안전하게 가져오는 방식입니다.
+    const fullName = /*[[${session.user != null ? session.user.fullName : 'Guest'}]]*/ "Guest";
+
+    // ✅ 2. 페이지 로드 시 유니티 브릿지 함수 호출
+    window.onload = function() {
+        //에 정의된 함수가 있는지 확인 후 실행
+        if (typeof sendUserInfoToUnity === 'function') {
+            sendUserInfoToUnity(fullName);
+        } else {
+            console.warn("unity-bridge.js를 찾을 수 없습니다.");
+        }
+    };
+    /*]]>*/
+</script>
 </body>
 </html>
