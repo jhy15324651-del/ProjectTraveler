@@ -527,7 +527,7 @@ body.main-page{
 
 /* 열린 상태 */
 .info-inlineDetail.is-open{
-    max-height: 1600px;
+    max-height: 99999px;
     opacity: 1;
     transform: translateY(0);
 
@@ -553,7 +553,7 @@ body.main-page{
 /* View content typography */
 .info-content-view{
     color: var(--if-text);
-    line-height: 1.75;
+    line-height: 1.25;
     font-size: 14px;
 }
 .info-content-view p{

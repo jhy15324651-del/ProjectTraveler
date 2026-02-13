@@ -10,12 +10,12 @@ Reviews - Detail (reviews-read.html)
    Layout Card
 ========================= */
 .reviews .post-read{
-    max-width: 820px;
+    max-width: 960px;
     margin: 24px auto;
     background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 16px;
-    padding: 22px 24px;
+    padding: 22px 40px;
     box-shadow: 0 6px 16px rgba(17,24,39,0.05);
 }
 
@@ -23,7 +23,7 @@ Reviews - Detail (reviews-read.html)
    Title Row + Buttons
 ========================= */
 .reviews .reviews-title-row{
-    max-width: 820px;
+    max-width: 960px;
     margin: 0 auto 12px;
     display:flex;
     justify-content: space-between;
@@ -228,6 +228,15 @@ Reviews - Detail (reviews-read.html)
     text-decoration: underline;
     text-underline-offset: 3px;
 }
+
+
+/* 게시글 텍스트 구별 마커(점) 콘텐츠영역 안으로 집어넣기 */
+.reviews .post-content ul,
+.reviews .post-content ol{
+    padding-left: 1.2em;  /* 1.0~1.6em 사이로 취향 조절 */
+    margin-left: 0;
+}
+
 
 /* =========================
    Background

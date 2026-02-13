@@ -255,7 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!file) return;
 
                 try {
-                    const url = await uploadInfoImage(file);
+                    const url = await uploadInfoThumbnail(file);
 
                     // 카드 이미지 즉시 반영
                     const img = thumb.querySelector("img");
@@ -700,7 +700,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!file) return;
 
             try {
-                const url = await uploadInfoImage(file);
+                const url = await uploadInfoContentImage(file);
                 insertImageToQuill(url);
             } catch (e) {
                 console.error(e);
@@ -709,7 +709,15 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-    async function uploadInfoImage(file) {
+    async function uploadInfoThumbnail(file) {
+        return await uploadImageTo("/api/admin/info/upload-thumbnail", file);
+    }
+
+    async function uploadInfoContentImage(file) {
+        return await uploadImageTo("/api/admin/info/upload-content-image", file);
+    }
+
+    async function uploadImageTo(apiUrl, file) {
         const formData = new FormData();
         formData.append("image", file);
 
@@ -717,7 +725,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const headers = {};
         if (csrf) headers[csrf.header] = csrf.token;
 
-        const res = await fetch("/api/admin/info/upload-image", {
+        const res = await fetch(apiUrl, {
             method: "POST",
             headers,
             body: formData

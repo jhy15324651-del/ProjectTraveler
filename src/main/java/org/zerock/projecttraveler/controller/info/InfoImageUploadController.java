@@ -20,22 +20,43 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class InfoImageUploadController {
 
-    // application-local.yml:
-    // app.upload.image-path: C:/lms-uploads/images
     @Value("${app.upload.image-path:C:/lms-uploads/images}")
     private String imageUploadPath;
 
-    // 저장 폴더명 (원하는 폴더명 고정)
-    private static final String SUB_DIR = "info-thumbnail";
+    // ✅ 폴더 분리
+    private static final String THUMB_DIR = "info-thumbnail";
+    private static final String CONTENT_DIR = "info-content";
 
-    // 허용 확장자 (안전장치)
-    private static final Set<String> ALLOWED_EXT = Set.of(
-            "jpg", "jpeg", "png", "gif", "webp"
-    );
+    private static final Set<String> ALLOWED_EXT = Set.of("jpg", "jpeg", "png", "gif", "webp");
 
+    // ============================
+    // 1) 썸네일 업로드
+    // POST /api/admin/info/upload-thumbnail
+    // ============================
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Map<String, String>> uploadImage(@RequestParam("image") MultipartFile image) throws IOException {
+    @PostMapping(value = "/upload-thumbnail", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, String>> uploadThumbnail(@RequestParam("image") MultipartFile image) throws IOException {
+        return saveAndReturnUrl(image, THUMB_DIR, "/uploads/info-thumbnail/");
+    }
+
+    // ============================
+    // 2) 본문(Quill) 이미지 업로드
+    // POST /api/admin/info/upload-content-image
+    // ============================
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping(value = "/upload-content-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Map<String, String>> uploadContentImage(@RequestParam("image") MultipartFile image) throws IOException {
+        return saveAndReturnUrl(image, CONTENT_DIR, "/uploads/info-content/");
+    }
+
+    // ============================
+    // 공통 저장 로직
+    // ============================
+    private ResponseEntity<Map<String, String>> saveAndReturnUrl(
+            MultipartFile image,
+            String subDir,
+            String urlPrefix
+    ) throws IOException {
 
         if (image == null || image.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "empty file"));
@@ -52,21 +73,19 @@ public class InfoImageUploadController {
 
         String filename = UUID.randomUUID() + "." + ext;
 
-        Path dir = Paths.get(imageUploadPath, SUB_DIR);
+        Path dir = Paths.get(imageUploadPath, subDir);
         Files.createDirectories(dir);
 
         Path target = dir.resolve(filename);
         Files.copy(image.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
 
-        // ✅ WebConfig: /uploads/info-thumbnail/** -> file:{imageUploadPath}/info-thumbnail/
-        String url = "/uploads/info-thumbnail/" + filename;
-
+        String url = urlPrefix + filename;
         return ResponseEntity.ok(Map.of("url", url));
     }
 
     private String extractExtLower(String filename) {
         int dot = filename.lastIndexOf('.');
-        if (dot < 0 || dot == filename.length() - 1) return "png"; // 확장자 없으면 png로 처리(원하면 거부로 바꿔도 됨)
+        if (dot < 0 || dot == filename.length() - 1) return "png";
         return filename.substring(dot + 1).toLowerCase();
     }
 }

@@ -86,25 +86,25 @@ public class InfoController {
            5) 지역 메타 정보 (타이틀 / 설명)
            ====================================================== */
         Map<String, Map<String, String>> regionMeta = Map.ofEntries(
-                Map.entry("asahikawa", Map.of("title","아사히카와","desc","홋카이도의 중심 도시로 아사히카와 라멘으로 유명합니다.")),
-                Map.entry("sapporo",   Map.of("title","삿포로","desc","눈축제와 미식으로 유명한 홋카이도의 대표 도시입니다.")),
-                Map.entry("hakodate",  Map.of("title","하코다테","desc","야경과 해산물로 유명한 항구 도시입니다.")),
+                Map.entry("asahikawa", Map.of("title","❄\uFE0F 아사히카와 (Asahikawa)","desc","홋카이도의 중심 도시로 아사히카와 라멘으로 유명합니다.")),
+                Map.entry("sapporo",   Map.of("title","\uD83C\uDF03 삿포로 (Sapporo)","desc","눈축제와 미식으로 유명한 홋카이도의 대표 도시입니다.")),
+                Map.entry("hakodate",  Map.of("title","⚓ 하코다테 (Hakodate)","desc","야경과 해산물로 유명한 항구 도시입니다.")),
 
-                Map.entry("tokyo",     Map.of("title","도쿄","desc","일본의 수도로 쇼핑과 문화의 중심지입니다.")),
-                Map.entry("osaka",     Map.of("title","오사카","desc","먹거리와 활기가 넘치는 서일본 대표 도시입니다.")),
-                Map.entry("nagoya",    Map.of("title","나고야","desc","산업과 미식이 공존하는 중부권 핵심 도시입니다.")),
-                Map.entry("hiroshima", Map.of("title","히로시마","desc","역사적 의미와 평화의 메시지를 가진 도시입니다.")),
-                Map.entry("kyoto",     Map.of("title","교토","desc","전통과 사찰, 일본 문화의 정수 도시입니다.")),
+                Map.entry("tokyo",     Map.of("title","\uD83D\uDDFC 도쿄 (Tokyo)","desc","일본의 수도로 쇼핑과 문화의 중심지입니다.")),
+                Map.entry("osaka",     Map.of("title","\uD83C\uDF5C 오사카 (Osaka)","desc","먹거리와 활기가 넘치는 서일본 대표 도시입니다.")),
+                Map.entry("nagoya",    Map.of("title","\uD83C\uDFED 나고야 (Nagoya)","desc","산업과 미식이 공존하는 중부권 핵심 도시입니다.")),
+                Map.entry("hiroshima", Map.of("title","\uD83D\uDD4A 히로시마 (Hiroshima)","desc","역사적 의미와 평화의 메시지를 가진 도시입니다.")),
+                Map.entry("kyoto",     Map.of("title","⛩ 교토 (Kyoto)","desc","전통과 사찰, 일본 문화의 정수 도시입니다.")),
 
-                Map.entry("kochi",     Map.of("title","고치","desc","자연과 바다가 어우러진 시코쿠 남부 도시입니다.")),
-                Map.entry("matsuyama", Map.of("title","마쓰야마","desc","도고 온천과 성으로 유명한 도시입니다.")),
-                Map.entry("takamatsu", Map.of("title","다카마쓰","desc","우동과 항구 풍경이 유명한 관문 도시입니다.")),
+                Map.entry("kochi",     Map.of("title","\uD83C\uDF0A 고치 (Kochi)","desc","자연과 바다가 어우러진 시코쿠 남부 도시입니다.")),
+                Map.entry("matsuyama", Map.of("title","♨\uFE0F 마쓰야마 (Matsuyama)","desc","도고 온천과 성으로 유명한 도시입니다.")),
+                Map.entry("takamatsu", Map.of("title","\uD83C\uDFEF 다카마쓰 (Takamatsu)","desc","우동과 항구 풍경이 유명한 관문 도시입니다.")),
 
-                Map.entry("kitakyushu",Map.of("title","기타큐슈","desc","규슈 북부의 산업·항만 도시입니다.")),
-                Map.entry("nagasaki",  Map.of("title","나가사키","desc","이국적인 항구 분위기와 역사를 지닌 도시입니다.")),
-                Map.entry("kumamoto",  Map.of("title","구마모토","desc","구마모토성과 자연 경관이 인상적인 도시입니다.")),
-                Map.entry("fukuoka",   Map.of("title","후쿠오카","desc","교통·쇼핑·먹거리 모두 강점인 규슈 대표 도시입니다.")),
-                Map.entry("okinawa",   Map.of("title","오키나와","desc","에메랄드빛 바다의 일본 대표 휴양지입니다."))
+                Map.entry("kitakyushu",Map.of("title","\uD83C\uDFED 기타큐슈 (Kitakyushu)","desc","규슈 북부의 산업·항만 도시입니다.")),
+                Map.entry("nagasaki",  Map.of("title","⛵ 나가사키 (Nagasaki)","desc","이국적인 항구 분위기와 역사를 지닌 도시입니다.")),
+                Map.entry("kumamoto",  Map.of("title","\uD83C\uDFEF 구마모토 (Kumamoto)","desc","구마모토성과 자연 경관이 인상적인 도시입니다.")),
+                Map.entry("fukuoka",   Map.of("title","\uD83C\uDF06 후쿠오카 (Fukuoka)","desc","교통·쇼핑·먹거리 모두 강점인 규슈 대표 도시입니다.")),
+                Map.entry("okinawa",   Map.of("title","\uD83C\uDF3A 오키나와 (Okinawa)","desc","에메랄드빛 바다의 일본 대표 휴양지입니다."))
         );
 
         Map<String, String> meta = regionMeta.getOrDefault(
