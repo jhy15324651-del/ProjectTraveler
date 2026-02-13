@@ -23,10 +23,16 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
 
     boolean existsByCourseIdAndActiveTrue(Long courseId);
 
+    // 코스별 퀴즈 리스트 조회 (ID 오름차순)
+    List<Quiz> findByCourseIdAndActiveTrueOrderByIdAsc(Long courseId);
+
     // 레슨별 퀴즈 조회
     Optional<Quiz> findFirstByLessonIdAndActiveTrue(Long lessonId);
 
     List<Quiz> findByLessonIdAndActiveTrue(Long lessonId);
+
+    // 레슨별 퀴즈 리스트 조회 (ID 오름차순)
+    List<Quiz> findByLessonIdAndActiveTrueOrderByIdAsc(Long lessonId);
 
     boolean existsByLessonIdAndActiveTrue(Long lessonId);
 
