@@ -70,16 +70,16 @@ public class QuizService {
     }
 
     /**
-     * 퀴즈 ID로 퀴즈 상태 조회
+     * 퀴즈 ID로 퀴즈 상태 조회 (퀴즈별 개별 상태)
      */
     public Optional<QuizDto.QuizStatus> getQuizStatusByQuizId(Long userId, Long quizId) {
         Quiz quiz = quizRepository.findById(quizId).orElse(null);
         if (quiz == null) return Optional.empty();
-        return getQuizStatus(userId, quiz.getCourse().getId());
+        return Optional.of(buildQuizStatusForQuiz(userId, quiz.getCourse().getId(), quiz));
     }
 
     /**
-     * 퀴즈 응시 가능 여부 확인
+     * 퀴즈 응시 가능 여부 확인 (퀴즈별 개별 판단)
      */
     public boolean canAttemptQuiz(Long userId, Long quizId) {
         Quiz quiz = quizRepository.findById(quizId).orElse(null);
@@ -90,20 +90,20 @@ public class QuizService {
                 .orElse(null);
         if (enrollment == null) return false;
 
-        // RETAKE_REQUIRED 상태면 응시 불가
-        if (enrollment.getQuizStatus() == CourseEnrollment.QuizStatus.RETAKE_REQUIRED) {
+        int cycle = enrollment.getQuizCycle();
+
+        // 퀴즈별 상태를 attempt 기록 기반으로 계산
+        CourseEnrollment.QuizStatus perQuizStatus = calcPerQuizStatus(userId, quizId, cycle);
+
+        if (perQuizStatus == CourseEnrollment.QuizStatus.PASSED) {
             return false;
         }
-
-        // 이미 합격한 경우 응시 불가 (중복 응시 방지)
-        if (enrollment.getQuizStatus() == CourseEnrollment.QuizStatus.PASSED) {
+        if (perQuizStatus == CourseEnrollment.QuizStatus.RETAKE_REQUIRED) {
             return false;
         }
 
         // 현재 사이클에서 시도 횟수 확인
-        int currentCycle = enrollment.getQuizCycle();
-        int attemptsInCycle = attemptRepository.countByUserIdAndQuizIdAndCycle(userId, quizId, currentCycle);
-
+        int attemptsInCycle = attemptRepository.countByUserIdAndQuizIdAndCycle(userId, quizId, cycle);
         return attemptsInCycle < MAX_ATTEMPTS_PER_CYCLE;
     }
 
@@ -128,19 +128,21 @@ public class QuizService {
                 .findByUserIdAndCourseId(userId, quiz.getCourse().getId())
                 .orElseThrow(() -> new IllegalArgumentException("수강 정보를 찾을 수 없습니다."));
 
-        int currentCycle = enrollment.getQuizCycle();
+        int cycle = enrollment.getQuizCycle();
 
-        // 응시 가능 여부 확인
-        if (enrollment.getQuizStatus() == CourseEnrollment.QuizStatus.RETAKE_REQUIRED) {
+        // 퀴즈별 상태를 attempt 기록 기반으로 계산하여 응시 가능 여부 확인
+        CourseEnrollment.QuizStatus perQuizStatus = calcPerQuizStatus(userId, quiz.getId(), cycle);
+
+        if (perQuizStatus == CourseEnrollment.QuizStatus.RETAKE_REQUIRED) {
             throw new IllegalStateException("재수강이 필요합니다. 강의를 다시 수강한 후 퀴즈에 응시해주세요.");
         }
 
-        if (enrollment.getQuizStatus() == CourseEnrollment.QuizStatus.PASSED) {
+        if (perQuizStatus == CourseEnrollment.QuizStatus.PASSED) {
             throw new IllegalStateException("이미 퀴즈를 통과했습니다.");
         }
 
         // 현재 사이클에서 시도 횟수 확인
-        int attemptsInCycle = attemptRepository.countByUserIdAndQuizIdAndCycle(userId, quiz.getId(), currentCycle);
+        int attemptsInCycle = attemptRepository.countByUserIdAndQuizIdAndCycle(userId, quiz.getId(), cycle);
         if (attemptsInCycle >= MAX_ATTEMPTS_PER_CYCLE) {
             throw new IllegalStateException("이 사이클에서 최대 응시 횟수(2회)를 초과했습니다.");
         }
@@ -163,7 +165,7 @@ public class QuizService {
                 .user(user)
                 .quiz(quiz)
                 .attemptNo(attemptNo)
-                .cycle(currentCycle)
+                .cycle(cycle)
                 .totalQuestions(quiz.getTotalQuestions())
                 .startedAt(LocalDateTime.now())
                 .build();
@@ -217,23 +219,20 @@ public class QuizService {
         boolean showReview = false;
 
         if (passed) {
-            // 합격
+            // 합격 - enrollment.quizStatus는 저장하지 않음 (퀴즈별 상태는 attempt 기록으로 계산)
             resultStatus = QuizDto.ResultStatus.PASS;
-            enrollment.setQuizStatus(CourseEnrollment.QuizStatus.PASSED);
             log.info("Quiz PASSED: userId={}, quizId={}, score={}%, attemptNo={}, cycle={}",
-                    userId, quiz.getId(), scorePercent, attemptNo, currentCycle);
+                    userId, quiz.getId(), scorePercent, attemptNo, cycle);
         } else if (attemptNo == 1) {
             // 1차 실패 -> 2차 응시 가능, 정답/해설 공개
             resultStatus = QuizDto.ResultStatus.RETRY_ALLOWED;
             showReview = true;
-            enrollment.setQuizStatus(CourseEnrollment.QuizStatus.RETRY_ALLOWED);
             log.info("Quiz 1st attempt FAILED: userId={}, quizId={}, score={}%. Retry allowed.",
                     userId, quiz.getId(), scorePercent);
         } else {
             // 2차 실패 -> 재수강 필요, 레슨 진도 초기화
             resultStatus = QuizDto.ResultStatus.RETAKE_REQUIRED;
             showReview = true;
-            enrollment.setQuizStatus(CourseEnrollment.QuizStatus.RETAKE_REQUIRED);
 
             // 레슨 진도를 0%로 초기화
             int resetCount = lessonProgressRepository.resetProgressByUserIdAndCourseId(userId, quiz.getCourse().getId());
@@ -241,15 +240,13 @@ public class QuizService {
                     userId, quiz.getId(), scorePercent, resetCount);
         }
 
-        enrollmentRepository.save(enrollment);
-
         // 출석 처리 (퀴즈 제출 시 출석으로 인정)
         attendanceService.touchAttendance(userId);
 
         return QuizDto.SubmitResult.builder()
                 .attemptId(attempt.getId())
                 .attemptNo(attemptNo)
-                .cycle(currentCycle)
+                .cycle(cycle)
                 .totalQuestions(attempt.getTotalQuestions())
                 .correctCount(correctCount)
                 .scorePercent(scorePercent)
@@ -392,45 +389,51 @@ public class QuizService {
     }
 
     /**
-     * 강좌의 퀴즈 상태 조회 (상세)
+     * 강좌의 퀴즈 상태 조회 (상세) - 퀴즈별 개별 상태 계산
      */
     public Optional<QuizDto.QuizStatus> getQuizStatus(Long userId, Long courseId) {
         return quizRepository.findFirstByCourseIdAndActiveTrue(courseId)
-                .map(quiz -> {
-                    CourseEnrollment enrollment = enrollmentRepository
-                            .findByUserIdAndCourseId(userId, courseId)
-                            .orElse(null);
+                .map(quiz -> buildQuizStatusForQuiz(userId, courseId, quiz));
+    }
 
-                    int currentCycle = enrollment != null ? enrollment.getQuizCycle() : 1;
-                    CourseEnrollment.QuizStatus quizStatus = enrollment != null ?
-                            enrollment.getQuizStatus() : CourseEnrollment.QuizStatus.NOT_STARTED;
+    /**
+     * 특정 퀴즈의 상태를 attempt 기록 기반으로 계산
+     */
+    private QuizDto.QuizStatus buildQuizStatusForQuiz(Long userId, Long courseId, Quiz quiz) {
+        CourseEnrollment enrollment = enrollmentRepository
+                .findByUserIdAndCourseId(userId, courseId)
+                .orElse(null);
 
-                    Integer bestScore = attemptRepository.findBestScoreByUserIdAndQuizId(userId, quiz.getId())
-                            .orElse(null);
-                    boolean hasPassed = attemptRepository.existsByUserIdAndQuizIdAndPassedTrue(userId, quiz.getId());
-                    int attemptCount = attemptRepository.countByUserIdAndQuizId(userId, quiz.getId());
-                    int attemptsInCycle = attemptRepository.countByUserIdAndQuizIdAndCycle(userId, quiz.getId(), currentCycle);
+        int currentCycle = enrollment != null ? enrollment.getQuizCycle() : 1;
 
-                    boolean canAttempt = quizStatus != CourseEnrollment.QuizStatus.RETAKE_REQUIRED
-                            && quizStatus != CourseEnrollment.QuizStatus.PASSED
-                            && attemptsInCycle < MAX_ATTEMPTS_PER_CYCLE;
+        // 퀴즈별 상태를 attempt 기록으로 계산
+        CourseEnrollment.QuizStatus quizStatus = calcPerQuizStatus(userId, quiz.getId(), currentCycle);
 
-                    String message = getStatusMessage(quizStatus, attemptsInCycle);
+        Integer bestScore = attemptRepository.findBestScoreByUserIdAndQuizId(userId, quiz.getId())
+                .orElse(null);
+        boolean hasPassed = attemptRepository.existsByUserIdAndQuizIdAndPassedTrue(userId, quiz.getId());
+        int attemptCount = attemptRepository.countByUserIdAndQuizId(userId, quiz.getId());
+        int attemptsInCycle = attemptRepository.countByUserIdAndQuizIdAndCycle(userId, quiz.getId(), currentCycle);
 
-                    return QuizDto.QuizStatus.builder()
-                            .quizId(quiz.getId())
-                            .title(quiz.getTitle())
-                            .passingScore(PASSING_SCORE)
-                            .bestScore(bestScore)
-                            .hasPassed(hasPassed)
-                            .attemptCount(attemptCount)
-                            .currentCycle(currentCycle)
-                            .attemptsInCycle(attemptsInCycle)
-                            .quizStatusCode(quizStatus.name())
-                            .canAttempt(canAttempt)
-                            .message(message)
-                            .build();
-                });
+        boolean canAttempt = quizStatus != CourseEnrollment.QuizStatus.RETAKE_REQUIRED
+                && quizStatus != CourseEnrollment.QuizStatus.PASSED
+                && attemptsInCycle < MAX_ATTEMPTS_PER_CYCLE;
+
+        String message = getStatusMessage(quizStatus, attemptsInCycle);
+
+        return QuizDto.QuizStatus.builder()
+                .quizId(quiz.getId())
+                .title(quiz.getTitle())
+                .passingScore(PASSING_SCORE)
+                .bestScore(bestScore)
+                .hasPassed(hasPassed)
+                .attemptCount(attemptCount)
+                .currentCycle(currentCycle)
+                .attemptsInCycle(attemptsInCycle)
+                .quizStatusCode(quizStatus.name())
+                .canAttempt(canAttempt)
+                .message(message)
+                .build();
     }
 
     private String getStatusMessage(CourseEnrollment.QuizStatus status, int attemptsInCycle) {
@@ -456,5 +459,41 @@ public class QuizService {
                         .completedAt(attempt.getCompletedAt())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 코스의 전체 활성 퀴즈 리스트 조회
+     */
+    public List<QuizDto.QuizInfo> getQuizzesForCourse(Long courseId) {
+        return quizRepository.findByCourseIdAndActiveTrueOrderByIdAsc(courseId).stream()
+                .map(q -> quizRepository.findByIdWithQuestionsAndOptions(q.getId()).orElse(q))
+                .map(full -> QuizDto.QuizInfo.from(full, false))
+                .toList();
+    }
+
+    /**
+     * 레슨의 전체 활성 퀴즈 리스트 조회
+     */
+    public List<QuizDto.QuizInfo> getQuizzesForLesson(Long lessonId) {
+        return quizRepository.findByLessonIdAndActiveTrueOrderByIdAsc(lessonId).stream()
+                .map(q -> quizRepository.findByIdWithQuestionsAndOptions(q.getId()).orElse(q))
+                .map(full -> QuizDto.QuizInfo.from(full, false))
+                .toList();
+    }
+
+    /**
+     * 퀴즈별 상태를 QuizAttempt 기록 기반으로 계산 (enrollment.quizStatus 대신 사용)
+     */
+    private CourseEnrollment.QuizStatus calcPerQuizStatus(Long userId, Long quizId, int cycle) {
+        boolean passedInCycle =
+                attemptRepository.existsByUserIdAndQuizIdAndCycleAndPassedTrue(userId, quizId, cycle);
+        if (passedInCycle) return CourseEnrollment.QuizStatus.PASSED;
+
+        int attemptsInCycle =
+                attemptRepository.countByUserIdAndQuizIdAndCycle(userId, quizId, cycle);
+
+        if (attemptsInCycle == 0) return CourseEnrollment.QuizStatus.IN_PROGRESS;
+        if (attemptsInCycle == 1) return CourseEnrollment.QuizStatus.RETRY_ALLOWED;
+        return CourseEnrollment.QuizStatus.RETAKE_REQUIRED;
     }
 }

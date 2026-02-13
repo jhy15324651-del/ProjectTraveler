@@ -30,6 +30,7 @@ public class MainPageController {
     private final AttendanceService attendanceService;
     private final CertificateService certificateService;
     private final PlannerService plannerService;
+    private final QuizService quizService;
 
 
     /**
@@ -94,6 +95,7 @@ public class MainPageController {
         model.addAttribute("username", user != null ? user.getFullName() : "사용자");
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
         model.addAttribute("course", courseDetail);
+        model.addAttribute("quizzes", quizService.getQuizzesForCourse(courseId));
 
         return "course-detail";
     }

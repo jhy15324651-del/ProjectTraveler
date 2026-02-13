@@ -8,6 +8,7 @@ import org.zerock.projecttraveler.dto.QuizDto;
 import org.zerock.projecttraveler.security.SecurityUtils;
 import org.zerock.projecttraveler.service.QuizService;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -210,5 +211,25 @@ public class QuizApiController {
         Long userId = SecurityUtils.getCurrentUserIdOrThrow();
         boolean canAttempt = quizService.canAttemptQuiz(userId, quizId);
         return ResponseEntity.ok(ApiResponse.success(Map.of("canAttempt", canAttempt)));
+    }
+
+    /**
+     * 코스의 전체 활성 퀴즈 목록 조회
+     * GET /api/quiz/course/{courseId}/all
+     */
+    @GetMapping("/course/{courseId}/all")
+    public ResponseEntity<?> getQuizzesForCourse(@PathVariable Long courseId) {
+        List<QuizDto.QuizInfo> quizzes = quizService.getQuizzesForCourse(courseId);
+        return ResponseEntity.ok(ApiResponse.success(quizzes));
+    }
+
+    /**
+     * 레슨의 전체 활성 퀴즈 목록 조회
+     * GET /api/quiz/lesson/{lessonId}/all
+     */
+    @GetMapping("/lesson/{lessonId}/all")
+    public ResponseEntity<?> getQuizzesForLesson(@PathVariable Long lessonId) {
+        List<QuizDto.QuizInfo> quizzes = quizService.getQuizzesForLesson(lessonId);
+        return ResponseEntity.ok(ApiResponse.success(quizzes));
     }
 }
