@@ -674,6 +674,10 @@
     text-decoration: none;
 }
 
+.reviews .post-card .post-link{
+    height: 100%;
+}
+
 .reviews .post-thumb{
     width: 180px;
     flex: 0 0 180px;
@@ -699,8 +703,8 @@
     padding: 14px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    flex: 1;
+    justify-content: center;
+    gap: 20px;
     min-width: 0;
 }
 
@@ -742,16 +746,6 @@
     background: #fff7ed;
     border-color: #f0c38d;
     color: #4b3a2a;
-}
-
-.reviews .post-desc{
-    margin: 0;
-    color: #555;
-    line-height: 1.45;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
 }
 
 .reviews .post-card:hover{
