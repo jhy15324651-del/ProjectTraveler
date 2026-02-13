@@ -38,6 +38,10 @@ public class WebConfig implements WebMvcConfigurer {
         // ⭐ info 썸네일 (🔥 추가 핵심)
         registry.addResourceHandler("/uploads/info-thumbnail/**")
                 .addResourceLocations("file:" + ensureSlash(imageUploadPath) + "info-thumbnail/");
+
+        // 본문 이미지
+        registry.addResourceHandler("/uploads/info-content/**")
+                .addResourceLocations("file:" + imageUploadPath + "/info-content/");
     }
 
     private String ensureSlash(String path) {
