@@ -32,7 +32,12 @@
         .question-type-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; margin-left: 10px; white-space: nowrap; }
         .type-mc { background: #e3f2fd; color: #1565c0; }
         .type-tf { background: #fff3e0; color: #e65100; }
-        .type-sa { background: #f3e5f5; color: #7b1fa2; }
+        /* OX 정답 선택 */
+        .ox-answer-group { margin-top: 10px; display: flex; gap: 15px; }
+        .ox-answer-item { display: flex; align-items: center; gap: 8px; padding: 12px 24px; border: 2px solid #eee; border-radius: 10px; cursor: pointer; transition: all 0.2s; font-size: 16px; font-weight: 600; }
+        .ox-answer-item:hover { border-color: #ccc; }
+        .ox-answer-item.selected-o { border-color: #4caf50; background: #e8f5e9; color: #2e7d32; }
+        .ox-answer-item.selected-x { border-color: #f44336; background: #ffebee; color: #c62828; }
         .question-points { font-size: 12px; color: #666; margin-top: 4px; }
         .question-actions { display: flex; gap: 8px; flex-shrink: 0; margin-left: 15px; }
         .btn-edit { background: #2196f3; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
@@ -123,8 +128,8 @@
                         <div style="display:flex; align-items:center; flex-wrap:wrap; gap:8px;">
                             <span class="question-text" th:text="${question.question}">문제 내용</span>
                             <span class="question-type-badge"
-                                  th:classappend="${question.questionType.name() == 'MULTIPLE_CHOICE' ? 'type-mc' : (question.questionType.name() == 'TRUE_FALSE' ? 'type-tf' : 'type-sa')}"
-                                  th:text="${question.questionType.name() == 'MULTIPLE_CHOICE' ? '객관식' : (question.questionType.name() == 'TRUE_FALSE' ? 'O/X' : '주관식')}">
+                                  th:classappend="${question.questionType.name() == 'MULTIPLE_CHOICE' ? 'type-mc' : 'type-tf'}"
+                                  th:text="${question.questionType.name() == 'MULTIPLE_CHOICE' ? '객관식' : 'O/X'}">
                                 객관식
                             </span>
                         </div>
@@ -198,7 +203,6 @@
                 <select id="questionType" onchange="toggleOptionsForm()">
                     <option value="MULTIPLE_CHOICE">객관식</option>
                     <option value="TRUE_FALSE">O/X (참/거짓)</option>
-                    <option value="SHORT_ANSWER">주관식</option>
                 </select>
             </div>
 
@@ -212,7 +216,7 @@
                 <input type="number" id="questionSortOrder" min="1" value="1">
             </div>
 
-            <!-- 선택지 입력 (객관식/O/X일 때만 표시) -->
+            <!-- 선택지 입력 (객관식일 때만 표시) -->
             <div class="form-group" id="optionsFormGroup">
                 <label>선택지</label>
                 <p class="help-text">문제 생성 시 선택지도 함께 추가됩니다. 정답에 체크해주세요.</p>
@@ -220,6 +224,21 @@
                     <!-- 동적으로 추가됨 -->
                 </div>
                 <button type="button" class="btn-add-option-form" onclick="addOptionFormItem()">+ 선택지 추가</button>
+            </div>
+
+            <!-- OX 정답 선택 (O/X일 때만 표시) -->
+            <div class="form-group" id="oxAnswerGroup" style="display: none;">
+                <label>정답 선택 *</label>
+                <p class="help-text">이 문제의 정답을 선택해주세요.</p>
+                <div class="ox-answer-group">
+                    <div class="ox-answer-item" id="oxOptionO" onclick="selectOxAnswer('O')">
+                        <span>O (참)</span>
+                    </div>
+                    <div class="ox-answer-item" id="oxOptionX" onclick="selectOxAnswer('X')">
+                        <span>X (거짓)</span>
+                    </div>
+                </div>
+                <input type="hidden" id="oxCorrectAnswer" value="O">
             </div>
 
             <div class="modal-actions">
@@ -289,6 +308,9 @@
             addOptionFormItem();
         }
 
+        // OX 정답 초기화
+        selectOxAnswer('O');
+
         toggleOptionsForm();
         document.getElementById('questionModal').classList.add('active');
     }
@@ -316,19 +338,46 @@
     function toggleOptionsForm() {
         const type = document.getElementById('questionType').value;
         const optionsGroup = document.getElementById('optionsFormGroup');
+        const oxGroup = document.getElementById('oxAnswerGroup');
 
         if (editingQuestionId) {
             optionsGroup.style.display = 'none';
+            oxGroup.style.display = 'none';
+            disableOptionRequired(true);
             return;
         }
 
-        if (type === 'SHORT_ANSWER') {
+        if (type === 'TRUE_FALSE') {
             optionsGroup.style.display = 'none';
-        } else if (type === 'TRUE_FALSE') {
-            optionsGroup.style.display = 'none';
+            oxGroup.style.display = 'block';
+            disableOptionRequired(true);
         } else {
             optionsGroup.style.display = 'block';
+            oxGroup.style.display = 'none';
+            disableOptionRequired(false);
         }
+    }
+
+    // 숨겨진 선택지 input의 required 속성을 토글하여 form validation 차단 방지
+    function disableOptionRequired(disable) {
+        document.querySelectorAll('#optionsFormList .opt-content').forEach(function(input) {
+            if (disable) {
+                input.removeAttribute('required');
+            } else {
+                input.setAttribute('required', '');
+            }
+        });
+    }
+
+    let oxCorrectAnswer = 'O'; // 기본값: O가 정답
+
+    function selectOxAnswer(answer) {
+        oxCorrectAnswer = answer;
+        document.getElementById('oxCorrectAnswer').value = answer;
+        const oEl = document.getElementById('oxOptionO');
+        const xEl = document.getElementById('oxOptionX');
+        oEl.className = 'ox-answer-item' + (answer === 'O' ? ' selected-o' : '');
+        xEl.className = 'ox-answer-item' + (answer === 'X' ? ' selected-x' : '');
     }
 
     let optionFormCounter = 0;
@@ -370,9 +419,10 @@
         let options = null;
         if (!editingQuestionId) {
             if (questionType === 'TRUE_FALSE') {
+                const correctAnswer = document.getElementById('oxCorrectAnswer').value;
                 options = [
-                    { content: 'O (참)', isCorrect: true, sortOrder: 1 },
-                    { content: 'X (거짓)', isCorrect: false, sortOrder: 2 }
+                    { content: 'O (참)', isCorrect: correctAnswer === 'O', sortOrder: 1 },
+                    { content: 'X (거짓)', isCorrect: correctAnswer === 'X', sortOrder: 2 }
                 ];
             } else if (questionType === 'MULTIPLE_CHOICE') {
                 options = [];
