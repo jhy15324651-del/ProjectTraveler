@@ -464,15 +464,14 @@
 
     <!-- 탭 네비게이션 -->
     <div class="mypage-tabs">
-        <button class="mypage-tab active" data-tab="online-learning">온라인학습</button>
-
-
+        <button class="mypage-tab active" data-tab="classroom">나의 강의실</button>
+        <button class="mypage-tab" data-tab="attendance">출석체크</button>
     </div>
 
     <!-- ============================================================ -->
-    <!-- 탭 1: 온라인학습 -->
+    <!-- (온라인학습 탭 - 나의 강의실과 중복으로 숨김 처리) -->
     <!-- ============================================================ -->
-    <div id="tab-online-learning" class="tab-content active">
+    <div id="tab-online-learning" class="tab-content">
 
         <!-- 학습 통계 -->
         <div class="stats-grid">
@@ -682,7 +681,7 @@
     <!-- ============================================================ -->
     <!-- 탭 3: 나의 강의실 -->
     <!-- ============================================================ -->
-    <div id="tab-classroom" class="tab-content">
+    <div id="tab-classroom" class="tab-content active">
 
         <!-- 학습 통계 -->
         <div class="stats-grid">
