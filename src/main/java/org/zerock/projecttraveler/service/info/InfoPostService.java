@@ -33,14 +33,19 @@ public class InfoPostService {
                             .build();
                 });
 
+        // region/tab은 패널 저장에서 항상 오니까 그대로 OK (원하면 null 체크 추가)
         post.setRegionKey(req.getRegionKey());
         post.setTabType(tab);
-        post.setTitle(req.getTitle());
-        post.setSummary(req.getSummary());
-        post.setContentHtml(req.getContentHtml());
 
-        // ✅ THUMB FIX 1) thumbnailUrl 저장
-        // - null/빈문자열이면 기존 값 유지 (완료 저장에서 빈값 덮어쓰기 방지)
+        if (req.getTitle() != null) post.setTitle(req.getTitle());
+        if (req.getSummary() != null) post.setSummary(req.getSummary());
+
+        // ✅ 핵심: contentHtml은 null이면 기존 값 유지
+        if (req.getContentHtml() != null) {
+            post.setContentHtml(req.getContentHtml());
+        }
+
+        // ✅ 썸네일: 이미 방어 잘 되어있음
         if (req.getThumbnailUrl() != null && !req.getThumbnailUrl().trim().isEmpty()) {
             post.setThumbnailUrl(req.getThumbnailUrl().trim());
         }

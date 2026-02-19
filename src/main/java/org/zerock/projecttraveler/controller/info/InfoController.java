@@ -32,28 +32,28 @@ public class InfoController {
            ====================================================== */
         List<Map<String, String>> regions = List.of(
                 // 홋카이도
-                Map.of("key", "asahikawa", "label", "아사히카와", "group", "홋카이도"),
-                Map.of("key", "sapporo",   "label", "삿포로",     "group", "홋카이도"),
-                Map.of("key", "hakodate",  "label", "하코다테",   "group", "홋카이도"),
+                Map.of("key", "asahikawa", "label", "❄\uFE0F 아사히카와", "group", "홋카이도"),
+                Map.of("key", "sapporo",   "label", "\uD83C\uDF03 삿포로",     "group", "홋카이도"),
+                Map.of("key", "hakodate",  "label", "⚓ 하코다테",   "group", "홋카이도"),
 
                 // 혼슈
-                Map.of("key", "tokyo",     "label", "도쿄",       "group", "혼슈"),
-                Map.of("key", "osaka",     "label", "오사카",     "group", "혼슈"),
-                Map.of("key", "nagoya",    "label", "나고야",     "group", "혼슈"),
-                Map.of("key", "hiroshima", "label", "히로시마",   "group", "혼슈"),
-                Map.of("key", "kyoto",     "label", "교토",       "group", "혼슈"),
+                Map.of("key", "tokyo",     "label", "\uD83D\uDDFC 도쿄",       "group", "혼슈"),
+                Map.of("key", "osaka",     "label", "\uD83C\uDF5C 오사카",     "group", "혼슈"),
+                Map.of("key", "nagoya",    "label", "\uD83C\uDFED 나고야",     "group", "혼슈"),
+                Map.of("key", "hiroshima", "label", "\uD83D\uDD4A 히로시마",   "group", "혼슈"),
+                Map.of("key", "kyoto",     "label", "⛩ 교토",       "group", "혼슈"),
 
                 // 시코쿠
-                Map.of("key", "kochi",     "label", "고치",       "group", "시코쿠"),
-                Map.of("key", "matsuyama", "label", "마쓰야마",   "group", "시코쿠"),
-                Map.of("key", "takamatsu", "label", "다카마쓰",   "group", "시코쿠"),
+                Map.of("key", "kochi",     "label", "\uD83C\uDF0A 고치",       "group", "시코쿠"),
+                Map.of("key", "matsuyama", "label", "♨\uFE0F 마쓰야마",   "group", "시코쿠"),
+                Map.of("key", "takamatsu", "label", "\uD83C\uDFEF 다카마쓰",   "group", "시코쿠"),
 
                 // 큐슈 (+ 오키나와 포함)
-                Map.of("key", "kitakyushu","label", "기타큐슈",   "group", "큐슈"),
-                Map.of("key", "nagasaki",  "label", "나가사키",   "group", "큐슈"),
-                Map.of("key", "kumamoto",  "label", "구마모토",   "group", "큐슈"),
-                Map.of("key", "fukuoka",   "label", "후쿠오카",   "group", "큐슈"),
-                Map.of("key", "okinawa",   "label", "오키나와",   "group", "큐슈")
+                Map.of("key", "kitakyushu","label", "\uD83C\uDFED 기타큐슈",   "group", "큐슈"),
+                Map.of("key", "nagasaki",  "label", "⛵ 나가사키",   "group", "큐슈"),
+                Map.of("key", "kumamoto",  "label", "\uD83C\uDFEF 구마모토",   "group", "큐슈"),
+                Map.of("key", "fukuoka",   "label", "\uD83C\uDF06 후쿠오카",   "group", "큐슈"),
+                Map.of("key", "okinawa",   "label", "\uD83C\uDF3A 오키나와",   "group", "큐슈")
         );
 
         /* ======================================================
@@ -100,7 +100,7 @@ public class InfoController {
                 Map.entry("matsuyama", Map.of("title","♨\uFE0F 마쓰야마 (Matsuyama)","desc","도고 온천과 성으로 유명한 도시입니다.")),
                 Map.entry("takamatsu", Map.of("title","\uD83C\uDFEF 다카마쓰 (Takamatsu)","desc","우동과 항구 풍경이 유명한 관문 도시입니다.")),
 
-                Map.entry("kitakyushu",Map.of("title","\uD83C\uDFED 기타큐슈 (Kitakyushu)","desc","규슈 북부의 산업·항만 도시입니다.")),
+                Map.entry("kitakyushu",Map.of("title","\uD83C\uDFED 기타큐슈 (Kitakyushu)","desc","큐슈 북부의 산업·항만 도시입니다.")),
                 Map.entry("nagasaki",  Map.of("title","⛵ 나가사키 (Nagasaki)","desc","이국적인 항구 분위기와 역사를 지닌 도시입니다.")),
                 Map.entry("kumamoto",  Map.of("title","\uD83C\uDFEF 구마모토 (Kumamoto)","desc","구마모토성과 자연 경관이 인상적인 도시입니다.")),
                 Map.entry("fukuoka",   Map.of("title","\uD83C\uDF06 후쿠오카 (Fukuoka)","desc","교통·쇼핑·먹거리 모두 강점인 규슈 대표 도시입니다.")),

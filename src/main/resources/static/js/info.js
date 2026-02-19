@@ -599,10 +599,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const editorEl = document.getElementById("quillEditor");
         if (!editorEl) return null;
 
+        // ✅ 1) px 사이즈 whitelist 등록 (한 번만)
+        const Size = Quill.import("attributors/style/size");
+        Size.whitelist = ["12px", "14px", "16px", "18px", "20px", "24px", "28px", "32px"];
+        Quill.register(Size, true);
+
+        // ✅ 2) toolbar에 size 드롭다운 추가
         current.quill = new Quill("#quillEditor", {
             theme: "snow",
             modules: {
                 toolbar: [
+                    [{ size: Size.whitelist }],                 // ⭐ px 드롭다운
                     [{ header: [1, 2, 3, false] }],
                     ["bold", "italic", "underline", "strike"],
                     [{ list: "ordered" }, { list: "bullet" }],
