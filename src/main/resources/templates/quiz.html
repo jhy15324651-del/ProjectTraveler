@@ -171,6 +171,7 @@
     let selectedAnswers = {};  // { questionId: optionId }
     let timerInterval = null;
     let remainingSec = 0;
+    let isSubmitting = false;  // 중복 제출 방지 플래그
 
     // ============ 초기화 ============
     async function init() {
@@ -262,9 +263,10 @@
                 <h2 class="result-title fail">1차 시험 불합격</h2>
                 <p class="result-detail">점수: ${status.bestScore || 0}점 / 합격 기준: ${status.passingScore}점</p>
                 <div class="result-message">
-                    오답을 확인한 후 2차 시험에 응시할 수 있습니다.
+                    오답을 확인하거나 바로 2차 시험에 응시할 수 있습니다.
                 </div>
                 <div class="result-actions">
+                    <button class="result-btn result-btn-primary" onclick="retakeQuiz()">2차 시험 응시하기</button>
                     <button class="result-btn result-btn-secondary" onclick="loadReview(${status.quizId}, 1)">오답 확인하기</button>
                 </div>
             </div>`;
@@ -347,7 +349,15 @@
     }
 
     // ============ 타이머 ============
+    function stopTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
     function startTimer(totalSec) {
+        stopTimer(); // 기존 타이머가 있으면 먼저 정리
         remainingSec = totalSec;
         document.getElementById('timerBar').style.display = 'flex';
         updateTimerDisplay();
@@ -357,8 +367,14 @@
             updateTimerDisplay();
 
             if (remainingSec <= 0) {
-                clearInterval(timerInterval);
-                alert('시간이 초과되었습니다. 자동으로 제출됩니다.');
+                stopTimer();
+                // alert 대신 비블로킹 방식으로 안내 후 자동 제출
+                const notice = document.getElementById('unansweredNotice');
+                if (notice) {
+                    notice.style.display = 'block';
+                    notice.textContent = '시간이 초과되었습니다. 자동으로 제출합니다.';
+                    notice.style.color = '#c62828';
+                }
                 submitQuiz();
             }
         }, 1000);
@@ -389,7 +405,9 @@
 
     // ============ 제출 ============
     async function submitQuiz() {
-        if (timerInterval) clearInterval(timerInterval);
+        if (isSubmitting) return; // 중복 제출 방지
+        isSubmitting = true;
+        stopTimer();
 
         const btn = document.getElementById('submitBtn');
         btn.disabled = true;
@@ -411,15 +429,13 @@
             if (data.success && data.data) {
                 showResult(data.data);
             } else {
-                alert(data.message || '제출에 실패했습니다.');
-                btn.disabled = false;
-                btn.textContent = '제출하기';
+                showError('제출 실패', data.message || '제출에 실패했습니다.');
             }
         } catch (e) {
             console.error('Submit error:', e);
-            alert('제출 중 오류가 발생했습니다.');
-            btn.disabled = false;
-            btn.textContent = '제출하기';
+            showError('제출 오류', '제출 중 오류가 발생했습니다.');
+        } finally {
+            isSubmitting = false;
         }
     }
 
@@ -447,9 +463,10 @@
         } else if (result.status === 'RETRY_ALLOWED') {
             icon = '📝';
             title = '1차 시험 불합격';
-            message = '오답을 확인한 후 2차 시험에 응시할 수 있습니다.';
+            message = '오답을 확인하거나 바로 2차 시험에 응시할 수 있습니다.';
             actions = `
-                <button class="result-btn result-btn-primary" onclick="loadReview(${quizData.id}, ${result.attemptNo})">오답 확인하기</button>
+                <button class="result-btn result-btn-primary" onclick="retakeQuiz()">2차 시험 응시하기</button>
+                <button class="result-btn result-btn-secondary" onclick="loadReview(${quizData.id}, ${result.attemptNo})">오답 확인하기</button>
                 <a href="/course-detail?id=${courseId}" class="result-btn result-btn-secondary">강좌로 돌아가기</a>`;
         } else if (result.status === 'RETAKE_REQUIRED') {
             icon = '📚';
@@ -560,10 +577,21 @@
 
     // ============ 2차 시험 응시 ============
     function retakeQuiz() {
-        // 상태 초기화 후 퀴즈 다시 로드
+        // 전체 상태 초기화
         selectedAnswers = {};
+        isSubmitting = false;
+        stopTimer();
+
         document.getElementById('reviewView').style.display = 'none';
+        document.getElementById('resultView').style.display = 'none';
         document.getElementById('loadingView').style.display = 'block';
+        document.getElementById('timerBar').style.display = 'none';
+
+        // 제출 버튼 상태 초기화
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = false;
+        btn.textContent = '제출하기';
+
         init();
     }
 

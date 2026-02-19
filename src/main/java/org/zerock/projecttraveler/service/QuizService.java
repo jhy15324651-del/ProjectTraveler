@@ -234,6 +234,10 @@ public class QuizService {
             resultStatus = QuizDto.ResultStatus.RETAKE_REQUIRED;
             showReview = true;
 
+            // enrollment 상태도 RETAKE_REQUIRED로 동기화
+            enrollment.setQuizStatus(CourseEnrollment.QuizStatus.RETAKE_REQUIRED);
+            enrollmentRepository.save(enrollment);
+
             // 레슨 진도를 0%로 초기화
             int resetCount = lessonProgressRepository.resetProgressByUserIdAndCourseId(userId, quiz.getCourse().getId());
             log.info("Quiz 2nd attempt FAILED: userId={}, quizId={}, score={}%. Retake required. Reset {} lesson progress records.",
@@ -335,12 +339,20 @@ public class QuizService {
             throw new IllegalArgumentException("수강 정보를 찾을 수 없습니다.");
         }
 
-        if (enrollment.getQuizStatus() != CourseEnrollment.QuizStatus.RETAKE_REQUIRED) {
+        int cycle = enrollment.getQuizCycle();
+
+        // attempt 기록 기반으로 재수강 필요 여부 확인 (퀴즈별 상태 계산)
+        boolean retakeRequired = quizRepository.findByCourseIdAndActiveTrueOrderByIdAsc(courseId).stream()
+                .anyMatch(quiz -> calcPerQuizStatus(userId, quiz.getId(), cycle) == CourseEnrollment.QuizStatus.RETAKE_REQUIRED);
+
+        if (!retakeRequired) {
             throw new IllegalStateException("재수강이 필요한 상태가 아닙니다.");
         }
 
-        // 상태를 IN_PROGRESS로 변경 (아직 사이클은 증가하지 않음)
-        // 재수강 완료 시점에 사이클 증가
+        // enrollment 상태도 동기화
+        enrollment.setQuizStatus(CourseEnrollment.QuizStatus.RETAKE_REQUIRED);
+        enrollmentRepository.save(enrollment);
+
         log.info("Retake started: userId={}, courseId={}", userId, courseId);
         return true;
     }
@@ -359,12 +371,19 @@ public class QuizService {
             throw new IllegalArgumentException("수강 정보를 찾을 수 없습니다.");
         }
 
-        if (enrollment.getQuizStatus() != CourseEnrollment.QuizStatus.RETAKE_REQUIRED) {
+        int cycle = enrollment.getQuizCycle();
+
+        // attempt 기록 기반으로 재수강 필요 여부 확인
+        boolean retakeRequired = enrollment.getQuizStatus() == CourseEnrollment.QuizStatus.RETAKE_REQUIRED
+                || quizRepository.findByCourseIdAndActiveTrueOrderByIdAsc(courseId).stream()
+                .anyMatch(quiz -> calcPerQuizStatus(userId, quiz.getId(), cycle) == CourseEnrollment.QuizStatus.RETAKE_REQUIRED);
+
+        if (!retakeRequired) {
             throw new IllegalStateException("재수강이 필요한 상태가 아닙니다.");
         }
 
         // 새 사이클 시작
-        int newCycle = enrollment.getQuizCycle() + 1;
+        int newCycle = cycle + 1;
         enrollment.setQuizCycle(newCycle);
         enrollment.setQuizStatus(CourseEnrollment.QuizStatus.IN_PROGRESS);
         enrollmentRepository.save(enrollment);
