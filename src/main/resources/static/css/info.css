@@ -625,6 +625,43 @@ body.main-page{
     height: 320px;
 }
 
+/* =========================
+   Quill editor height 늘리기
+========================= */
+.info-page .info-content-editor .ql-container{
+    min-height: 600px;     /* 원하는 기본 높이 */
+}
+
+.info-page .info-content-editor .ql-editor{
+    min-height: 600px;     /* 실제 입력 영역 높이 */
+}
+
+/* Quill size dropdown label 보정 (선택) */
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="12px"]::before { content: "12px"; }
+
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="14px"]::before { content: "14px"; }
+
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="16px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="16px"]::before { content: "16px"; }
+
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="18px"]::before { content: "18px"; }
+
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="20px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="20px"]::before { content: "20px"; }
+
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="24px"]::before { content: "24px"; }
+
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="28px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="28px"]::before { content: "28px"; }
+
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="32px"]::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="32px"]::before { content: "32px"; }
+
+
 /* =================================
    10) RESPONSIVE
 ================================= */
