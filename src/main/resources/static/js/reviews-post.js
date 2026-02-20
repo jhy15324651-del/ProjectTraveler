@@ -140,16 +140,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const missing = [];
 
         const travelType = getHiddenValue("travelType");
-        const theme = getHiddenValue("theme");
         const period = getHiddenValue("period");
         const level = getHiddenValue("level");
+
+        const themes = qsa('input[name="themes"]')
+            .map((inp) => (inp.value || "").trim())
+            .filter((v) => v.length > 0);
 
         const regions = qsa('input[name="regionTags"]')
             .map((inp) => (inp.value || "").trim())
             .filter((v) => v.length > 0);
 
         if (!travelType) missing.push("여행 유형");
-        if (!theme) missing.push("테마");
+        if (themes.length === 0) missing.push("테마");
         if (!period) missing.push("기간");
         if (!level) missing.push("난이도");
         if (regions.length === 0) missing.push("지역");
@@ -187,8 +190,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const travelType = getHiddenValue("travelType");
         if (travelType) chips.push(typeMap[travelType] || travelType);
 
-        const theme = getHiddenValue("theme");
-        if (theme) chips.push(themeMap[theme] || theme);
+        qsa('input[name="themes"]').forEach((inp) => {
+            const v = (inp.value || "").trim();
+            if (v) chips.push(themeMap[v] || v);
+        });
 
         const period = getHiddenValue("period");
         if (period) chips.push(period);
@@ -237,6 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // regionTags hidden들이 들어가는 곳
     const regionInputsWrap = qs("#regionInputs") || qs(".region-inputs") || postForm;
+    const regionSubLabel = qs("#regionSubLabel"); // ✅ 추가 (없으면 스크립트 죽음)
 
     function closeRegionDropdown() {
         if (regionSubWrap) regionSubWrap.style.display = "none";
@@ -346,12 +352,82 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const value = btn.dataset.value;
 
-            // ✅ 단일 선택
+            // ✅ 단일 선택(토글 지원)
+            // - 같은 칩을 다시 누르면 해제(=미선택)
+            // - '전체' 칩이 있으면 전체로 복귀, 없으면 전부 해제
             if (mode === "single") {
+                const isActiveNow = btn.classList.contains("active");
+                const allBtn = qs('.chip[data-value=""]', group); // 있으면 "전체"로 복귀 가능
+
+                if (isActiveNow) {
+                    // (1) 다시 클릭 = 해제
+                    qsa(".chip", group).forEach((c) => c.classList.remove("active"));
+
+                    if (allBtn) {
+                        allBtn.classList.add("active");
+                        if (singleHidden) singleHidden.value = "";
+                    } else {
+                        // 작성 페이지처럼 '전체'가 없으면 그냥 미선택 상태로
+                        if (singleHidden) singleHidden.value = "";
+                    }
+
+                    renderMiniSummary();
+                    return;
+                }
+
+                // (2) 일반 클릭 = 해당 칩 선택
                 qsa(".chip", group).forEach((c) => c.classList.remove("active"));
                 btn.classList.add("active");
 
                 if (singleHidden) singleHidden.value = value;
+
+                renderMiniSummary();
+                return;
+            }
+
+            // ✅ 다중 선택 (theme 같은 multi-or)
+            if (mode === "multi-or" && key === "theme") {
+                const wrap = qs("#themeInputs") || postForm;
+
+                // 전체 클릭(옵션): data-value=""을 쓰는 경우
+                if (value === "") {
+                    qsa(".chip", group).forEach((c) => c.classList.remove("active"));
+                    btn.classList.add("active");
+                    qsa('input[name="themes"]', wrap).forEach((el) => el.remove());
+                    renderMiniSummary();
+                    return;
+                }
+
+                // 전체 버튼이 있다면 비활성화
+                const allBtn = qs('.chip[data-value=""]', group);
+                if (allBtn) allBtn.classList.remove("active");
+
+                // 토글
+                btn.classList.toggle("active");
+
+                // 기존 themes hidden 제거 후 재생성
+                qsa('input[name="themes"]', wrap).forEach((el) => el.remove());
+
+                const selected = qsa(".chip.active", group)
+                    .map((c) => (c.dataset.value || "").trim())
+                    .filter((v) => v && v !== "");
+
+                // 아무것도 없으면 전체 활성(있을 때만)
+                if (selected.length === 0) {
+                    qsa(".chip", group).forEach((c) => c.classList.remove("active"));
+                    if (allBtn) allBtn.classList.add("active");
+                    renderMiniSummary();
+                    return;
+                }
+
+                selected.forEach((v) => {
+                    const input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = "themes";
+                    input.value = v;
+                    wrap.appendChild(input);
+                });
+
                 renderMiniSummary();
                 return;
             }
@@ -393,6 +469,33 @@ document.addEventListener("DOMContentLoaded", () => {
             renderMiniSummary();
         });
     });
+
+// ✅ 초기 로드: themes hidden -> 테마 칩 active 복원
+    (function restoreThemesFromHidden() {
+        const group = qs('.filter-chips[data-key="theme"]');
+        if (!group) return;
+
+        const selected = qsa('#themeInputs input[name="themes"]')
+            .map((i) => (i.value || "").trim())
+            .filter((v) => v);
+
+        // 초기화
+        qsa(".chip", group).forEach((c) => c.classList.remove("active"));
+
+        const allBtn = qs('.chip[data-value=""]', group);
+
+        if (selected.length === 0) {
+            if (allBtn) allBtn.classList.add("active");
+            return;
+        }
+
+        if (allBtn) allBtn.classList.remove("active");
+
+        selected.forEach((v) => {
+            const btn = qs(`.chip[data-value="${v}"]`, group);
+            if (btn) btn.classList.add("active");
+        });
+    })();
 
     // =========================
     // 최초 1회 렌더

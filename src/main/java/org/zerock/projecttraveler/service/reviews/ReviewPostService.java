@@ -35,7 +35,7 @@ public class ReviewPostService {
     public Long create(ReviewPostCreateRequest request) {
 
         require(request.getTravelType() != null && !request.getTravelType().isBlank(), "여행 유형을 선택해주세요.");
-        require(request.getTheme() != null && !request.getTheme().isBlank(), "테마를 선택해주세요.");
+        require(request.getThemes() != null && !request.getThemes().isEmpty(), "테마를 1개 이상 선택해주세요.");
         require(request.getPeriod() != null && !request.getPeriod().isBlank(), "기간을 선택해주세요.");
         require(request.getLevel() != null && !request.getLevel().isBlank(), "난이도를 선택해주세요.");
         require(request.getRegionTags() != null && !request.getRegionTags().isEmpty(), "지역을 1개 이상 선택해주세요.");
@@ -58,7 +58,7 @@ public class ReviewPostService {
             post.setTitle(request.getTitle());
             post.setContent(request.getContent());
             post.setTravelType(request.getTravelType());
-            post.setTheme(request.getTheme());
+            post.setThemes(request.getThemes());      // ✅ 변경
             post.setPeriod(request.getPeriod());
             post.setLevel(request.getLevel());
             post.setRegionTags(request.getRegionTags());
@@ -76,7 +76,7 @@ public class ReviewPostService {
                 .title(request.getTitle())
                 .content(request.getContent())
                 .travelType(request.getTravelType())
-                .theme(request.getTheme())
+                .themes(request.getThemes())           // ✅ 변경
                 .period(request.getPeriod())
                 .level(request.getLevel())
                 .regionTags(request.getRegionTags())
@@ -119,10 +119,9 @@ public class ReviewPostService {
                     .and(ReviewPostSpecs.notDeleted())
                     .and(ReviewPostSpecs.keyword(req.getQ()))
                     .and(ReviewPostSpecs.travelTypeEq(req.getTravelType()))
-                    .and(ReviewPostSpecs.themeEq(req.getTheme()))
+                    .and(ReviewPostSpecs.themeIn(req.getThemes()))
                     .and(ReviewPostSpecs.periodIn(req.getPeriods()))
                     .and(ReviewPostSpecs.levelIn(req.getLevels()))
-                    .and(ReviewPostSpecs.regionTagsOr(req.getTags()))
                     .and(ReviewPostSpecs.budgetTotalBetween(req.getMinBudget(), req.getMaxBudget()));
 
             result = reviewPostRepository.findAll(spec, pageable);

@@ -84,14 +84,15 @@
                 <input type="hidden" th:field="*{travelType}">
             </div>
 
-            <!-- 테마 (단일) -->
+            <!-- 테마 (다중) -->
             <div class="filter-row">
                 <div>
                     <div class="filter-label">테마</div>
-                    <div class="filter-hint single">한 개만 선택</div>
+                    <div class="filter-hint multi">중복 선택 가능</div>
                 </div>
 
-                <div class="filter-chips" data-key="theme" data-mode="single">
+                <!-- ✅ single -> multi-or -->
+                <div class="filter-chips" data-key="theme" data-mode="multi-or">
                     <button type="button" class="chip" data-value="freedom">자유</button>
                     <button type="button" class="chip" data-value="healing">힐링</button>
                     <button type="button" class="chip" data-value="food">맛집</button>
@@ -99,7 +100,11 @@
                     <button type="button" class="chip" data-value="nature">자연</button>
                 </div>
 
-                <input type="hidden" th:field="*{theme}">
+                <!-- ✅ List<String> themes 전송용 hidden inputs -->
+                <div id="themeInputs">
+                    <input th:each="t : ${request != null ? request.themes : null}"
+                           type="hidden" name="themes" th:value="${t}"/>
+                </div>
             </div>
 
             <!-- 기간 (단일) -->

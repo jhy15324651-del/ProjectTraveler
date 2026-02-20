@@ -121,7 +121,7 @@ public class ReviewsController {
         request.setTitle(post.getTitle());
         request.setContent(post.getContent());
         request.setTravelType(post.getTravelType());
-        request.setTheme(post.getTheme());
+        request.setThemes(post.getThemes());
         request.setPeriod(post.getPeriod());
         request.setLevel(post.getLevel());
         request.setRegionTags(post.getRegionTags());
@@ -158,7 +158,7 @@ public class ReviewsController {
         request.setTitle(post.getTitle());
         request.setContent(post.getContent());
         request.setTravelType(post.getTravelType());
-        request.setTheme(post.getTheme());
+        request.setThemes(post.getThemes());
         request.setPeriod(post.getPeriod());
         request.setLevel(post.getLevel());
         request.setRegionTags(post.getRegionTags());

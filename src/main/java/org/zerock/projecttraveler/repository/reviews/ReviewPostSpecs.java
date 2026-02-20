@@ -76,8 +76,14 @@ public class ReviewPostSpecs {
         return (root, query, cb) -> (v == null || v.isBlank()) ? null : cb.equal(root.get("travelType"), v);
     }
 
-    public static Specification<ReviewPost> themeEq(String v) {
-        return (root, query, cb) -> (v == null || v.isBlank()) ? null : cb.equal(root.get("theme"), v);
+    public static Specification<ReviewPost> themeIn(List<String> themes) {
+        return (root, query, cb) -> {
+            if (themes == null || themes.isEmpty()) return cb.conjunction();
+
+            query.distinct(true);                 // ✅ 중복 row 방지
+            var join = root.join("themes");        // ✅ ElementCollection 조인
+            return join.in(themes);
+        };
     }
 
     public static Specification<ReviewPost> periodIn(List<String> periods) {

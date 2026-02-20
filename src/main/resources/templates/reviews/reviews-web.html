@@ -14,12 +14,15 @@
 
 <div th:replace="fragments/main-header :: mainHeader"></div>
 
-<main th:replace="reviews/reviews :: reviewsContent"></main>
+<main>
+    <div th:replace="reviews/reviews :: reviewsContent"></div>
+</main>
+
+<div th:replace="fragments/main-footer :: mainFooter"></div>
 
 <script th:src="@{/js/main.js}" src="/js/main.js"></script>
 <script th:src="@{/js/reviews.js}" src="/js/reviews.js"></script>
 
-<div th:replace="fragments/main-footer :: mainFooter"></div>
 
 </body>
 </html>

@@ -83,18 +83,17 @@
                       post.travelType
                   }">유형</span>
 
-            <!-- 테마 -->
-            <span class="chip"
-                  th:if="${post.theme != null and !post.theme.isEmpty()}"
-                  th:text="${
-                      post.theme == 'freedom'  ? '자유여행' :
-                      post.theme == 'healing'  ? '힐링' :
-                      post.theme == 'food'     ? '맛집' :
-                      post.theme == 'activity' ? '액티비티' :
-                      post.theme == 'nature'   ? '자연' :
-                      post.theme
-                  }">테마</span>
-
+            <!-- 테마(다중) -->
+            <th:block th:if="${post.themes != null and !post.themes.isEmpty()}">
+                <span class="chip"
+                     th:each="thm : ${post.themes}"
+                     th:text="${thm == 'freedom'  ? '자유여행' :
+                                thm == 'healing'  ? '힐링' :
+                                thm == 'food'     ? '맛집' :
+                                thm == 'activity' ? '액티비티' :
+                                thm == 'nature'   ? '자연' :
+                                thm}">테마</span>
+            </th:block>
             <!-- 기간 -->
             <span class="chip"
                   th:if="${post.period != null and !post.period.isEmpty()}"

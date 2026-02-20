@@ -94,7 +94,7 @@
 .filter-row{
     display: grid;
     grid-template-columns: 90px 1fr;
-    gap: 14px;
+    gap: 0px;
     align-items: center;
     margin-bottom: 18px;
 }
