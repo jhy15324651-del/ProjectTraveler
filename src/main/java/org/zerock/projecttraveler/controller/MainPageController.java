@@ -404,8 +404,10 @@ public class MainPageController {
         CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
 
         // 강좌 조회
-        Course course = courseService.findById(courseId)
-                .orElseThrow(() -> new IllegalArgumentException("강좌를 찾을 수 없습니다."));
+        Course course = courseService.findById(courseId).orElse(null);
+        if (course == null) {
+            return "redirect:/mypage";
+        }
 
         // 수강 정보 조회
         CourseEnrollment enrollment = enrollmentService.findEnrollment(userId, courseId).orElse(null);
@@ -417,11 +419,16 @@ public class MainPageController {
         // 레슨 결정 (지정된 레슨 또는 첫 번째 레슨)
         Lesson lesson;
         if (lessonId != null) {
-            lesson = courseService.findLessonById(lessonId)
-                    .orElseThrow(() -> new IllegalArgumentException("레슨을 찾을 수 없습니다."));
+            lesson = courseService.findLessonById(lessonId).orElse(null);
+            if (lesson == null) {
+                return "redirect:/lesson?courseId=" + courseId;
+            }
         } else {
-            lesson = courseService.findFirstLesson(courseId)
-                    .orElseThrow(() -> new IllegalArgumentException("등록된 레슨이 없습니다."));
+            lesson = courseService.findFirstLesson(courseId).orElse(null);
+            if (lesson == null) {
+                // 레슨이 아직 없는 강좌 → 강좌 상세로 이동
+                return "redirect:/course-detail?id=" + courseId;
+            }
         }
 
         // 진도 맵 (레슨별 완료 여부)

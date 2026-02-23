@@ -19,7 +19,7 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
 
     int countByCourseId(Long courseId);
 
-    @Query("SELECT l FROM Lesson l WHERE l.course.id = :courseId AND l.sortOrder = 1")
+    @Query("SELECT l FROM Lesson l WHERE l.course.id = :courseId ORDER BY l.sortOrder ASC LIMIT 1")
     Optional<Lesson> findFirstLessonByCourseId(@Param("courseId") Long courseId);
 
     @Query("SELECT l FROM Lesson l WHERE l.course.id = :courseId AND l.sortOrder > :currentOrder ORDER BY l.sortOrder ASC LIMIT 1")
