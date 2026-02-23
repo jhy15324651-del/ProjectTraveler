@@ -48,14 +48,15 @@
                        th:value="${search != null ? search.travelType : ''}" value=""/>
             </div>
 
-            <!-- theme (single) -->
+            <!-- theme (multi-or) -->
             <div class="filter-row">
                 <div class="filter-label">
                     테마
-                    <div class="filter-hint single">* 한 개만 선택</div>
+                    <div class="filter-hint multi">* 중복 선택 가능</div>
                 </div>
 
-                <div class="filter-chips" data-key="theme" data-mode="single">
+                <!-- ✅ single -> multi-or -->
+                <div class="filter-chips" data-key="theme" data-mode="multi-or">
                     <button type="button" class="chip" data-value="">전체</button>
                     <button type="button" class="chip" data-value="freedom">자유</button>
                     <button type="button" class="chip" data-value="healing">힐링</button>
@@ -64,8 +65,11 @@
                     <button type="button" class="chip" data-value="nature">자연</button>
                 </div>
 
-                <input type="hidden" id="f_theme" name="theme"
-                       th:value="${search != null ? search.theme : ''}" value=""/>
+                <!-- ✅ multi hidden inputs -->
+                <div id="themeInputs">
+                    <input th:each="t : ${search != null ? search.themes : null}"
+                           type="hidden" name="themes" th:value="${t}"/>
+                </div>
             </div>
 
             <!-- budget -->
@@ -236,7 +240,7 @@
                 </div>
 
                 <div class="q-stack">
-                    <select class="q-field">
+                    <select class="q-field" name="qField">
                         <option value="tc">제목 + 내용</option>
                         <option value="t">제목</option>
                         <option value="c">내용</option>
@@ -294,13 +298,13 @@
                                        post.travelType}">유형</span>
 
                         <span class="badge"
-                              th:if="${post.theme != null}"
-                              th:text="${post.theme == 'freedom' ? '자유여행' :
-                                       post.theme == 'healing' ? '힐링' :
-                                       post.theme == 'food' ? '맛집' :
-                                       post.theme == 'activity' ? '액티비티' :
-                                       post.theme == 'nature' ? '자연' :
-                                       post.theme}">테마</span>
+                              th:each="thm : ${post.themes}"
+                              th:text="${thm == 'freedom' ? '자유여행' :
+                                        thm == 'healing' ? '힐링' :
+                                        thm == 'food' ? '맛집' :
+                                        thm == 'activity' ? '액티비티' :
+                                        thm == 'nature' ? '자연' :
+                                        thm}"></span>
 
                         <span class="badge"
                               th:if="${post.period != null}"
@@ -357,7 +361,7 @@
                 page=0,
                 q=${search.q},
                 travelType=${search.travelType},
-                theme=${search.theme},
+                themes=${search.themes},
                 minBudget=${minB},
                 maxBudget=${maxB},
                 periods=${search.periods},
@@ -372,7 +376,7 @@
                 page=0,
                 q=${search.q},
                 travelType=${search.travelType},
-                theme=${search.theme},
+                themes=${search.themes},
                 minBudget=${minB},
                 maxBudget=${maxB},
                 periods=${search.periods},
@@ -390,7 +394,7 @@
                 page=${blockStart - 1},
                 q=${search.q},
                 travelType=${search.travelType},
-                theme=${search.theme},
+                themes=${search.themes},
                 minBudget=${minB},
                 maxBudget=${maxB},
                 periods=${search.periods},
@@ -405,7 +409,7 @@
                 page=${blockStart - 1},
                 q=${search.q},
                 travelType=${search.travelType},
-                theme=${search.theme},
+                themes=${search.themes},
                 minBudget=${minB},
                 maxBudget=${maxB},
                 periods=${search.periods},
@@ -431,7 +435,7 @@
                         page=${p},
                         q=${search.q},
                         travelType=${search.travelType},
-                        theme=${search.theme},
+                        themes=${search.themes},
                         minBudget=${minB},
                         maxBudget=${maxB},
                         periods=${search.periods},
@@ -447,7 +451,7 @@
                         page=${p},
                         q=${search.q},
                         travelType=${search.travelType},
-                        theme=${search.theme},
+                        themes=${search.themes},
                         minBudget=${minB},
                         maxBudget=${maxB},
                         periods=${search.periods},
@@ -466,7 +470,7 @@
                 page=${blockEnd + 1},
                 q=${search.q},
                 travelType=${search.travelType},
-                theme=${search.theme},
+                themes=${search.themes},
                 minBudget=${minB},
                 maxBudget=${maxB},
                 periods=${search.periods},
@@ -481,7 +485,7 @@
                 page=${blockEnd + 1},
                 q=${search.q},
                 travelType=${search.travelType},
-                theme=${search.theme},
+                themes=${search.themes},
                 minBudget=${minB},
                 maxBudget=${maxB},
                 periods=${search.periods},
@@ -499,7 +503,7 @@
                 page=${total - 1},
                 q=${search.q},
                 travelType=${search.travelType},
-                theme=${search.theme},
+                themes=${search.themes},
                 minBudget=${minB},
                 maxBudget=${maxB},
                 periods=${search.periods},
@@ -514,7 +518,7 @@
                 page=${total - 1},
                 q=${search.q},
                 travelType=${search.travelType},
-                theme=${search.theme},
+                themes=${search.themes},
                 minBudget=${minB},
                 maxBudget=${maxB},
                 periods=${search.periods},

@@ -399,7 +399,6 @@ body.main-page{
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block;
 }
 
 /* Thumb edit button */
@@ -660,6 +659,28 @@ body.main-page{
 
 .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="32px"]::before,
 .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="32px"]::before { content: "32px"; }
+
+
+/* =========================
+   Quill align support (VIEW)
+========================= */
+.info-content-view .ql-align-center {
+    text-align: center;
+}
+
+.info-content-view .ql-align-right {
+    text-align: right;
+}
+
+.info-content-view .ql-align-justify {
+    text-align: justify;
+}
+
+/* 이미지 가운데 정렬 보정 */
+.info-content-view .ql-align-center img {
+    margin-left: auto;
+    margin-right: auto;
+}
 
 
 /* =================================

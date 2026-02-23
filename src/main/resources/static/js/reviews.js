@@ -12,11 +12,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterForm = document.getElementById("filterForm");
     if (!filterForm) return;
 
-    // =====================================================
-    // 0) Multi hidden input mapping
-    // =====================================================
+// =====================================================
+// 0) Multi hidden input mapping
+// =====================================================
     const multiWrap = {
         period: { wrapId: "periodInputs", inputName: "periods" },
+        theme:  { wrapId: "themeInputs",  inputName: "themes"  }, // ✅ 추가
         level:  { wrapId: "levelInputs",  inputName: "levels"  },
         region: { wrapId: "tagInputs",    inputName: "tags"    },
     };
@@ -108,8 +109,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const typeVal = document.getElementById("f_travelType")?.value || "";
         if (typeVal) chips.push(typeMap[typeVal] || typeVal);
 
-        const themeVal = document.getElementById("f_theme")?.value || "";
-        if (themeVal) chips.push(themeMap[themeVal] || themeVal);
+        // ✅ themes (multi) - hidden inputs 기반
+        document.querySelectorAll("#themeInputs input[type='hidden']").forEach((inp) => {
+            const v = (inp.value || "").trim();
+            if (!v) return;
+            chips.push(themeMap[v] || v);
+        });
 
         // (2) multi (hidden inputs 기반)
         document.querySelectorAll("#periodInputs input[type='hidden']").forEach((inp) => {
@@ -381,8 +386,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // 6) 초기 로드: URL 기반 복원 + budget + summary
     // =====================================================
     restoreSingle("travelType", "travelType");
-    restoreSingle("theme", "theme");
 
+    restoreMulti("theme", "themes");
     restoreMulti("period", "periods");
     restoreMulti("level", "levels");
     restoreMulti("region", "tags");
@@ -582,7 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
             resetPage();
 
             // 2) single 그룹: 전체로 + hidden 비우기
-            ["travelType", "theme"].forEach((key) => {
+            ["travelType"].forEach((key) => {
                 const group = document.querySelector(`.filter-chips[data-key="${key}"]`);
                 if (!group) return;
 
@@ -594,7 +599,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             // 3) multi 그룹(period/level): 전체로 + hidden list 비우기
-            ["period", "level"].forEach((key) => {
+            ["period", "theme", "level"].forEach((key) => {
                 const group = document.querySelector(`.filter-chips[data-key="${key}"]`);
                 if (!group) return;
 

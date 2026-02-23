@@ -37,8 +37,14 @@ public class ReviewPost {
     @Column(length = 30)
     private String travelType;
 
-    @Column(length = 30)
-    private String theme;
+    // ReviewPost.java
+    @ElementCollection
+    @CollectionTable(
+            name = "review_post_theme",
+            joinColumns = @JoinColumn(name = "post_id")
+    )
+    @Column(name = "theme")
+    private List<String> themes = new ArrayList<>();
 
     @Column(length = 30)
     private String period;
