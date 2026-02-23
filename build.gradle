@@ -54,6 +54,10 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     implementation 'org.jsoup:jsoup:1.17.2'
+
+    // QR 코드 생성
+    implementation 'com.google.zxing:core:3.5.3'
+    implementation 'com.google.zxing:javase:3.5.3'
 }
 
 tasks.named('test') {

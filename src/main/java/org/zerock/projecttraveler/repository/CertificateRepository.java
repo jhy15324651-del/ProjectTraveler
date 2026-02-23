@@ -21,5 +21,8 @@ public interface CertificateRepository extends JpaRepository<Certificate, Long> 
     @Query("SELECT c FROM Certificate c JOIN FETCH c.course WHERE c.user.id = :userId ORDER BY c.issuedAt DESC")
     List<Certificate> findByUserIdWithCourse(@Param("userId") Long userId);
 
+    @Query("SELECT c FROM Certificate c JOIN FETCH c.user JOIN FETCH c.course WHERE c.id = :id")
+    Optional<Certificate> findByIdWithUserAndCourse(@Param("id") Long id);
+
     int countByUserId(Long userId);
 }

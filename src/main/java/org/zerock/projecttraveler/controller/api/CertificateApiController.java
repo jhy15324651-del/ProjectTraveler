@@ -1,12 +1,22 @@
 package org.zerock.projecttraveler.controller.api;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.zerock.projecttraveler.dto.ApiResponse;
 import org.zerock.projecttraveler.dto.CertificateDto;
 import org.zerock.projecttraveler.security.SecurityUtils;
 import org.zerock.projecttraveler.service.CertificateService;
+
+import java.io.ByteArrayOutputStream;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/certificates")
@@ -71,6 +81,32 @@ public class CertificateApiController {
             }
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    /**
+     * QR 코드 이미지 생성 (PNG)
+     * GET /api/certificates/qr/{certificateNumber}
+     */
+    @GetMapping(value = "/qr/{certificateNumber}", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getQrCode(@PathVariable String certificateNumber, HttpServletRequest request) {
+        try {
+            String baseUrl = request.getScheme() + "://" + request.getServerName()
+                    + (request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort());
+            String verifyUrl = baseUrl + "/certificate/verify/" + certificateNumber;
+
+            QRCodeWriter writer = new QRCodeWriter();
+            BitMatrix matrix = writer.encode(verifyUrl, BarcodeFormat.QR_CODE, 200, 200,
+                    Map.of(EncodeHintType.MARGIN, 1));
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            MatrixToImageWriter.writeToStream(matrix, "PNG", out);
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)
+                    .body(out.toByteArray());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

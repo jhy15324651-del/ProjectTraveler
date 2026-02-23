@@ -842,10 +842,16 @@
                             <strong style="display: block; color: #333;" th:text="${cert.issuedAt}">2024.01.01</strong>
                         </div>
                     </div>
-                    <a th:href="@{/lesson(courseId=${cert.courseId})}"
-                       style="display: block; padding: 10px; text-align: center; background: #f5f5f5; color: #333; border-radius: 6px; text-decoration: none; font-size: 14px;">
-                        복습하기
-                    </a>
+                    <div style="display: flex; gap: 8px;">
+                        <a th:href="@{/certificate/view/{id}(id=${cert.id})}"
+                           style="flex: 1; display: block; padding: 10px; text-align: center; background: #0A3D62; color: white; border-radius: 6px; text-decoration: none; font-size: 14px; font-weight: 600;">
+                            수료증 보기
+                        </a>
+                        <a th:href="@{/lesson(courseId=${cert.courseId})}"
+                           style="flex: 1; display: block; padding: 10px; text-align: center; background: #f5f5f5; color: #333; border-radius: 6px; text-decoration: none; font-size: 14px;">
+                            복습하기
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
