@@ -1,0 +1,57 @@
+
+    /* 수강신청 버튼 스타일 */
+.learn-course-action {
+    margin-top: 12px;
+}
+
+.learn-enroll-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #e63946, #d62839);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    justify-content: center;
+}
+
+.learn-enroll-btn:hover {
+    background: linear-gradient(135deg, #d62839, #c41e30);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
+}
+
+.learn-enroll-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.learn-status-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.learn-status-badge.pending {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.learn-enroll-btn.btn-instant {
+    background: linear-gradient(135deg, #4caf50, #43a047);
+}
+
+.learn-enroll-btn.btn-instant:hover {
+    background: linear-gradient(135deg, #43a047, #388e3c);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}

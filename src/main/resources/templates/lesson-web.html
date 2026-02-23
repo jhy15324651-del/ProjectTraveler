@@ -1,0 +1,35 @@
+<!-- templates/lesson-web.html -->
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${lesson.title + ' - ' + course.title}">레슨 시청</title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <link rel="stylesheet" th:href="@{/css/lesson.css}" href="/css/lesson.css">
+</head>
+
+<body class="main-page"
+      th:attr="
+        data-course-id=${course != null ? course.id : 0},
+        data-lesson-id=${lesson != null ? lesson.id : 0},
+        data-duration-sec=${lesson != null ? lesson.durationSec : 0},
+        data-video-type=${lesson != null ? lesson.videoType.name() : 'NONE'},
+        data-can-access=${canAccess}">
+
+<!-- ✅ 헤더 (WEB만) -->
+<div th:replace="fragments/main-header :: mainHeader"></div>
+
+<!-- ✅ 본문 fragment 조립 -->
+<div th:replace="lesson :: lessonContent"></div>
+
+<!-- ✅ 푸터 (WEB만) -->
+<div th:replace="fragments/main-footer :: mainFooter"></div>
+
+<!-- ✅ 스크립트 -->
+<script th:src="@{/js/main.js}" src="/js/main.js"></script>
+<script th:src="@{/js/lesson.js}" src="/js/lesson.js"></script>
+
+</body>
+</html>

@@ -1,90 +1,76 @@
-<!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>학습하기 - 일본 여행 LMS</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
-    <link rel="stylesheet" th:href="@{/css/learn.css}" href="/css/learn.css">
-</head>
-<body class="main-page">
-
-<!-- ✅ fetch 없이 Thymeleaf로 헤더 삽입 -->
-<div th:replace="fragments/main-header :: mainHeader"></div>
+<!-- templates/fragments/learning-content.html -->
+<div th:fragment="learningContent">
 
     <!-- 학습하기 헤더 섹션 -->
     <section class="learn-hero">
         <div class="learn-hero-content">
-            <a href="/main" class="learn-back-link">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-                홈으로
-            </a>
             <h1 class="learn-hero-title">학습하기</h1>
             <p class="learn-hero-subtitle">기초 회화부터 실전 일본어까지, 일본 여행을 위한 체계적인 학습을 시작하세요</p>
         </div>
     </section>
 
+    <!-- 카테고리별 더보기 (향후 확장) -->
+    <section class="learn-section learn-section-categories">
+        <div class="learn-section-header">
+            <h2 class="learn-section-title">카테고리별 학습</h2>
+            <p class="learn-section-subtitle">관심 분야를 선택하여 학습하세요</p>
+        </div>
 
-<!-- 카테고리별 더보기 (향후 확장) -->
-<section class="learn-section learn-section-categories">
-    <div class="learn-section-header">
-        <h2 class="learn-section-title">카테고리별 학습</h2>
-        <p class="learn-section-subtitle">관심 분야를 선택하여 학습하세요</p>
-    </div>
-    <div class="learn-category-grid">
-        <div class="learn-category-card" data-category="language">
-            <div class="learn-category-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-                </svg>
+        <div class="learn-category-grid">
+            <div class="learn-category-card" data-category="language">
+                <div class="learn-category-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                    </svg>
+                </div>
+                <h3 class="learn-category-title">일본어</h3>
+                <p class="learn-category-count">5개 강좌</p>
             </div>
-            <h3 class="learn-category-title">일본어</h3>
-            <p class="learn-category-count">5개 강좌</p>
-        </div>
-        <div class="learn-category-card" data-category="culture">
-            <div class="learn-category-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M2 12h20"/>
-                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                </svg>
+
+            <div class="learn-category-card" data-category="culture">
+                <div class="learn-category-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M2 12h20"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                </div>
+                <h3 class="learn-category-title">문화</h3>
+                <p class="learn-category-count">3개 강좌</p>
             </div>
-            <h3 class="learn-category-title">문화</h3>
-            <p class="learn-category-count">3개 강좌</p>
-        </div>
-        <div class="learn-category-card" data-category="travel">
-            <div class="learn-category-icon">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                    <circle cx="12" cy="10" r="3"/>
-                </svg>
+
+            <div class="learn-category-card" data-category="travel">
+                <div class="learn-category-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                </div>
+                <h3 class="learn-category-title">여행</h3>
+                <p class="learn-category-count">4개 강좌</p>
             </div>
-            <h3 class="learn-category-title">여행</h3>
-            <p class="learn-category-count">4개 강좌</p>
         </div>
-    </div>
-</section>
+    </section>
 
     <!-- 추천 강의 섹션 -->
     <section class="learn-section">
         <div class="learn-section-header">
-
+            <!-- (원본 유지: 비어있음) -->
         </div>
 
         <!-- 강의 카드 그리드 - DB에서 가져온 실제 강좌 표시 -->
         <div class="learn-course-grid">
 
             <!-- 강좌가 없는 경우 -->
-            <div th:if="${#lists.isEmpty(courses)}" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #666;">
+            <div th:if="${#lists.isEmpty(courses)}"
+                 style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #666;">
                 <p>등록된 강좌가 없습니다.</p>
             </div>
 
-            <!-- 강의 카드 반복 -->
+            <!-- ✅ course-detail 이동: 웹/유니티 분기 -->
             <a th:each="item : ${courses}"
-               th:href="@{/course-detail(id=${item.course.id})}"
+               th:href="${isUnity} ? @{/course-detail-unity(id=${item.course.id})} : @{/course-detail(id=${item.course.id})}"
                class="learn-course-card"
                th:data-course-id="${item.course.id}"
                th:data-category="${item.course.category != null ? item.course.category.name().toLowerCase() : 'etc'}">
@@ -95,6 +81,7 @@
                     <!-- 수강 상태 뱃지 -->
                     <span th:if="${item.enrollment != null and item.enrollment.status.name() == 'REQUESTED'}"
                           class="learn-course-badge" style="background: #ff9800;">승인대기</span>
+
                     <span th:if="${item.enrollment != null and item.enrollment.isAccessible() and item.progressPercent >= 100}"
                           class="learn-course-badge" style="background: #4caf50;">완료</span>
 
@@ -104,7 +91,9 @@
                         <div class="learn-progress-ring" th:classappend="${item.progressPercent >= 90 ? 'learn-progress-almost' : ''}">
                             <svg viewBox="0 0 36 36">
                                 <path class="learn-progress-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                                <path class="learn-progress-fill" th:attr="stroke-dasharray=${item.progressPercent + ', 100'}" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                                <path class="learn-progress-fill"
+                                      th:attr="stroke-dasharray=${item.progressPercent + ', 100'}"
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
                             </svg>
                             <span class="learn-progress-text" th:text="${item.progressPercent + '%'}">0%</span>
                         </div>
@@ -113,7 +102,9 @@
 
                 <div class="learn-course-body">
                     <h3 class="learn-course-title" th:text="${item.course.title}">강좌명</h3>
-                    <p class="learn-course-desc" th:text="${item.course.shortDesc != null ? item.course.shortDesc : '강좌 설명이 없습니다.'}">강좌 설명</p>
+                    <p class="learn-course-desc"
+                       th:text="${item.course.shortDesc != null ? item.course.shortDesc : '강좌 설명이 없습니다.'}">강좌 설명</p>
+
                     <div class="learn-course-meta">
                         <span class="learn-meta-item">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -124,6 +115,7 @@
                             </svg>
                             <span th:text="${item.course.totalLessonCount + '개 레슨'}">0개 레슨</span>
                         </span>
+
                         <span class="learn-meta-item">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"/>
@@ -131,6 +123,7 @@
                             </svg>
                             <span th:text="${item.course.formattedDuration}">미정</span>
                         </span>
+
                         <span class="learn-meta-item"
                               th:classappend="${item.course.level != null and item.course.level.name() == 'BEGINNER' ? 'learn-level-beginner' : (item.course.level != null and item.course.level.name() == 'INTERMEDIATE' ? 'learn-level-intermediate' : 'learn-level-advanced')}"
                               th:text="${item.course.levelDisplayName}">입문</span>
@@ -152,9 +145,11 @@
                             <th:block th:if="${item.course.enrollPolicy != null and item.course.enrollPolicy.name() == 'SELF'}">바로 수강</th:block>
                             <th:block th:if="${item.course.enrollPolicy == null or item.course.enrollPolicy.name() != 'SELF'}">수강 신청</th:block>
                         </button>
+
                         <!-- 승인 대기 중 -->
                         <span th:if="${item.enrollment != null and item.enrollment.status.name() == 'REQUESTED'}"
                               class="learn-status-badge pending">승인 대기 중</span>
+
                         <!-- 수강 가능: 학습 시작/이어하기 -->
                         <span th:if="${item.enrollment != null and item.enrollment.isAccessible() and item.progressPercent == 0}"
                               class="learn-course-link">학습 시작하기 &gt;</span>
@@ -165,116 +160,9 @@
                     </div>
                 </div>
             </a>
-
         </div>
     </section>
 
-    <style>
-        /* 수강신청 버튼 스타일 */
-        .learn-course-action {
-            margin-top: 12px;
-        }
-
-        .learn-enroll-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #e63946, #d62839);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            width: 100%;
-            justify-content: center;
-        }
-
-        .learn-enroll-btn:hover {
-            background: linear-gradient(135deg, #d62839, #c41e30);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
-        }
-
-        .learn-enroll-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .learn-status-badge {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .learn-status-badge.pending {
-            background: #fff3e0;
-            color: #e65100;
-        }
-
-        .learn-enroll-btn.btn-instant {
-            background: linear-gradient(135deg, #4caf50, #43a047);
-        }
-
-        .learn-enroll-btn.btn-instant:hover {
-            background: linear-gradient(135deg, #43a047, #388e3c);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-        }
-    </style>
-
-    <script th:src="@{/js/main.js}" src="/js/main.js"></script>
-    <script th:src="@{/js/learning.js}" src="/js/learning.js"></script>
-    <script>
-        // 수강 신청 함수
-        async function requestEnrollment(event, button) {
-            // 카드 링크 클릭 방지
-            event.preventDefault();
-            event.stopPropagation();
-
-            const courseId = button.dataset.courseId;
-            const policy = button.dataset.policy;
-
-            // 버튼 비활성화
-            button.disabled = true;
-            const originalText = button.innerHTML;
-            button.innerHTML = '처리 중...';
-
-            try {
-                const response = await fetch('/api/enrollments/request', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ courseId: parseInt(courseId) })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    alert(result.message);
-                    // 페이지 새로고침하여 상태 업데이트
-                    location.reload();
-                } else {
-                    alert(result.message || '수강 신청에 실패했습니다.');
-                    button.disabled = false;
-                    button.innerHTML = originalText;
-                }
-            } catch (error) {
-                console.error('수강 신청 오류:', error);
-                alert('오류가 발생했습니다. 다시 시도해주세요.');
-                button.disabled = false;
-                button.innerHTML = originalText;
-            }
-        }
-    </script>
-
-<div th:replace="fragments/main-footer :: mainFooter"></div>
-
-</body>
-</html>
+    <!-- ✅ JS에서 필요하면 쓰라고 isUnity도 같이 내려줌 (원본 유지) -->
+    <input type="hidden" id="isUnity" th:value="${isUnity}">
+</div>
