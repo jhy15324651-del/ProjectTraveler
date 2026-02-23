@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${course.title + ' - 일본 여행 LMS'}">강좌 상세 - 일본 여행 LMS</title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <link rel="stylesheet" th:href="@{/css/learn.css}" href="/css/learn.css">
+</head>
+<body class="main-page">
+
+<!-- ✅ WEB: 헤더 포함 -->
+<div th:replace="fragments/main-header :: mainHeader"></div>
+
+<!-- ✅ 본문 fragment 조립 -->
+<div th:replace="course-detail :: courseDetailContent"></div>
+
+<!-- ✅ WEB: 푸터 포함 -->
+<div th:replace="fragments/main-footer :: mainFooter"></div>
+
+<script th:src="@{/js/main.js}" src="/js/main.js"></script>
+<script th:src="@{/js/course.js}" src="/js/course.js"></script>
+<script th:src="@{/js/course-detail.js}" src="/js/course-detail.js"></script>
+
+</body>
+</html>

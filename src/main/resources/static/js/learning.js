@@ -12,6 +12,40 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /**
+ * ✅ isUnity 판별 (최소 개입)
+ * - body data-is-unity="true" (권장)
+ * - 또는 html root data-is-unity="true"
+ * - 또는 window.__APP_CONTEXT__.isUnity === true (있다면)
+ */
+function isUnityPage() {
+    if (window.__APP_CONTEXT__ && window.__APP_CONTEXT__.isUnity === true) return true;
+
+    const b = document.body;
+    if (b) {
+        const v = (b.getAttribute('data-is-unity') || '').toLowerCase().trim();
+        if (v === 'true' || v === '1' || v === 'yes') return true;
+    }
+
+    const root = document.documentElement;
+    if (root) {
+        const v = (root.getAttribute('data-is-unity') || '').toLowerCase().trim();
+        if (v === 'true' || v === '1' || v === 'yes') return true;
+    }
+
+    return false;
+}
+
+/**
+ * ✅ course-detail 이동 URL 생성 (요청사항 적용 포인트)
+ * - Unity면 /course-detail-unity?id=...
+ * - Web이면 /course-detail?id=...
+ */
+function buildCourseDetailUrl(courseId) {
+    const base = isUnityPage() ? '/course-detail-unity' : '/course-detail';
+    return `${base}?id=${encodeURIComponent(courseId)}`;
+}
+
+/**
  * 카테고리 카드 클릭 시 해당 카테고리로 필터링
  * 향후: /learning?category=language 형태로 URL 파라미터 처리
  */
@@ -105,7 +139,9 @@ function startCourse(courseId) {
     // 향후: 백엔드 API 호출 후 플레이어 페이지로 이동
     // window.location.href = `/learning/${courseId}/lessons/1`;
     console.log('Start course:', courseId);
-    window.location.href = `course-detail.html?id=${courseId}`;
+
+    // ✅ 요청사항: Unity면 unity route로, Web이면 web route로
+    window.location.href = buildCourseDetailUrl(courseId);
 }
 
 /**
