@@ -11,15 +11,13 @@
 <body>
 
 <!-- 헤더 없음 (유니티) -->
-
+<main th:replace="planner/planner :: plannerContent"></main>
 <!-- 플래너 목록 콘텐츠 -->
 <div th:replace="planner/planner :: plannerContent"></div>
 
 <!-- 플래너 랜딩 콘텐츠 -->
 <script th:src="@{/js/main.js}" src="/js/main.js"></script>
-
 <script th:src="@{/js/unity-bridge.js}"></script>
-
 <script th:inline="javascript">
     /*<![CDATA[*/
     // ✅ 1. 주석 문법을 사용하여 IDE 에러를 방지하고, 타임리프가 없을 때의 기본값("Guest")을 설정합니다.
