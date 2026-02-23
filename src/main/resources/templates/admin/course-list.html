@@ -58,6 +58,7 @@
         <a th:href="@{/admin/courses}" href="/admin/courses" class="active">강좌 관리</a>
         <a th:href="@{/admin/enrollments/requests}" href="/admin/enrollments/requests">수강 승인</a>
         <a th:href="@{/admin/enrollments/assign}" href="/admin/enrollments/assign">강좌 배정</a>
+        <a th:href="@{/admin/course-qna}">Q&A 관리</a>
     </div>
 
     <table class="admin-table">
@@ -91,6 +92,7 @@
                 <td>
                     <a th:href="@{/admin/courses/{id}(id=${c.id})}" class="btn-view">상세</a>
                     <a th:href="@{/admin/quiz/course/{id}(id=${c.id})}" class="btn-edit" style="background:#ff9800;">퀴즈</a>
+                    <a th:href="@{/admin/course-resources/{id}(id=${c.id})}" class="btn-edit" style="background:#9c27b0;">자료실</a>
                     <a th:href="@{/admin/courses/{id}/edit(id=${c.id})}" class="btn-edit">수정</a>
                     <button class="btn-delete"
                             th:data-id="${c.id}"

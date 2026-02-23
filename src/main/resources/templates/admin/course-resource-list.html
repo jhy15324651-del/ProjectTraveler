@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${course.title + ' - 자료실 관리'}">자료실 관리</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <style>
+        .admin-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .admin-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+        .admin-subtitle { color: #666; margin-bottom: 30px; }
+        .admin-nav { margin-bottom: 30px; display: flex; gap: 15px; flex-wrap: wrap; }
+        .admin-nav a { padding: 10px 20px; background: #f5f5f5; border-radius: 8px; text-decoration: none; color: #333; }
+        .admin-nav a.active { background: var(--primary-red); color: white; }
+
+        .course-info-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .course-info h2 { margin: 0 0 10px 0; font-size: 20px; }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-title { font-size: 18px; font-weight: 600; }
+        .btn-add { background: var(--primary-red); color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; }
+        .btn-add:hover { background: #b71c1c; }
+
+        .resource-list { display: flex; flex-direction: column; gap: 12px; }
+        .resource-card { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+        .resource-info { flex: 1; min-width: 0; }
+        .resource-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+        .resource-meta { font-size: 13px; color: #666; display: flex; gap: 15px; flex-wrap: wrap; }
+        .resource-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; background: #e3f2fd; color: #1565c0; }
+        .resource-badge.inactive { background: #fce4ec; color: #c62828; }
+        .resource-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .btn-edit { background: #2196f3; color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-delete { background: #f44336; color: white; border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+
+        .empty-state { padding: 60px 20px; text-align: center; color: #666; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; padding: 30px; border-radius: 12px; width: 100%; max-width: 550px; max-height: 90vh; overflow-y: auto; }
+        .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary-red); }
+        .form-group .help-text { font-size: 12px; color: #666; margin-top: 5px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-submit { flex: 1; padding: 12px; background: var(--primary-red); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-cancel { flex: 1; padding: 12px; background: #f5f5f5; color: #333; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body class="main-page">
+<div th:replace="~{fragments/main-header :: mainHeader}"></div>
+
+<div class="admin-container">
+    <h1 class="admin-title">자료실 관리</h1>
+    <p class="admin-subtitle">강좌에 학습 자료를 업로드하고 관리합니다.</p>
+
+    <div class="admin-nav">
+        <a th:href="@{/admin/courses}">강좌 관리</a>
+        <a th:href="@{/admin/courses/{id}(id=${course.id})}">레슨 관리</a>
+        <a th:href="@{/admin/quiz/course/{id}(id=${course.id})}">퀴즈 관리</a>
+        <a th:href="@{/admin/course-resources/{id}(id=${course.id})}" class="active">자료실 관리</a>
+        <a th:href="@{/admin/enrollments/requests}">수강 승인</a>
+    </div>
+
+    <div class="course-info-card">
+        <div class="course-info">
+            <h2 th:text="${course.title}">강좌명</h2>
+            <p style="color: #666; margin: 0;" th:text="${course.shortDesc}">강좌 설명</p>
+        </div>
+    </div>
+
+    <div class="section-header">
+        <span class="section-title" th:text="'자료 목록 (' + ${#lists.size(resources)} + '개)'">자료 목록</span>
+        <button class="btn-add" onclick="openUploadModal()">+ 자료 업로드</button>
+    </div>
+
+    <div class="resource-list" th:if="${!#lists.isEmpty(resources)}">
+        <div th:each="res : ${resources}" class="resource-card">
+            <div class="resource-info">
+                <div class="resource-title" th:text="${res.title}">자료 제목</div>
+                <div class="resource-meta">
+                    <span th:text="${res.originalFileName}">파일명</span>
+                    <span th:text="${res.fileSize != null ? (res.fileSize / 1024) + 'KB' : ''}">크기</span>
+                    <span th:text="'다운로드: ' + ${res.downloadCount} + '회'">다운로드: 0회</span>
+                    <span class="resource-badge"
+                          th:classappend="${!res.active ? 'inactive' : ''}"
+                          th:if="${res.unit != null}"
+                          th:text="${res.unit.title}">유닛명</span>
+                    <span class="resource-badge" th:if="${res.unit == null}">공통</span>
+                    <span class="resource-badge inactive" th:if="${!res.active}">비활성</span>
+                </div>
+            </div>
+            <div class="resource-actions">
+                <button class="btn-edit"
+                        th:data-id="${res.id}"
+                        th:data-title="${res.title}"
+                        th:data-description="${res.description}"
+                        th:data-unit-id="${res.unit?.id}"
+                        th:data-sort-order="${res.sortOrder}"
+                        onclick="openEditModal(this)">수정</button>
+                <button class="btn-delete" th:data-id="${res.id}" onclick="deleteResource(this)">삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="empty-state" th:if="${#lists.isEmpty(resources)}">
+        <p>등록된 자료가 없습니다.</p>
+        <p>"자료 업로드" 버튼을 클릭하여 학습 자료를 등록하세요.</p>
+    </div>
+</div>
+
+<!-- 업로드 모달 -->
+<div class="modal-overlay" id="uploadModal">
+    <div class="modal">
+        <h3 class="modal-title">자료 업로드</h3>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="uploadTitle">자료 제목 *</label>
+                <input type="text" id="uploadTitle" required placeholder="예: 1강 보충 자료">
+            </div>
+            <div class="form-group">
+                <label for="uploadDescription">설명</label>
+                <textarea id="uploadDescription" rows="3" placeholder="자료에 대한 설명"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="uploadUnit">연결 유닛 (선택)</label>
+                <select id="uploadUnit">
+                    <option value="">공통 자료</option>
+                    <option th:each="unit : ${units}" th:value="${unit.id}" th:text="${unit.title}">유닛</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="uploadFile">파일 *</label>
+                <input type="file" id="uploadFile" required>
+                <p class="help-text">모든 파일 유형 업로드 가능합니다.</p>
+            </div>
+            <div class="form-group">
+                <label for="uploadSortOrder">정렬 순서</label>
+                <input type="number" id="uploadSortOrder" value="0" min="0">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeModal('uploadModal')">취소</button>
+                <button type="submit" class="btn-submit" id="uploadBtn">업로드</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 수정 모달 -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal">
+        <h3 class="modal-title">자료 수정</h3>
+        <form id="editForm">
+            <input type="hidden" id="editId">
+            <div class="form-group">
+                <label for="editTitle">자료 제목 *</label>
+                <input type="text" id="editTitle" required>
+            </div>
+            <div class="form-group">
+                <label for="editDescription">설명</label>
+                <textarea id="editDescription" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="editUnit">연결 유닛</label>
+                <select id="editUnit">
+                    <option value="">공통 자료</option>
+                    <option th:each="unit : ${units}" th:value="${unit.id}" th:text="${unit.title}">유닛</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="editSortOrder">정렬 순서</label>
+                <input type="number" id="editSortOrder" value="0" min="0">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeModal('editModal')">취소</button>
+                <button type="submit" class="btn-submit">수정</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const courseId = /*[[${course.id}]]*/ 0;
+
+    function openUploadModal() {
+        document.getElementById('uploadForm').reset();
+        document.getElementById('uploadModal').classList.add('active');
+    }
+
+    function openEditModal(button) {
+        document.getElementById('editId').value = button.dataset.id;
+        document.getElementById('editTitle').value = button.dataset.title || '';
+        document.getElementById('editDescription').value = button.dataset.description || '';
+        document.getElementById('editUnit').value = button.dataset.unitId || '';
+        document.getElementById('editSortOrder').value = button.dataset.sortOrder || 0;
+        document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    }
+
+    document.getElementById('uploadModal').addEventListener('click', function(e) { if (e.target === this) closeModal('uploadModal'); });
+    document.getElementById('editModal').addEventListener('click', function(e) { if (e.target === this) closeModal('editModal'); });
+
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('uploadBtn');
+        btn.disabled = true;
+        btn.textContent = '업로드 중...';
+
+        const formData = new FormData();
+        formData.append('title', document.getElementById('uploadTitle').value.trim());
+        formData.append('description', document.getElementById('uploadDescription').value.trim());
+        formData.append('file', document.getElementById('uploadFile').files[0]);
+        formData.append('sortOrder', document.getElementById('uploadSortOrder').value || 0);
+        const unitId = document.getElementById('uploadUnit').value;
+        if (unitId) formData.append('unitId', unitId);
+
+        try {
+            const res = await fetch(`/admin/course-resources/api/${courseId}/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await res.json();
+            if (result.success) {
+                location.reload();
+            } else {
+                alert(result.message || '업로드에 실패했습니다.');
+            }
+        } catch (error) {
+            alert('서버 오류가 발생했습니다.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '업로드';
+        }
+    });
+
+    document.getElementById('editForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('editId').value;
+
+        try {
+            const res = await fetch(`/admin/course-resources/api/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: document.getElementById('editTitle').value.trim(),
+                    description: document.getElementById('editDescription').value.trim(),
+                    unitId: document.getElementById('editUnit').value || null,
+                    sortOrder: parseInt(document.getElementById('editSortOrder').value) || 0
+                })
+            });
+            const result = await res.json();
+            if (result.success) {
+                location.reload();
+            } else {
+                alert(result.message || '수정에 실패했습니다.');
+            }
+        } catch (error) {
+            alert('서버 오류가 발생했습니다.');
+        }
+    });
+
+    async function deleteResource(button) {
+        if (!confirm('정말 이 자료를 삭제하시겠습니까?')) return;
+        const id = button.dataset.id;
+        try {
+            const res = await fetch(`/admin/course-resources/api/${id}`, { method: 'DELETE' });
+            const result = await res.json();
+            if (result.success) {
+                location.reload();
+            } else {
+                alert(result.message || '삭제에 실패했습니다.');
+            }
+        } catch (error) {
+            alert('서버 오류가 발생했습니다.');
+        }
+    }
+</script>
+</body>
+</html>

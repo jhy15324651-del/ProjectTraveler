@@ -68,6 +68,8 @@
         <a th:href="@{/admin/courses}">강좌 관리</a>
         <a th:href="@{/admin/courses/{id}(id=${course.id})}" class="active">레슨 관리</a>
         <a th:href="@{/admin/quiz/course/{id}(id=${course.id})}">퀴즈 관리</a>
+        <a th:href="@{/admin/course-resources/{id}(id=${course.id})}">자료실 관리</a>
+        <a th:href="@{/admin/course-qna}">Q&A 관리</a>
         <a th:href="@{/admin/enrollments/requests}">수강 승인</a>
         <a th:href="@{/admin/enrollments/assign}">강좌 배정</a>
     </div>
