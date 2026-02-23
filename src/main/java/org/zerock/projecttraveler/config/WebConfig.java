@@ -42,6 +42,14 @@ public class WebConfig implements WebMvcConfigurer {
         // 본문 이미지
         registry.addResourceHandler("/uploads/info-content/**")
                 .addResourceLocations("file:" + imageUploadPath + "/info-content/");
+
+        // ✅ 강좌 자료실 파일 서빙
+        registry.addResourceHandler("/uploads/course-resources/**")
+                .addResourceLocations("file:" + imageUploadPath + "/course-resources/");
+
+        // ✅ Q&A 이미지 파일 서빙
+        registry.addResourceHandler("/uploads/qna/**")
+                .addResourceLocations("file:" + imageUploadPath + "/qna/");
     }
 
     private String ensureSlash(String path) {

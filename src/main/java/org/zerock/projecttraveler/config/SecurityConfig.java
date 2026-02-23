@@ -53,7 +53,8 @@ public class SecurityConfig {
 
             // CSRF 설정
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**", "/admin/courses/api/**", "/admin/enrollments/api/**", "/admin/quiz/api/**") // API는 CSRF 비활성화
+                .ignoringRequestMatchers("/api/**", "/admin/courses/api/**", "/admin/enrollments/api/**",
+                    "/admin/quiz/api/**", "/admin/course-resources/api/**", "/admin/course-qna/api/**") // API는 CSRF 비활성화
             )
             // 인증/인가 규칙
             .authorizeHttpRequests(auth -> auth

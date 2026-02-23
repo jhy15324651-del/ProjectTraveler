@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./gradlew bootRun:*)"
+      "Bash(./gradlew bootRun:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(./gradlew compileJava:*)",
+      "Bash(cmd.exe /c \"gradlew.bat compileJava\")"
     ]
   }
 }
