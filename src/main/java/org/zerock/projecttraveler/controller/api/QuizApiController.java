@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.zerock.projecttraveler.dto.ApiResponse;
 import org.zerock.projecttraveler.dto.QuizDto;
 import org.zerock.projecttraveler.security.SecurityUtils;
+import org.zerock.projecttraveler.service.CertificateService;
 import org.zerock.projecttraveler.service.QuizService;
 
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.Map;
 public class QuizApiController {
 
     private final QuizService quizService;
+    private final CertificateService certificateService;
 
     /**
      * 강좌의 퀴즈 조회 (문제 포함, 정답 미포함)
@@ -92,6 +94,8 @@ public class QuizApiController {
 
         try {
             QuizDto.SubmitResult result = quizService.submitQuiz(userId, request);
+            quizService.getCourseIdByQuizId(request.getQuizId())
+                    .ifPresent(courseId -> certificateService.tryIssueCertificate(userId, courseId));
             return ResponseEntity.ok(ApiResponse.success(result));
         } catch (IllegalStateException e) {
             // 응시 불가 상태 (RETAKE_REQUIRED, 이미 합격, 횟수 초과)

@@ -188,4 +188,24 @@ public class CertificateService {
     public int getCertificateCount(Long userId) {
         return certificateRepository.countByUserId(userId);
     }
+
+    /**
+     * 자동발급용 - 조건 미충족·중복 시 조용히 리턴
+     */
+    @Transactional
+    public void tryIssueCertificate(Long userId, Long courseId) {
+        try {
+            issueCertificate(userId, courseId);
+        } catch (Exception e) {
+            log.debug("tryIssueCertificate skipped: userId={}, courseId={}, reason={}", userId, courseId, e.getMessage());
+        }
+    }
+
+    /**
+     * View용 수료증 조회 (User+Course JOIN FETCH)
+     */
+    public Optional<CertificateDto.CertificateInfo> getCertificateForView(Long id) {
+        return certificateRepository.findByIdWithUserAndCourse(id)
+                .map(CertificateDto.CertificateInfo::from);
+    }
 }

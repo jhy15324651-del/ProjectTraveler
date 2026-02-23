@@ -22,6 +22,7 @@ public class CertificateDto {
         private Integer quizPercent;
         private String issuedAt;
         private Boolean pdfAvailable;
+        private String userName;
 
         public static CertificateInfo from(Certificate certificate) {
             return CertificateInfo.builder()
@@ -35,6 +36,8 @@ public class CertificateDto {
                     .issuedAt(certificate.getIssuedAt() != null ?
                             certificate.getIssuedAt().format(DateTimeFormatter.ofPattern("yyyy.MM.dd")) : null)
                     .pdfAvailable(certificate.isPdfGenerated())
+                    .userName(certificate.getUser().getFullName() != null ?
+                            certificate.getUser().getFullName() : certificate.getUser().getUsername())
                     .build();
         }
     }
