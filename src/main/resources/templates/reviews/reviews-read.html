@@ -76,10 +76,12 @@
             <span class="chip"
                   th:if="${post.travelType != null and !post.travelType.isEmpty()}"
                   th:text="${
-                      post.travelType == 'solo'    ? '혼자' :
-                      post.travelType == 'couple'  ? '커플' :
-                      post.travelType == 'family'  ? '가족' :
-                      post.travelType == 'friends' ? '친구' :
+                      post.travelType == 'solo'    ? '🧍혼자' :
+                      post.travelType == 'couple'  ? '💕커플' :
+                      post.travelType == 'family'  ? '‍👨‍👩‍👧‍👦가족' :
+                      post.travelType == 'friends' ? '‍🧑‍🤝‍🧑친구' :
+                       post.travelType == 'withBaby' ? '👶아이 동반' :
+                        post.travelType == 'peoples' ? '🧑‍🤝‍🧑단체' :
                       post.travelType
                   }">유형</span>
 
@@ -87,11 +89,12 @@
             <th:block th:if="${post.themes != null and !post.themes.isEmpty()}">
                 <span class="chip"
                      th:each="thm : ${post.themes}"
-                     th:text="${thm == 'freedom'  ? '자유여행' :
-                                thm == 'healing'  ? '힐링' :
-                                thm == 'food'     ? '맛집' :
-                                thm == 'activity' ? '액티비티' :
-                                thm == 'nature'   ? '자연' :
+                     th:text="${thm == 'freedom'  ? '🕊️자유여행' :
+                                thm == 'healing'  ? '🌿힐링' :
+                                thm == 'food'     ? '🍣맛집' :
+                                thm == 'activity' ? '🎢액티비티' :
+                                thm == 'nature'   ? '🌲자연' :
+                                   thm == 'shopping'   ? '🛍️쇼핑' :
                                 thm}">테마</span>
             </th:block>
             <!-- 기간 -->

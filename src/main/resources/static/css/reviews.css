@@ -847,10 +847,6 @@
     outline-offset: 2px;
 }
 
-body.reviews-page{
-    background: linear-gradient(to bottom, #FDF2F2, var(--white));
-}
-
 .reviews-hero__titleRow{
     display: flex;
     align-items: center;
@@ -1026,6 +1022,65 @@ body.reviews-page{
     white-space: nowrap;
 }
 
+/* =========================================
+   REVIEWS PAGE BG (blur photo + overlay)
+   - 적용 대상: body에 reviews-page 클래스가 붙는 전제
+   - 컨텐츠(.reviews)는 선명, 배경만 흐릿
+========================================= */
+
+body.reviews-page{
+    position: relative;
+    min-height: 100vh;
+
+    /* 기존 그라데이션은 "fallback"로만 */
+    background: linear-gradient(to bottom, #FDF2F2, #ffffff);
+    overflow-x: hidden;
+}
+
+/* 배경 이미지 레이어(블러) */
+body.reviews-page::before{
+    content: "";
+    position: fixed;          /* 스크롤에도 배경 고정 */
+    inset: 0;
+    z-index: 0;
+
+    background: url("/images/reviews-blur.jpg") center/cover no-repeat;
+
+    filter: blur(5px);
+    transform: scale(1.08);   /* 블러 가장자리 빈틈 방지 */
+    opacity: 0.95;
+}
+
+/* 가독성용 오버레이(밝게) */
+body.reviews-page::after{
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+
+    /* 현재 UI 톤이 밝아서 흰 오버레이가 안정적 */
+    background: rgba(255,255,255,0.72);
+}
+
+/* 실제 내용은 배경보다 위로 */
+body.reviews-page .reviews{
+    position: relative;
+    z-index: 2;
+}
+
+/* 배경 위 카드 유리감 옵션 (원하면만) */
+body.reviews-page .reviews .filter-panel,
+body.reviews-page .reviews .post-card,
+body.reviews-page .reviews .reviews-pagination{
+    background: rgba(255,255,255,0.80);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+body.reviews-page footer{
+    position: relative;
+    z-index: 2;
+}
 
 /* =========================
    7) Responsive
