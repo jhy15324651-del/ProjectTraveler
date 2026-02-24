@@ -38,10 +38,13 @@
 
                 <div class="filter-chips" data-key="travelType" data-mode="single">
                     <button type="button" class="chip" data-value="">전체</button>
-                    <button type="button" class="chip" data-value="solo">혼자</button>
-                    <button type="button" class="chip" data-value="couple">커플</button>
-                    <button type="button" class="chip" data-value="family">가족</button>
-                    <button type="button" class="chip" data-value="friends">친구</button>
+                    <button type="button" class="chip" data-value="solo">🧍혼자</button>
+                    <button type="button" class="chip" data-value="couple">💕커플</button>
+                    <button type="button" class="chip" data-value="family">👨‍👩‍👧‍👦가족</button>
+                    <button type="button" class="chip" data-value="friends">🧑‍🤝‍🧑친구</button>
+                    <button type="button" class="chip" data-value="withBaby">👶아이 동반</button>
+                    <button type="button" class="chip" data-value="peoples">🧑‍🤝‍🧑단체</button>
+
                 </div>
 
                 <input type="hidden" id="f_travelType" name="travelType"
@@ -58,11 +61,12 @@
                 <!-- ✅ single -> multi-or -->
                 <div class="filter-chips" data-key="theme" data-mode="multi-or">
                     <button type="button" class="chip" data-value="">전체</button>
-                    <button type="button" class="chip" data-value="freedom">자유</button>
-                    <button type="button" class="chip" data-value="healing">힐링</button>
-                    <button type="button" class="chip" data-value="food">맛집</button>
-                    <button type="button" class="chip" data-value="activity">액티비티</button>
-                    <button type="button" class="chip" data-value="nature">자연</button>
+                    <button type="button" class="chip" data-value="freedom">🕊️자유</button>
+                    <button type="button" class="chip" data-value="healing">🌿힐링</button>
+                    <button type="button" class="chip" data-value="food">🍣맛집</button>
+                    <button type="button" class="chip" data-value="activity">🎢액티비티</button>
+                    <button type="button" class="chip" data-value="nature">🌲자연</button>
+                    <button type="button" class="chip" data-value="shopping">🛍️쇼핑</button>
                 </div>
 
                 <!-- ✅ multi hidden inputs -->
@@ -135,6 +139,10 @@
                     <button type="button" class="chip" data-value="1박2일">1박2일</button>
                     <button type="button" class="chip" data-value="2박3일">2박3일</button>
                     <button type="button" class="chip" data-value="3박4일">3박4일</button>
+                    <button type="button" class="chip" data-value="4박5일">4박5일</button>
+                    <button type="button" class="chip" data-value="5박6일">5박6일</button>
+                    <button type="button" class="chip" data-value="6박7일">6박7일</button>
+                    <button type="button" class="chip" data-value="장기여행">장기여행</button>
                 </div>
 
                 <div id="periodInputs">
@@ -291,20 +299,25 @@
 
                         <span class="badge"
                               th:if="${post.travelType != null}"
-                              th:text="${post.travelType == 'solo' ? '혼자' :
-                                       post.travelType == 'couple' ? '커플' :
-                                       post.travelType == 'family' ? '가족' :
-                                       post.travelType == 'friends' ? '친구' :
-                                       post.travelType}">유형</span>
+                              th:text="${
+                      post.travelType == 'solo'    ? '🧍혼자' :
+                      post.travelType == 'couple'  ? '💕커플' :
+                      post.travelType == 'family'  ? '‍👨‍👩‍👧‍👦가족' :
+                      post.travelType == 'friends' ? '‍🧑‍🤝‍🧑친구' :
+                       post.travelType == 'withBaby' ? '👶아이 동반' :
+                        post.travelType == 'peoples' ? '🧑‍🤝‍🧑단체' :
+                      post.travelType
+                  }">유형</span>
 
                         <span class="badge"
                               th:each="thm : ${post.themes}"
-                              th:text="${thm == 'freedom' ? '자유여행' :
-                                        thm == 'healing' ? '힐링' :
-                                        thm == 'food' ? '맛집' :
-                                        thm == 'activity' ? '액티비티' :
-                                        thm == 'nature' ? '자연' :
-                                        thm}"></span>
+                              th:text="${thm == 'freedom'  ? '🕊️자유여행' :
+                                thm == 'healing'  ? '🌿힐링' :
+                                thm == 'food'     ? '🍣맛집' :
+                                thm == 'activity' ? '🎢액티비티' :
+                                thm == 'nature'   ? '🌲자연' :
+                                   thm == 'shopping'   ? '🛍️쇼핑' :
+                                thm}">테마</span>
 
                         <span class="badge"
                               th:if="${post.period != null}"

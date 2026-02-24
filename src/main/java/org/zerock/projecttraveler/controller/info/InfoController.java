@@ -32,34 +32,34 @@ public class InfoController {
            ====================================================== */
         List<Map<String, String>> regions = List.of(
                 // 홋카이도
-                Map.of("key", "asahikawa", "label", "❄\uFE0F 아사히카와", "group", "홋카이도"),
-                Map.of("key", "sapporo",   "label", "\uD83C\uDF03 삿포로",     "group", "홋카이도"),
-                Map.of("key", "hakodate",  "label", "⚓ 하코다테",   "group", "홋카이도"),
+                Map.of("key", "asahikawa", "label", "❄\uFE0F 아사히카와 (Asahikawa)", "group", "홋카이도 (Hokkaido)"),
+                Map.of("key", "sapporo",   "label", "\uD83C\uDF03 삿포로 (Sapporo)",     "group", "홋카이도 (Hokkaido)"),
+                Map.of("key", "hakodate",  "label", "⚓ 하코다테 (Hakodate)",   "group", "홋카이도 (Hokkaido)"),
 
                 // 혼슈
-                Map.of("key", "tokyo",     "label", "\uD83D\uDDFC 도쿄",       "group", "혼슈"),
-                Map.of("key", "osaka",     "label", "\uD83C\uDF5C 오사카",     "group", "혼슈"),
-                Map.of("key", "nagoya",    "label", "\uD83C\uDFED 나고야",     "group", "혼슈"),
-                Map.of("key", "hiroshima", "label", "\uD83D\uDD4A 히로시마",   "group", "혼슈"),
-                Map.of("key", "kyoto",     "label", "⛩ 교토",       "group", "혼슈"),
+                Map.of("key", "tokyo",     "label", "\uD83D\uDDFC 도쿄 (Tokyo)",       "group", "혼슈 (Honshu)"),
+                Map.of("key", "osaka",     "label", "\uD83C\uDF5C 오사카 (Osaka)",     "group", "혼슈 (Honshu)"),
+                Map.of("key", "nagoya",    "label", "\uD83C\uDFED 나고야 (Nagoya)",     "group", "혼슈 (Honshu)"),
+                Map.of("key", "hiroshima", "label", "\uD83D\uDD4A 히로시마 (Hiroshima)",   "group", "혼슈 (Honshu)"),
+                Map.of("key", "kyoto",     "label", "⛩ 교토 (Kyoto)",       "group", "혼슈 (Honshu)"),
 
                 // 시코쿠
-                Map.of("key", "kochi",     "label", "\uD83C\uDF0A 고치",       "group", "시코쿠"),
-                Map.of("key", "matsuyama", "label", "♨\uFE0F 마쓰야마",   "group", "시코쿠"),
-                Map.of("key", "takamatsu", "label", "\uD83C\uDFEF 다카마쓰",   "group", "시코쿠"),
+                Map.of("key", "kochi",     "label", "\uD83C\uDF0A 고치 (Kochi)",       "group", "시코쿠 (Shikoku)"),
+                Map.of("key", "matsuyama", "label", "♨\uFE0F 마쓰야마 (Matsuyama)",   "group", "시코쿠 (Shikoku)"),
+                Map.of("key", "takamatsu", "label", "\uD83C\uDFEF 다카마쓰 (Takamatsu)",   "group", "시코쿠 (Shikoku)"),
 
                 // 큐슈 (+ 오키나와 포함)
-                Map.of("key", "kitakyushu","label", "\uD83C\uDFED 기타큐슈",   "group", "큐슈"),
-                Map.of("key", "nagasaki",  "label", "⛵ 나가사키",   "group", "큐슈"),
-                Map.of("key", "kumamoto",  "label", "\uD83C\uDFEF 구마모토",   "group", "큐슈"),
-                Map.of("key", "fukuoka",   "label", "\uD83C\uDF06 후쿠오카",   "group", "큐슈"),
-                Map.of("key", "okinawa",   "label", "\uD83C\uDF3A 오키나와",   "group", "큐슈")
+                Map.of("key", "kitakyushu","label", "\uD83C\uDFED 기타큐슈 (Kitakyushu)",   "group", "큐슈 (Kyūshū)"),
+                Map.of("key", "nagasaki",  "label", "⛵ 나가사키 (Nagasaki)",   "group", "큐슈 (Kyūshū)"),
+                Map.of("key", "kumamoto",  "label", "\uD83C\uDFEF 구마모토 (Kumamoto)",   "group", "큐슈 (Kyūshū)"),
+                Map.of("key", "fukuoka",   "label", "\uD83C\uDF06 후쿠오카 (Fukuoka)",   "group", "큐슈 (Kyūshū)"),
+                Map.of("key", "okinawa",   "label", "\uD83C\uDF3A 오키나와 (Okinawa)",   "group", "큐슈 (Kyūshū)")
         );
 
         /* ======================================================
            2) 그룹 목록 (사이드바 아코디언 순서 제어)
            ====================================================== */
-        List<String> groups = List.of("홋카이도", "혼슈", "시코쿠", "큐슈");
+        List<String> groups = List.of("홋카이도 (Hokkaido)", "혼슈 (Honshu)", "시코쿠 (Shikoku)", "큐슈 (Kyūshū)");
 
         /* ======================================================
            3) region / tab 유효성 보정
