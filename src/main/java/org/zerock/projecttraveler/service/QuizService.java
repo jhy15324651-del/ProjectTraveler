@@ -353,27 +353,6 @@ public class QuizService {
     }
 
     /**
-     * 재수강 버튼 클릭 시 진도 완전 초기화
-     * - lesson_progress 삭제
-     * - quizStatus = IN_PROGRESS
-     * - quizCycle 증가 (사이클 내 시도 횟수 리셋)
-     */
-    @Transactional
-    public void resetCourseForRetake(Long userId, Long courseId) {
-        CourseEnrollment enrollment = enrollmentRepository
-                .findByUserIdAndCourseId(userId, courseId)
-                .orElseThrow(() -> new IllegalArgumentException("수강 정보를 찾을 수 없습니다."));
-
-        lessonProgressRepository.deleteByUserIdAndCourseId(userId, courseId);
-
-        enrollment.setQuizStatus(CourseEnrollment.QuizStatus.IN_PROGRESS);
-        enrollment.setQuizCycle(enrollment.getQuizCycle() + 1);
-        enrollmentRepository.save(enrollment);
-
-        log.info("Course reset for retake: userId={}, courseId={}", userId, courseId);
-    }
-
-    /**
      * 재수강 시작 (RETAKE_REQUIRED 상태에서만)
      */
     @Transactional
