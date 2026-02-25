@@ -207,6 +207,18 @@ public class QuizApiController {
     }
 
     /**
+     * 퀴즈별 개별 상태 조회 (사이클 인식)
+     * GET /api/quiz/{quizId}/status
+     */
+    @GetMapping("/{quizId}/status")
+    public ResponseEntity<?> getQuizStatusByQuizId(@PathVariable Long quizId) {
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+        return quizService.getQuizStatusByQuizId(userId, quizId)
+                .map(status -> ResponseEntity.ok(ApiResponse.success(status)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
      * 응시 가능 여부 확인
      * GET /api/quiz/{quizId}/can-attempt
      */

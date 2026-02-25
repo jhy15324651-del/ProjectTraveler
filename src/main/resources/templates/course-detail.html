@@ -6,6 +6,8 @@
     <title th:text="${course.title + ' - 일본 여행 LMS'}" >강좌 상세 - 일본 여행 LMS</title>
     <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
     <link rel="stylesheet" th:href="@{/css/learn.css}" href="/css/learn.css">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body class="main-page">
 
@@ -376,47 +378,35 @@
             for (const card of quizCards) {
                 const quizId = card.getAttribute('data-quiz-id');
                 try {
-                    const res = await fetch(`/api/quiz/${quizId}/can-attempt`);
-                    const data = await res.json();
-
-                    // 퀴즈별 상세 상태도 가져오기
-                    const statusRes = await fetch(`/api/quiz/status/${courseId}`);
+                    // 사이클 인식 개별 퀴즈 상태 조회 (합격/응시가능/재수강 모두 포함)
+                    const statusRes = await fetch(`/api/quiz/${quizId}/status`);
                     const statusData = await statusRes.json();
+                    const status = statusData.success && statusData.data ? statusData.data : null;
 
                     const actionArea = card.querySelector('.quiz-action-area');
                     const iconEl = card.querySelector('div[style*="border-radius: 50%"]');
 
-                    // 개별 퀴즈 상태를 /api/quiz/{quizId}/can-attempt + history로 판단
-                    const histRes = await fetch(`/api/quiz/${quizId}/history`);
-                    const histData = await histRes.json();
+                    if (!status) continue;
 
-                    // 합격 여부 확인
-                    const passedAttempt = histData.success && histData.data ?
-                        histData.data.find(a => a.passed) : null;
-
-                    if (passedAttempt) {
+                    if (status.quizStatusCode === 'PASSED') {
                         iconEl.textContent = '\u2713';
                         iconEl.style.background = '#e8f5e9';
                         iconEl.style.color = '#2e7d32';
-                        card.querySelector('div[style*="font-size: 13px"]').textContent = '최고 점수: ' + passedAttempt.scorePercent + '점';
+                        card.querySelector('div[style*="font-size: 13px"]').textContent = '최고 점수: ' + status.bestScore + '점';
                         actionArea.innerHTML = '<span style="padding: 8px 16px; background: #e8f5e9; color: #2e7d32; border-radius: 20px; font-size: 13px; font-weight: 600;">합격</span>';
-                    } else if (data.success && data.data && data.data.canAttempt) {
+                    } else if (status.quizStatusCode === 'RETAKE_REQUIRED') {
+                        iconEl.textContent = '\uD83D\uDCDA';
+                        iconEl.style.background = '#fff3e0';
+                        card.querySelector('div[style*="font-size: 13px"]').textContent = '재수강이 필요합니다.';
+                        actionArea.innerHTML = `<button onclick="retakeCourse(${courseId})" style="padding: 10px 24px; background: #ff9800; color: white; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 14px;">재수강</button>`;
+                    } else if (status.quizStatusCode === 'RETRY_ALLOWED') {
+                        iconEl.style.background = '#fff3e0';
+                        card.querySelector('div[style*="font-size: 13px"]').textContent = '오답 확인 후 2차 시험에 응시하세요.';
+                        actionArea.innerHTML = `<a href="/quiz?courseId=${courseId}&quizId=${quizId}" style="padding: 10px 24px; background: var(--primary-red); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">퀴즈 응시</a>`;
+                    } else if (status.canAttempt) {
                         actionArea.innerHTML = `<a href="/quiz?courseId=${courseId}&quizId=${quizId}" style="padding: 10px 24px; background: var(--primary-red); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">퀴즈 응시</a>`;
                     } else {
-                        // 응시 불가 - 상태 메시지 표시
-                        const attempts = histData.success && histData.data ? histData.data.length : 0;
-                        if (attempts >= 2) {
-                            iconEl.textContent = '\uD83D\uDCDA';
-                            iconEl.style.background = '#fff3e0';
-                            card.querySelector('div[style*="font-size: 13px"]').textContent = '재수강이 필요합니다.';
-                            actionArea.innerHTML = `<a href="/quiz?courseId=${courseId}&quizId=${quizId}" style="padding: 10px 24px; background: #ff9800; color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">재수강</a>`;
-                        } else if (attempts === 1) {
-                            iconEl.style.background = '#fff3e0';
-                            card.querySelector('div[style*="font-size: 13px"]').textContent = '오답 확인 후 2차 시험에 응시하세요.';
-                            actionArea.innerHTML = `<a href="/quiz?courseId=${courseId}&quizId=${quizId}" style="padding: 10px 24px; background: var(--primary-red); color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">퀴즈 응시</a>`;
-                        } else {
-                            actionArea.innerHTML = '<span style="padding: 8px 16px; background: #f5f5f5; color: #666; border-radius: 20px; font-size: 13px;">응시 불가</span>';
-                        }
+                        actionArea.innerHTML = '<span style="padding: 8px 16px; background: #f5f5f5; color: #666; border-radius: 20px; font-size: 13px;">응시 불가</span>';
                     }
                 } catch (e) {
                     console.error('Quiz status load error for quizId=' + quizId, e);
@@ -457,7 +447,7 @@
                     icon.style.background = '#fff3e0';
                     title.textContent = '재수강 필요';
                     msg.textContent = status.message || '강의를 다시 수강한 후 퀴즈에 응시해주세요.';
-                    action.innerHTML = `<a href="/quiz?courseId=${courseId}&quizId=${status.quizId}" style="padding: 10px 24px; background: #ff9800; color: white; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">재수강</a>`;
+                    action.innerHTML = `<button onclick="retakeCourse(${courseId})" style="padding: 10px 24px; background: #ff9800; color: white; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; font-size: 14px;">재수강</button>`;
                 } else if (status.quizStatusCode === 'RETRY_ALLOWED') {
                     icon.textContent = '\uD83D\uDCDD';
                     icon.style.background = '#fff3e0';
@@ -703,6 +693,21 @@
                 btn.disabled = false;
                 btn.textContent = '질문 등록';
             }
+        }
+
+        // 재수강 - 진도 초기화 후 강좌 상세 페이지로 리다이렉트
+        function retakeCourse(cId) {
+            const csrf = document.querySelector('meta[name="_csrf"]')?.content || '';
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/courses/' + cId + '/retake';
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = '_csrf';
+            input.value = csrf;
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
         }
 
         // 레슨 선택 (영상 재생 페이지로 이동)

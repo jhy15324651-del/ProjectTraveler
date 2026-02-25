@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>퀴즈 - 일본 여행 LMS</title>
     <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <style>
         .quiz-container { max-width: 800px; margin: 0 auto; padding: 20px; }
         .quiz-back { display: inline-flex; align-items: center; gap: 8px; color: #666; text-decoration: none; margin-bottom: 20px; }
@@ -596,21 +598,18 @@
     }
 
     // ============ 재수강 시작 ============
-    async function startRetake() {
-        try {
-            const res = await fetch(`/api/quiz/retake/${courseId}/start`, { method: 'POST' });
-            const data = await res.json();
-
-            if (data.success) {
-                alert(data.data.message || '재수강을 시작했습니다. 강의를 다시 수강해주세요.');
-                window.location.href = '/course-detail?id=' + courseId;
-            } else {
-                alert(data.message || '재수강 시작에 실패했습니다.');
-            }
-        } catch (e) {
-            console.error('Retake error:', e);
-            alert('오류가 발생했습니다.');
-        }
+    function startRetake() {
+        const csrf = document.querySelector('meta[name="_csrf"]')?.content || '';
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/courses/' + courseId + '/retake';
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_csrf';
+        input.value = csrf;
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
     }
 
     // ============ 에러/유틸 ============
