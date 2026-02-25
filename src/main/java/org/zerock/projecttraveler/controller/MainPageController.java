@@ -55,10 +55,10 @@ public class MainPageController {
     }
 
     /**
-     * 학습하기 (강좌 목록)
+     * 학습하기 (강좌 목록) - 웹
      */
     @GetMapping("/learning")
-    public String learning(Model model) {
+    public String learningWeb(Model model) {
         Long userId = SecurityUtils.getCurrentUserIdOrThrow();
         CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
 
@@ -79,14 +79,73 @@ public class MainPageController {
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
         model.addAttribute("courses", coursesWithProgress);
 
-        return "learning";
+        // ✅ 플래너 규칙처럼 isUnity 분기값 주입
+        model.addAttribute("isUnity", false);
+
+        // ✅ WEB shell로 조립
+        return "learning-web";
     }
 
     /**
-     * 강좌 상세
+     * 학습하기 (강좌 목록) - 유니티
+     */
+    @GetMapping("/learning-unity")
+    public String learningUnity(Model model) {
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
+
+        // 모든 강좌 조회
+        List<Course> courses = courseService.findAllActiveCourses();
+
+        // 각 강좌별 진도율 계산
+        List<CourseWithProgress> coursesWithProgress = courses.stream()
+                .map(course -> {
+                    int progress = enrollmentService.calculateProgressPercent(userId, course.getId());
+                    CourseEnrollment enrollment = enrollmentService.findEnrollment(userId, course.getId()).orElse(null);
+                    return new CourseWithProgress(course, progress, enrollment);
+                })
+                .collect(Collectors.toList());
+
+        model.addAttribute("activePage", "learning");
+        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
+        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
+        model.addAttribute("courses", coursesWithProgress);
+
+        // ✅ 플래너 규칙처럼 isUnity 분기값 주입
+        model.addAttribute("isUnity", true);
+
+        // ✅ UNITY shell로 조립
+        return "learning-unity";
+    }
+
+    /**
+     * 강좌 상세 (웹)
+     * - URL: /course-detail?id=...
+     * - View: course-detail-web
      */
     @GetMapping("/course-detail")
-    public String courseDetail(@RequestParam("id") Long courseId, Model model) {
+    public String courseDetailWeb(@RequestParam("id") Long courseId, Model model) {
+        applyCourseDetailCommonModel(courseId, model);
+        model.addAttribute("isUnity", false);
+        return "course-detail-web";
+    }
+
+    /**
+     * 강좌 상세 (유니티)
+     * - URL: /course-detail-unity?id=...
+     * - View: course-detail-unity
+     */
+    @GetMapping("/course-detail-unity")
+    public String courseDetailUnity(@RequestParam("id") Long courseId, Model model) {
+        applyCourseDetailCommonModel(courseId, model);
+        model.addAttribute("isUnity", true);
+        return "course-detail-unity";
+    }
+
+    /* =========================
+       공통 모델 세팅
+    ========================= */
+    private void applyCourseDetailCommonModel(Long courseId, Model model) {
         Long userId = SecurityUtils.getCurrentUserIdOrThrow();
         CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
 
@@ -98,8 +157,6 @@ public class MainPageController {
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
         model.addAttribute("course", courseDetail);
         model.addAttribute("quizzes", quizService.getQuizzesForCourse(courseId));
-
-        return "course-detail";
     }
 
     /**
@@ -387,13 +444,41 @@ public class MainPageController {
 
 
     /**
-     * 퀴즈 응시 페이지
+     * 퀴즈 응시 페이지 (웹)
      */
     @GetMapping("/quiz")
-    public String quiz(
+    public String quizWeb(
             @RequestParam Long courseId,
             @RequestParam(required = false) Long quizId,
-            Model model) {
+            Model model
+    ) {
+        applyQuizCommonModel(courseId, quizId, model);
+        model.addAttribute("isUnity", false);
+        return "quiz-web";
+    }
+
+    /**
+     * 퀴즈 응시 페이지 (유니티)
+     */
+    @GetMapping("/quiz-unity")
+    public String quizUnity(
+            @RequestParam Long courseId,
+            @RequestParam(required = false) Long quizId,
+            Model model
+    ) {
+        applyQuizCommonModel(courseId, quizId, model);
+        model.addAttribute("isUnity", true);
+        return "quiz-unity";
+    }
+
+    /* =========================
+       공통 모델 세팅
+    ========================= */
+    private void applyQuizCommonModel(
+            Long courseId,
+            Long quizId,
+            Model model
+    ) {
         CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
 
         model.addAttribute("activePage", "quiz");
@@ -401,18 +486,20 @@ public class MainPageController {
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
         model.addAttribute("courseId", courseId);
         model.addAttribute("quizId", quizId);
-
-        return "quiz";
     }
 
+
     /**
-     * 레슨 시청 페이지
+     * 레슨 시청 페이지 (웹)
+     * - URL: /lesson  (✅ -web 없이)
+     * - View: lesson-web
      */
     @GetMapping("/lesson")
-    public String lesson(
+    public String lessonWeb(
             @RequestParam Long courseId,
             @RequestParam(required = false) Long lessonId,
-            Model model) {
+            Model model
+    ) {
         Long userId = SecurityUtils.getCurrentUserIdOrThrow();
         CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
 
@@ -463,6 +550,8 @@ public class MainPageController {
         model.addAttribute("activePage", "lesson");
         model.addAttribute("username", user != null ? user.getFullName() : "사용자");
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
+        model.addAttribute("isUnity", false);
+
         model.addAttribute("course", course);
         model.addAttribute("lesson", lesson);
         model.addAttribute("allLessons", allLessons);
@@ -471,7 +560,81 @@ public class MainPageController {
         model.addAttribute("progressMap", progressMap);
         model.addAttribute("youtubeEmbedUrl", youtubeEmbedUrl);
 
-        return "lesson";
+        return "lesson-web";
+    }
+
+    /**
+     * 레슨 시청 페이지 (유니티)
+     * - URL: /lesson-unity  (✅ -unity 붙음)
+     * - View: lesson-unity
+     */
+    @GetMapping("/lesson-unity")
+    public String lessonUnity(
+            @RequestParam Long courseId,
+            @RequestParam(required = false) Long lessonId,
+            Model model
+    ) {
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+        CustomUserDetails user = SecurityUtils.getCurrentUserDetails().orElse(null);
+
+        // 강좌 조회
+        Course course = courseService.findById(courseId).orElse(null);
+        if (course == null) {
+            return "redirect:/mypage";
+        }
+
+        // 수강 정보 조회
+        CourseEnrollment enrollment = enrollmentService.findEnrollment(userId, courseId).orElse(null);
+        boolean canAccess = enrollment != null && enrollment.isAccessible();
+
+        // 레슨 목록
+        List<Lesson> allLessons = courseService.findLessonsByCourseId(courseId);
+
+        // 레슨 결정 (지정된 레슨 또는 첫 번째 레슨)
+        Lesson lesson;
+        if (lessonId != null) {
+            lesson = courseService.findLessonById(lessonId).orElse(null);
+            if (lesson == null) {
+                return "redirect:/lesson-unity?courseId=" + courseId;
+            }
+        } else {
+            lesson = courseService.findFirstLesson(courseId).orElse(null);
+            if (lesson == null) {
+                // 레슨이 아직 없는 강좌 → 강좌 상세로 이동 (유니티)
+                return "redirect:/course-detail-unity?id=" + courseId;
+            }
+        }
+
+        // 진도 맵 (레슨별 완료 여부)
+        java.util.Map<Long, org.zerock.projecttraveler.entity.LessonProgress> progressMap = new java.util.HashMap<>();
+        if (canAccess) {
+            List<org.zerock.projecttraveler.entity.LessonProgress> progressList =
+                    learningService.getProgressListByUserAndCourse(userId, courseId);
+            for (var p : progressList) {
+                progressMap.put(p.getLesson().getId(), p);
+            }
+        }
+
+        // YouTube URL → embed URL 변환
+        String youtubeEmbedUrl = null;
+        if (lesson.getVideoType() == Lesson.VideoType.YOUTUBE && lesson.getVideoUrl() != null) {
+            youtubeEmbedUrl = convertToYoutubeEmbed(lesson.getVideoUrl());
+        }
+
+        model.addAttribute("activePage", "lesson");
+        model.addAttribute("username", user != null ? user.getFullName() : "사용자");
+        model.addAttribute("isAdmin", SecurityUtils.isAdmin());
+        model.addAttribute("isUnity", true);
+
+        model.addAttribute("course", course);
+        model.addAttribute("lesson", lesson);
+        model.addAttribute("allLessons", allLessons);
+        model.addAttribute("enrollment", enrollment);
+        model.addAttribute("canAccess", canAccess);
+        model.addAttribute("progressMap", progressMap);
+        model.addAttribute("youtubeEmbedUrl", youtubeEmbedUrl);
+
+        return "lesson-unity";
     }
 
     /**

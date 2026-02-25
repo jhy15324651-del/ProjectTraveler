@@ -1,0 +1,29 @@
+<!-- templates/quiz-unity.html -->
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>퀴즈 - 일본 여행 LMS</title>
+
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+    <link rel="stylesheet" th:href="@{/css/quiz.css}" href="/css/quiz.css">
+</head>
+
+<body class="main-page">
+<!-- ✅ 유니티: 헤더 없음 -->
+
+<!-- ✅ 본문 fragment -->
+<div th:replace="quiz :: quizContent"></div>
+
+<!-- ✅ 페이지 데이터 주입 -->
+<script th:inline="javascript">
+    window.__QUIZ_PAGE__ = {
+        courseId: /*[[${courseId}]]*/ 0,
+        quizIdParam: /*[[${quizId}]]*/ null
+    };
+</script>
+
+<script th:src="@{/js/quiz.js}" src="/js/quiz.js" defer></script>
+</body>
+</html>

@@ -173,8 +173,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         box.innerHTML = "";
 
-        const typeMap = { solo: "혼자", couple: "커플", family: "가족", friends: "친구" };
-        const themeMap = { freedom: "자유여행", healing: "힐링", food: "맛집", activity: "액티비티", nature: "자연" };
+        const typeMap = {  solo: "🧍혼자", couple: "💕커플", family: "👨‍👩‍👧‍👦가족", friends: "🧑‍🤝‍🧑친구" , withBaby: "👶아이 동반", peoples: "🧑‍🤝‍🧑‍단체" };
+        const themeMap = {  freedom: "🕊️자유여행", healing: "🌿힐링", food: "🍣️맛집", activity: "🎢액티비티", nature: "🌲자연", shopping:"🛍️쇼핑" };
 
         const addChip = (label, className = "") => {
             const text = (label ?? "").toString().trim();

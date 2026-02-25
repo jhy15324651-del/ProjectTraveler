@@ -17,12 +17,16 @@
     <!-- 강좌 상세 헤더 -->
     <section class="course-hero">
         <div class="course-hero-inner">
-            <a href="/learning" class="learn-back-link">
+            <!-- ✅ 웹/유니티 분기: 목록으로 -->
+            <a class="learn-back-link"
+               th:href="${isUnity} ? @{/learning-unity} : @{/learning}"
+               href="/learning">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M19 12H5M12 19l-7-7 7-7"/>
                 </svg>
                 강의 목록으로
             </a>
+
             <div class="course-hero-content">
                 <div class="course-hero-info">
                     <span class="course-category-badge" th:text="${course.categoryDisplayName}">일본어</span>
@@ -58,18 +62,26 @@
 
                     <!-- 학습 시작/이어하기 버튼 -->
                     <div class="course-action-buttons">
-                        <!-- 수강 가능한 경우 -->
+                        <!-- ✅ 수강 가능한 경우 -->
                         <th:block th:if="${course.enrollmentInfo != null and course.enrollmentInfo.accessible}">
+
+                            <!-- ✅ 이어서 학습: lesson 링크도 웹/유니티 분기 -->
                             <a th:if="${course.continueLesson != null}"
-                               th:href="@{/lesson(courseId=${course.id}, lessonId=${course.continueLesson.id})}"
+                               th:href="${isUnity}
+                                    ? @{/lesson-unity(courseId=${course.id}, lessonId=${course.continueLesson.id})}
+                                    : @{/lesson(courseId=${course.id}, lessonId=${course.continueLesson.id})}"
                                class="btn-course-start" data-action="continue">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polygon points="5 3 19 12 5 21 5 3"/>
                                 </svg>
                                 이어서 학습하기
                             </a>
+
+                            <!-- ✅ 학습 시작: lesson 링크도 웹/유니티 분기 -->
                             <a th:unless="${course.continueLesson != null}"
-                               th:href="@{/lesson(courseId=${course.id})}"
+                               th:href="${isUnity}
+                                    ? @{/lesson-unity(courseId=${course.id})}
+                                    : @{/lesson(courseId=${course.id})}"
                                class="btn-course-start" data-action="start">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polygon points="5 3 19 12 5 21 5 3"/>
@@ -78,7 +90,7 @@
                             </a>
                         </th:block>
 
-                        <!-- 수강 신청 필요한 경우 -->
+                        <!-- ✅ 수강 신청 필요한 경우 -->
                         <th:block th:if="${course.enrollmentInfo == null or !course.enrollmentInfo.accessible}">
                             <!-- 승인 대기 중 -->
                             <th:block th:if="${course.enrollmentInfo != null and course.enrollmentInfo.status == 'REQUESTED'}">
@@ -93,6 +105,7 @@
                                     관리자 승인 후 학습 가능합니다
                                 </span>
                             </th:block>
+
                             <!-- 수강 신청 가능 (미신청 또는 거절됨) -->
                             <th:block th:if="${course.enrollmentInfo.status == null or course.enrollmentInfo.status == 'REJECTED'}">
                                 <button class="btn-course-start" onclick="requestEnrollment()" id="enrollBtn"
@@ -106,6 +119,7 @@
                                     <th:block th:if="${course.enrollmentInfo.enrollPolicy == 'SELF'}">바로 수강하기</th:block>
                                     <th:block th:if="${course.enrollmentInfo.enrollPolicy != 'SELF'}">수강 신청</th:block>
                                 </button>
+
                                 <span th:if="${course.enrollmentInfo.enrollPolicy == 'APPROVAL'}"
                                       style="margin-left: 10px; color: #666; font-size: 14px;">
                                     (관리자 승인 필요)
@@ -164,6 +178,7 @@
             <!-- 커리큘럼 탭 (동적) -->
             <div class="course-tab-content is-active" data-tab-content="curriculum">
                 <div class="course-curriculum">
+
                     <!-- 유닛 반복 -->
                     <th:block th:each="unit, unitStat : ${course.units}">
                         <div class="course-unit" th:data-unit-id="${unit.id}">
@@ -187,6 +202,7 @@
                             <!-- 레슨 리스트 -->
                             <div class="course-unit-lessons" th:classappend="${unitStat.first or unit.status != '미시작' ? 'is-open' : ''}">
                                 <th:block th:each="lesson : ${unit.lessons}">
+                                    <!-- ✅ 레슨 클릭: 기존 selectLesson() 유지 (JS에서 isUnity 분기 처리하도록 런타임 값 제공) -->
                                     <a href="#" class="course-lesson-item"
                                        th:classappend="${lesson.status == '완료' ? 'is-done' : (lesson.status == '진행중' ? 'is-current' : '')}"
                                        th:data-lesson-id="${lesson.id}"
@@ -285,6 +301,7 @@
             <!-- Q&A 탭 -->
             <div class="course-tab-content" data-tab-content="qna">
                 <div class="course-qna-content" id="qnaContainer">
+
                     <!-- 질문 작성 폼 -->
                     <div id="qnaWriteForm" style="background: white; border-radius: 12px; padding: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px;">
                         <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 15px 0;">질문하기</h3>
@@ -311,6 +328,7 @@
                             </button>
                         </div>
                     </div>
+
                     <!-- 질문 목록 -->
                     <div id="qnaList">
                         <p class="course-empty-message" id="qnaLoading">
@@ -326,8 +344,10 @@
         </div>
     </section>
 
-    <!-- 강좌 ID 저장 -->
+    <!-- ✅ 외부 JS가 읽는 런타임 값들 -->
     <input type="hidden" id="courseId" th:value="${course.id}">
+    <input type="hidden" id="isAccessible"
+           th:value="${course.enrollmentInfo != null and course.enrollmentInfo.accessible}">
 
     <script th:src="@{/js/main.js}" src="/js/main.js"></script>
     <script th:src="@{/js/course-detail.js}" src="/js/course-detail.js"></script>

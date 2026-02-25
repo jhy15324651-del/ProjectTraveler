@@ -75,10 +75,12 @@
                 </div>
 
                 <div class="filter-chips" data-key="travelType" data-mode="single">
-                    <button type="button" class="chip" data-value="solo">혼자</button>
-                    <button type="button" class="chip" data-value="couple">커플</button>
-                    <button type="button" class="chip" data-value="family">가족</button>
-                    <button type="button" class="chip" data-value="friends">친구</button>
+                    <button type="button" class="chip" data-value="solo">🧍혼자</button>
+                    <button type="button" class="chip" data-value="couple">💕커플</button>
+                    <button type="button" class="chip" data-value="family">👨‍👩‍👧‍👦가족</button>
+                    <button type="button" class="chip" data-value="friends">🧑‍🤝‍🧑친구</button>
+                    <button type="button" class="chip" data-value="withBaby">👶아이 동반</button>
+                    <button type="button" class="chip" data-value="peoples">🧑‍🤝‍🧑단체</button>
                 </div>
 
                 <input type="hidden" th:field="*{travelType}">
@@ -93,11 +95,12 @@
 
                 <!-- ✅ single -> multi-or -->
                 <div class="filter-chips" data-key="theme" data-mode="multi-or">
-                    <button type="button" class="chip" data-value="freedom">자유</button>
-                    <button type="button" class="chip" data-value="healing">힐링</button>
-                    <button type="button" class="chip" data-value="food">맛집</button>
-                    <button type="button" class="chip" data-value="activity">액티비티</button>
-                    <button type="button" class="chip" data-value="nature">자연</button>
+                    <button type="button" class="chip" data-value="freedom">🕊️자유</button>
+                    <button type="button" class="chip" data-value="healing">🌿힐링</button>
+                    <button type="button" class="chip" data-value="food">🍣맛집</button>
+                    <button type="button" class="chip" data-value="activity">🎢액티비티</button>
+                    <button type="button" class="chip" data-value="nature">🌲자연</button>
+                    <button type="button" class="chip" data-value="shopping">🛍️쇼핑</button>
                 </div>
 
                 <!-- ✅ List<String> themes 전송용 hidden inputs -->
@@ -119,6 +122,10 @@
                     <button type="button" class="chip" data-value="1박2일">1박2일</button>
                     <button type="button" class="chip" data-value="2박3일">2박3일</button>
                     <button type="button" class="chip" data-value="3박4일">3박4일</button>
+                    <button type="button" class="chip" data-value="4박5일">4박5일</button>
+                    <button type="button" class="chip" data-value="5박6일">5박6일</button>
+                    <button type="button" class="chip" data-value="6박7일">6박7일</button>
+                    <button type="button" class="chip" data-value="장기여행">장기여행</button>
                 </div>
 
                 <input type="hidden" th:field="*{period}">
