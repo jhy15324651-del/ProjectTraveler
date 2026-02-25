@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.zerock.projecttraveler.dto.CourseDetailDto;
 import org.zerock.projecttraveler.dto.EnrollmentDto;
@@ -155,6 +157,17 @@ public class MainPageController {
         model.addAttribute("isAdmin", SecurityUtils.isAdmin());
         model.addAttribute("course", courseDetail);
         model.addAttribute("quizzes", quizService.getQuizzesForCourse(courseId));
+    }
+
+    /**
+     * 재수강 - 레슨 진도 초기화 및 퀴즈 사이클 리셋
+     * POST /courses/{courseId}/retake
+     */
+    @PostMapping("/courses/{courseId}/retake")
+    public String retakeCourse(@PathVariable Long courseId) {
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+        quizService.resetCourseForRetake(userId, courseId);
+        return "redirect:/course-detail?id=" + courseId;
     }
 
     /**
