@@ -12,6 +12,7 @@ import org.zerock.projecttraveler.entity.LessonProgress;
 import org.zerock.projecttraveler.security.SecurityUtils;
 import org.zerock.projecttraveler.service.CertificateService;
 import org.zerock.projecttraveler.service.LearningService;
+import org.zerock.projecttraveler.service.QuizService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +25,7 @@ public class LearningApiController {
 
     private final LearningService learningService;
     private final CertificateService certificateService;
+    private final QuizService quizService;
 
     /**
      * Heartbeat - 영상 학습 추적 (10~15초마다 호출)
@@ -65,6 +67,7 @@ public class LearningApiController {
             data.put("completed", completed);
 
             if (completed) {
+                quizService.tryCompleteRetake(userId, request.getCourseId());
                 certificateService.tryIssueCertificate(userId, request.getCourseId());
                 return ResponseEntity.ok(ApiResponse.success("레슨을 완료했습니다.", data));
             } else {

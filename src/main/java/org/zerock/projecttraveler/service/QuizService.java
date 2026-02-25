@@ -32,6 +32,7 @@ public class QuizService {
     private final UserRepository userRepository;
     private final CourseEnrollmentRepository enrollmentRepository;
     private final LessonProgressRepository lessonProgressRepository;
+    private final LessonRepository lessonRepository;
     private final AttendanceService attendanceService;
 
     /**
@@ -59,6 +60,31 @@ public class QuizService {
      */
     public boolean hasQuiz(Long courseId) {
         return quizRepository.existsByCourseIdAndActiveTrue(courseId);
+    }
+
+    /**
+     * 재수강 자동 완료 - 레슨을 모두 재수강 완료 시 퀴즈 잠금 자동 해제
+     * RETAKE_REQUIRED 상태이고 모든 레슨 완료 시에만 동작, 그 외 조용히 리턴
+     */
+    @Transactional
+    public void tryCompleteRetake(Long userId, Long courseId) {
+        try {
+            CourseEnrollment enrollment = enrollmentRepository
+                    .findByUserIdAndCourseId(userId, courseId)
+                    .orElse(null);
+            if (enrollment == null) return;
+            if (enrollment.getQuizStatus() != CourseEnrollment.QuizStatus.RETAKE_REQUIRED) return;
+
+            int totalLessons = lessonRepository.countByCourseId(courseId);
+            if (totalLessons == 0) return;
+            long completedLessons = lessonProgressRepository.countCompletedByUserIdAndCourseId(userId, courseId);
+            if (completedLessons < totalLessons) return;
+
+            completeRetake(userId, courseId);
+            log.info("재수강 자동 완료: userId={}, courseId={}", userId, courseId);
+        } catch (Exception e) {
+            log.debug("tryCompleteRetake skipped: userId={}, courseId={}, reason={}", userId, courseId, e.getMessage());
+        }
     }
 
     /**
