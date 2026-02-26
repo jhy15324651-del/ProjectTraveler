@@ -3,6 +3,18 @@
     <div class="planner-explore-container">
         <!-- 헤더 -->
         <div class="planner-explore-header">
+
+            <!-- ⭐ 돌아가기 버튼 -->
+            <a class="planner-back-link"
+               th:href="${isUnity} ? @{/planner-unity} : @{/planner}"
+               href="/planner">
+                <svg width="20" height="20" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                메인으로 돌아가기
+            </a>
+
             <div>
                 <h1>플래너 둘러보기</h1>
                 <p>다른 여행자들의 플래너를 참고해보세요</p>

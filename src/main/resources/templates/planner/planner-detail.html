@@ -11,6 +11,16 @@
                  th:alt="${planner.title}">
         </div>
         <div class="planner-detail-header-content">
+            <!-- ⭐ 돌아가기 버튼 -->
+            <a class="planner-back-link"
+               th:href="${isUnity} ? @{/planner-unity} : @{/planner}"
+               href="/planner">
+                <svg width="20" height="20" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                메인으로 돌아가기
+            </a>
             <h1 class="planner-detail-title" th:text="${planner.title}">플래너 제목</h1>
             <div class="planner-detail-meta">
                 <div class="planner-detail-meta-item">
