@@ -1,8 +1,19 @@
 <!-- templates/planner/planner-list.html - 내 플래너 목록 콘텐츠 (fragment) -->
 <main th:fragment="plannerListContent" class="planner-list-page">
     <div class="planner-list-container">
+
+        <a class="planner-back-link"
+           th:href="${isUnity} ? @{/planner-unity} : @{/planner}"
+           href="/planner">
+            <svg width="20" height="20" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            메인으로 돌아가기
+        </a>
         <!-- 헤더 -->
         <div class="planner-list-header">
+
             <div>
                 <h1>내 여행 플래너</h1>
                 <p>여행을 체계적으로 계획하세요</p>

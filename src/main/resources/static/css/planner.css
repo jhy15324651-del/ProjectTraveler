@@ -44,6 +44,37 @@
    여행 플래너 랜딩 페이지 스타일
    ======================================== */
 
+.planner-back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:14px;
+    color:#6b7280;
+    text-decoration:none;
+    margin-bottom:20px;
+    transition:color 0.2s ease;
+}
+
+/* 방문 전 */
+.planner-back-link:link{
+    color:#6b7280;
+}
+
+/* 방문 후 (보라색 방지) */
+.planner-back-link:visited{
+    color:#6b7280;
+}
+
+/* hover */
+.planner-back-link:hover{
+    color:#111827;
+}
+
+/* 클릭 순간 */
+.planner-back-link:active{
+    color:#374151;
+}
+
 /* Hero 섹션 */
 .planner-hero {
     position: relative;
