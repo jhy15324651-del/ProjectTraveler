@@ -50,6 +50,10 @@ public class WebConfig implements WebMvcConfigurer {
         // ✅ Q&A 이미지 파일 서빙
         registry.addResourceHandler("/uploads/qna/**")
                 .addResourceLocations("file:" + imageUploadPath + "/qna/");
+
+        // ✅html 폴더 내부의 모든 자원을 매핑
+        registry.addResourceHandler("/html/**")
+                .addResourceLocations("classpath:/static/html/");
     }
 
     private String ensureSlash(String path) {
