@@ -59,7 +59,7 @@ public class SecurityConfig {
             // 인증/인가 규칙
             .authorizeHttpRequests(auth -> auth
                 // 정적 리소스 허용
-                .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/uploads/**", "/html/**").permitAll()
                 // Unity WebGL 정적 파일 허용
                 .requestMatchers("/unity/**").permitAll()
                 // 로그인/회원가입 페이지 허용
