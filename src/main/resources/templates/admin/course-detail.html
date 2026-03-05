@@ -262,10 +262,9 @@
             let response;
 
             if (editingLessonId) {
-                // 수정 - 기존 API가 없으므로 생성 API 사용 (실제로는 수정 API 필요)
-                // 여기서는 일단 새 레슨 생성으로 처리
-                response = await fetch(`/admin/courses/api/${courseId}/lessons`, {
-                    method: 'POST',
+                // 수정 - PUT 호출
+                response = await fetch(`/admin/courses/api/lessons/${editingLessonId}`, {
+                    method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ title, sortOrder, durationSec })
                 });
@@ -281,15 +280,16 @@
             const result = await response.json();
 
             if (result.success && result.data) {
-                // 레슨 생성 후 영상 URL 업데이트
                 const lessonId = result.data.id;
 
-                // 영상 정보 업데이트 API 호출
-                const videoResponse = await fetch(`/admin/courses/api/lessons/${lessonId}/url`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ videoUrl, videoType, durationSec })
-                });
+                // 영상 URL이 있으면 업데이트
+                if (videoUrl) {
+                    await fetch(`/admin/courses/api/lessons/${lessonId}/url`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ videoUrl, videoType, durationSec })
+                    });
+                }
 
                 location.reload();
             } else {

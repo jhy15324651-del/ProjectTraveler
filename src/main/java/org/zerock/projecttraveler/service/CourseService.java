@@ -132,6 +132,20 @@ public class CourseService {
     }
 
     /**
+     * 레슨 기본정보 수정
+     */
+    @Transactional
+    public Lesson updateLesson(Long lessonId, String title, int sortOrder, int durationSec) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new IllegalArgumentException("레슨을 찾을 수 없습니다."));
+        lesson.setTitle(title);
+        lesson.setSortOrder(sortOrder);
+        lesson.setDurationSec(durationSec);
+        updateCourseTotalDuration(lesson.getCourse().getId());
+        return lesson;
+    }
+
+    /**
      * 레슨 영상 URL 업데이트
      */
     @Transactional
