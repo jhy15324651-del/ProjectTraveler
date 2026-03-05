@@ -10,229 +10,229 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body>
-    <!-- 헤더 포함 (웹) -->
-    <th:block th:replace="~{fragments/main-header :: mainHeader}"></th:block>
+<!-- 헤더 포함 (웹) -->
+<th:block th:replace="~{fragments/main-header :: mainHeader}"></th:block>
 
-    <!-- 플래너 상세 콘텐츠 -->
-    <div th:replace="planner/planner-detail :: plannerDetailContent"></div>
+<!-- 플래너 상세 콘텐츠 -->
+<div th:replace="planner/planner-detail :: plannerDetailContent"></div>
 
-    <!-- 모달들 -->
-    <div th:replace="planner/planner-detail :: plannerDetailModals"></div>
-    <div th:replace="planner/planner-detail :: editItineraryModal"></div>
-    <div th:replace="planner/planner-detail :: shareModal"></div>
+<!-- 모달들 -->
+<div th:replace="planner/planner-detail :: plannerDetailModals"></div>
+<div th:replace="planner/planner-detail :: editItineraryModal"></div>
+<div th:replace="planner/planner-detail :: shareModal"></div>
 
-    <script th:inline="javascript">
-        const plannerId = [[${plannerId}]];
-        const canEdit = [[${canEdit}]];
-        const isOwner = [[${isOwner}]];
-        const totalDays = [[${planner.days}]];
-        const isUnity = [[${isUnity}]];
-        const listPath = isUnity ? '/planner-unity/list' : '/planner/list';
-        const csrfToken = document.querySelector('meta[name="_csrf"]').content;
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+<script th:inline="javascript">
+    const plannerId = [[${plannerId}]];
+    const canEdit = [[${canEdit}]];
+    const isOwner = [[${isOwner}]];
+    const totalDays = [[${planner.days}]];
+    const isUnity = [[${isUnity}]];
+    const listPath = isUnity ? '/planner-unity/list' : '/planner/list';
+    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
 
-        let selectedDay = 0;
-        let itineraryCostTotal = [[${itineraryCostTotal}]];
+    let selectedDay = 0;
+    let itineraryCostTotal = [[${itineraryCostTotal}]];
 
-        // 통화 표시 관련 (내부 저장은 항상 KRW, 화면만 변환)
-        let displayCurrency = 'KRW';
-        const currencySymbols = { KRW: '₩', USD: '$', JPY: '¥' };
-        // 기본 환율 (API 호출 실패 시 사용)
-        let exchangeRates = { KRW: 1, USD: 0.00075, JPY: 0.11 };
+    // 통화 표시 관련 (내부 저장은 항상 KRW, 화면만 변환)
+    let displayCurrency = 'KRW';
+    const currencySymbols = { KRW: '₩', USD: '$', JPY: '¥' };
+    // 기본 환율 (API 호출 실패 시 사용)
+    let exchangeRates = { KRW: 1, USD: 0.00075, JPY: 0.11 };
 
-        // 페이지 로드 시 초기화
-        document.addEventListener('DOMContentLoaded', function() {
-            const navLinks = document.querySelectorAll('.header-nav a');
-            navLinks.forEach(link => {
-                if (link.getAttribute('href').includes('/planner')) {
-                    link.classList.add('active');
-                }
-            });
-
-            // 첫 번째 Day 탭 선택 상태 확인
-            updateItineraryVisibility();
-
-            // 환율 정보 로드
-            loadExchangeRates();
+    // 페이지 로드 시 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+        const navLinks = document.querySelectorAll('.header-nav a');
+        navLinks.forEach(link => {
+            if (link.getAttribute('href').includes('/planner')) {
+                link.classList.add('active');
+            }
         });
 
+        // 첫 번째 Day 탭 선택 상태 확인
+        updateItineraryVisibility();
+
         // 환율 정보 로드
-        async function loadExchangeRates() {
-            try {
-                const response = await fetch('/api/exchange-rates/today');
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.rates) {
-                        exchangeRates = data.rates;
-                    }
+        loadExchangeRates();
+    });
+
+    // 환율 정보 로드
+    async function loadExchangeRates() {
+        try {
+            const response = await fetch('/api/exchange-rates/today');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.rates) {
+                    exchangeRates = data.rates;
                 }
-            } catch (error) {
-                console.log('환율 정보 로드 실패, 기본값 사용');
+            }
+        } catch (error) {
+            console.log('환율 정보 로드 실패, 기본값 사용');
+        }
+    }
+
+    // KRW 금액을 선택된 통화로 변환하여 포맷팅
+    function formatCurrency(krwAmount, currency = displayCurrency) {
+        const symbol = currencySymbols[currency] || '₩';
+        const rate = exchangeRates[currency] || 1;
+        const converted = Math.round(krwAmount * rate);
+        return symbol + converted.toLocaleString();
+    }
+
+    // 통화 표시 전환 (DB 저장 없이 화면만 변경)
+    function switchDisplayCurrency(currency) {
+        displayCurrency = currency;
+
+        // 모든 금액 요소 업데이트
+        document.querySelectorAll('.currency-amount, .cost-amount').forEach(el => {
+            const krw = parseInt(el.dataset.krw) || 0;
+            el.textContent = formatCurrency(krw, currency);
+        });
+
+        // 총 예산 입력란 처리
+        const totalBudgetInput = document.getElementById('totalBudgetInput');
+        if (totalBudgetInput) {
+            if (currency === 'KRW') {
+                // 원화일 때는 수정 가능
+                totalBudgetInput.disabled = false;
+                totalBudgetInput.style.opacity = '1';
+            } else {
+                // 달러/엔일 때는 수정 불가
+                totalBudgetInput.disabled = true;
+                totalBudgetInput.style.opacity = '0.6';
             }
         }
 
-        // KRW 금액을 선택된 통화로 변환하여 포맷팅
-        function formatCurrency(krwAmount, currency = displayCurrency) {
-            const symbol = currencySymbols[currency] || '₩';
-            const rate = exchangeRates[currency] || 1;
-            const converted = Math.round(krwAmount * rate);
-            return symbol + converted.toLocaleString();
+        // 통화 심볼은 항상 ₩ 유지 (내부 저장이 원화이므로)
+        const currencySymbolEl = document.getElementById('budgetCurrencySymbol');
+        if (currencySymbolEl) currencySymbolEl.textContent = '₩';
+    }
+
+    // Day 탭 선택
+    function selectDay(day) {
+        selectedDay = day;
+
+        // 탭 활성화
+        document.querySelectorAll('.day-tab').forEach(tab => {
+            tab.classList.remove('active');
+            if (parseInt(tab.dataset.day) === day) {
+                tab.classList.add('active');
+            }
+        });
+
+        updateItineraryVisibility();
+    }
+
+    // 일정 표시/숨김 업데이트
+    function updateItineraryVisibility() {
+        const cards = document.querySelectorAll('.itinerary-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            if (parseInt(card.dataset.day) === selectedDay) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // 빈 상태 메시지 표시/숨김
+        const emptyMsg = document.getElementById('itineraryEmpty');
+        if (emptyMsg) {
+            emptyMsg.style.display = visibleCount === 0 ? 'flex' : 'none';
         }
+    }
 
-        // 통화 표시 전환 (DB 저장 없이 화면만 변경)
-        function switchDisplayCurrency(currency) {
-            displayCurrency = currency;
+    // 사이드바 탭 전환
+    function switchSidebarTab(tab) {
+        document.querySelectorAll('.sidebar-tab').forEach(t => {
+            t.classList.remove('active');
+            if (t.dataset.tab === tab) {
+                t.classList.add('active');
+            }
+        });
 
-            // 모든 금액 요소 업데이트
-            document.querySelectorAll('.currency-amount, .cost-amount').forEach(el => {
-                const krw = parseInt(el.dataset.krw) || 0;
-                el.textContent = formatCurrency(krw, currency);
+        // flex 구조 유지를 위해 display: flex 사용
+        document.getElementById('checklistTab').style.display = tab === 'checklist' ? 'flex' : 'none';
+        document.getElementById('budgetTab').style.display = tab === 'budget' ? 'flex' : 'none';
+    }
+
+    // 일정 완료 토글
+    async function toggleItineraryComplete(itineraryId, element) {
+        if (!canEdit) return;
+
+        try {
+            const response = await fetch(`/api/planner/itinerary/${itineraryId}/toggle`, {
+                method: 'PUT',
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
             });
 
-            // 총 예산 입력란 처리
-            const totalBudgetInput = document.getElementById('totalBudgetInput');
-            if (totalBudgetInput) {
-                if (currency === 'KRW') {
-                    // 원화일 때는 수정 가능
-                    totalBudgetInput.disabled = false;
-                    totalBudgetInput.style.opacity = '1';
-                } else {
-                    // 달러/엔일 때는 수정 불가
-                    totalBudgetInput.disabled = true;
-                    totalBudgetInput.style.opacity = '0.6';
-                }
+            const result = await response.json();
+
+            if (result.success) {
+                element.classList.toggle('checked');
+                const svg = element.querySelector('svg');
+                svg.style.display = element.classList.contains('checked') ? 'block' : 'none';
             }
-
-            // 통화 심볼은 항상 ₩ 유지 (내부 저장이 원화이므로)
-            const currencySymbolEl = document.getElementById('budgetCurrencySymbol');
-            if (currencySymbolEl) currencySymbolEl.textContent = '₩';
+        } catch (error) {
+            console.error('Error toggling itinerary:', error);
         }
+    }
 
-        // Day 탭 선택
-        function selectDay(day) {
-            selectedDay = day;
+    // 일정 추가 모달 열기
+    function openAddItineraryModal() {
+        document.getElementById('addItineraryModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        document.getElementById('addItineraryForm').reset();
+        removeItineraryImage('add');
+    }
 
-            // 탭 활성화
-            document.querySelectorAll('.day-tab').forEach(tab => {
-                tab.classList.remove('active');
-                if (parseInt(tab.dataset.day) === day) {
-                    tab.classList.add('active');
-                }
-            });
+    // 일정 추가 모달 닫기
+    function closeAddItineraryModal() {
+        document.getElementById('addItineraryModal').classList.remove('active');
+        document.body.style.overflow = '';
+        removeItineraryImage('add');
+    }
 
-            updateItineraryVisibility();
+    // ==================== 일정 이미지 업로드 ====================
+
+    // 일정 이미지 미리보기
+    function previewItineraryImage(input, mode) {
+        const previewId = mode === 'add' ? 'addImagePreview' : 'editImagePreview';
+        const removeBtnId = mode === 'add' ? 'btnRemoveAddImage' : 'btnRemoveEditImage';
+        const preview = document.getElementById(previewId);
+        const removeBtn = document.getElementById(removeBtnId);
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="일정 이미지 미리보기">`;
+                preview.classList.add('has-image');
+                removeBtn.style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
         }
+    }
 
-        // 일정 표시/숨김 업데이트
-        function updateItineraryVisibility() {
-            const cards = document.querySelectorAll('.itinerary-card');
-            let visibleCount = 0;
+    // 일정 이미지 삭제
+    function removeItineraryImage(mode) {
+        const inputId = mode === 'add' ? 'itineraryImage' : 'editItineraryImage';
+        const previewId = mode === 'add' ? 'addImagePreview' : 'editImagePreview';
+        const removeBtnId = mode === 'add' ? 'btnRemoveAddImage' : 'btnRemoveEditImage';
+        const urlInputId = mode === 'add' ? 'itineraryImageUrl' : 'editItineraryImageUrl';
 
-            cards.forEach(card => {
-                if (parseInt(card.dataset.day) === selectedDay) {
-                    card.style.display = 'block';
-                    visibleCount++;
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+        const input = document.getElementById(inputId);
+        const preview = document.getElementById(previewId);
+        const removeBtn = document.getElementById(removeBtnId);
+        const urlInput = document.getElementById(urlInputId);
 
-            // 빈 상태 메시지 표시/숨김
-            const emptyMsg = document.getElementById('itineraryEmpty');
-            if (emptyMsg) {
-                emptyMsg.style.display = visibleCount === 0 ? 'flex' : 'none';
-            }
-        }
-
-        // 사이드바 탭 전환
-        function switchSidebarTab(tab) {
-            document.querySelectorAll('.sidebar-tab').forEach(t => {
-                t.classList.remove('active');
-                if (t.dataset.tab === tab) {
-                    t.classList.add('active');
-                }
-            });
-
-            // flex 구조 유지를 위해 display: flex 사용
-            document.getElementById('checklistTab').style.display = tab === 'checklist' ? 'flex' : 'none';
-            document.getElementById('budgetTab').style.display = tab === 'budget' ? 'flex' : 'none';
-        }
-
-        // 일정 완료 토글
-        async function toggleItineraryComplete(itineraryId, element) {
-            if (!canEdit) return;
-
-            try {
-                const response = await fetch(`/api/planner/itinerary/${itineraryId}/toggle`, {
-                    method: 'PUT',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    element.classList.toggle('checked');
-                    const svg = element.querySelector('svg');
-                    svg.style.display = element.classList.contains('checked') ? 'block' : 'none';
-                }
-            } catch (error) {
-                console.error('Error toggling itinerary:', error);
-            }
-        }
-
-        // 일정 추가 모달 열기
-        function openAddItineraryModal() {
-            document.getElementById('addItineraryModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-            document.getElementById('addItineraryForm').reset();
-            removeItineraryImage('add');
-        }
-
-        // 일정 추가 모달 닫기
-        function closeAddItineraryModal() {
-            document.getElementById('addItineraryModal').classList.remove('active');
-            document.body.style.overflow = '';
-            removeItineraryImage('add');
-        }
-
-        // ==================== 일정 이미지 업로드 ====================
-
-        // 일정 이미지 미리보기
-        function previewItineraryImage(input, mode) {
-            const previewId = mode === 'add' ? 'addImagePreview' : 'editImagePreview';
-            const removeBtnId = mode === 'add' ? 'btnRemoveAddImage' : 'btnRemoveEditImage';
-            const preview = document.getElementById(previewId);
-            const removeBtn = document.getElementById(removeBtnId);
-
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.innerHTML = `<img src="${e.target.result}" alt="일정 이미지 미리보기">`;
-                    preview.classList.add('has-image');
-                    removeBtn.style.display = 'block';
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // 일정 이미지 삭제
-        function removeItineraryImage(mode) {
-            const inputId = mode === 'add' ? 'itineraryImage' : 'editItineraryImage';
-            const previewId = mode === 'add' ? 'addImagePreview' : 'editImagePreview';
-            const removeBtnId = mode === 'add' ? 'btnRemoveAddImage' : 'btnRemoveEditImage';
-            const urlInputId = mode === 'add' ? 'itineraryImageUrl' : 'editItineraryImageUrl';
-
-            const input = document.getElementById(inputId);
-            const preview = document.getElementById(previewId);
-            const removeBtn = document.getElementById(removeBtnId);
-            const urlInput = document.getElementById(urlInputId);
-
-            if (input) input.value = '';
-            if (urlInput) urlInput.value = '';
-            if (preview) {
-                preview.innerHTML = `
+        if (input) input.value = '';
+        if (urlInput) urlInput.value = '';
+        if (preview) {
+            preview.innerHTML = `
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                         <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -240,323 +240,323 @@
                     </svg>
                     <span>클릭하여 이미지 선택</span>
                 `;
-                preview.classList.remove('has-image');
-            }
-            if (removeBtn) removeBtn.style.display = 'none';
+            preview.classList.remove('has-image');
+        }
+        if (removeBtn) removeBtn.style.display = 'none';
+    }
+
+    // 일정 이미지 업로드
+    async function uploadItineraryImage(mode) {
+        const inputId = mode === 'add' ? 'itineraryImage' : 'editItineraryImage';
+        const fileInput = document.getElementById(inputId);
+
+        if (!fileInput.files || !fileInput.files[0]) {
+            return null;
         }
 
-        // 일정 이미지 업로드
-        async function uploadItineraryImage(mode) {
-            const inputId = mode === 'add' ? 'itineraryImage' : 'editItineraryImage';
-            const fileInput = document.getElementById(inputId);
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]);
 
-            if (!fileInput.files || !fileInput.files[0]) {
-                return null;
+        const response = await fetch('/api/planner/upload-itinerary-image', {
+            method: 'POST',
+            headers: {
+                [csrfHeader]: csrfToken
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            return result.url;
+        } else {
+            throw new Error(result.error || '이미지 업로드 실패');
+        }
+    }
+
+    // 일정 추가 제출
+    async function submitAddItinerary() {
+        const form = document.getElementById('addItineraryForm');
+        const title = document.getElementById('itineraryTitle').value.trim();
+
+        if (!title) {
+            alert('제목을 입력해주세요.');
+            return;
+        }
+
+        try {
+            // 이미지 업로드 (선택된 경우)
+            let imageUrl = null;
+            const fileInput = document.getElementById('itineraryImage');
+            if (fileInput.files && fileInput.files[0]) {
+                imageUrl = await uploadItineraryImage('add');
             }
 
-            const formData = new FormData();
-            formData.append('image', fileInput.files[0]);
+            const data = {
+                dayIndex: selectedDay,
+                time: document.getElementById('itineraryTime').value || null,
+                title: title,
+                location: document.getElementById('itineraryLocation').value || null,
+                category: document.getElementById('itineraryCategory').value,
+                notes: document.getElementById('itineraryNotes').value || null,
+                cost: parseInt(document.getElementById('itineraryCost').value) || 0,
+                imageUrl: imageUrl
+            };
 
-            const response = await fetch('/api/planner/upload-itinerary-image', {
+            const response = await fetch(`/api/planner/${plannerId}/itinerary`, {
                 method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     [csrfHeader]: csrfToken
                 },
-                body: formData
+                body: JSON.stringify(data)
             });
 
             const result = await response.json();
+
             if (result.success) {
-                return result.url;
+                closeAddItineraryModal();
+                // 예산 요약 갱신 후 페이지 새로고침
+                location.reload();
             } else {
-                throw new Error(result.error || '이미지 업로드 실패');
+                alert('일정 추가에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
             }
+        } catch (error) {
+            console.error('Error adding itinerary:', error);
+            alert('일정 추가 중 오류가 발생했습니다: ' + error.message);
         }
+    }
 
-        // 일정 추가 제출
-        async function submitAddItinerary() {
-            const form = document.getElementById('addItineraryForm');
-            const title = document.getElementById('itineraryTitle').value.trim();
+    // 일정 삭제
+    async function deleteItinerary(itineraryId) {
+        if (!confirm('이 일정을 삭제하시겠습니까?')) return;
 
-            if (!title) {
-                alert('제목을 입력해주세요.');
-                return;
-            }
-
-            try {
-                // 이미지 업로드 (선택된 경우)
-                let imageUrl = null;
-                const fileInput = document.getElementById('itineraryImage');
-                if (fileInput.files && fileInput.files[0]) {
-                    imageUrl = await uploadItineraryImage('add');
+        try {
+            const response = await fetch(`/api/planner/itinerary/${itineraryId}`, {
+                method: 'DELETE',
+                headers: {
+                    [csrfHeader]: csrfToken
                 }
+            });
 
-                const data = {
-                    dayIndex: selectedDay,
-                    time: document.getElementById('itineraryTime').value || null,
-                    title: title,
-                    location: document.getElementById('itineraryLocation').value || null,
-                    category: document.getElementById('itineraryCategory').value,
-                    notes: document.getElementById('itineraryNotes').value || null,
-                    cost: parseInt(document.getElementById('itineraryCost').value) || 0,
-                    imageUrl: imageUrl
-                };
+            const result = await response.json();
 
-                const response = await fetch(`/api/planner/${plannerId}/itinerary`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify(data)
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    closeAddItineraryModal();
-                    // 예산 요약 갱신 후 페이지 새로고침
-                    location.reload();
-                } else {
-                    alert('일정 추가에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
-                }
-            } catch (error) {
-                console.error('Error adding itinerary:', error);
-                alert('일정 추가 중 오류가 발생했습니다: ' + error.message);
+            if (result.success) {
+                const card = document.querySelector(`.itinerary-card[data-id="${itineraryId}"]`);
+                if (card) card.remove();
+                updateItineraryVisibility();
+                // 예산 요약 갱신
+                refreshBudgetSummary();
+            } else {
+                alert('일정 삭제에 실패했습니다.');
             }
+        } catch (error) {
+            console.error('Error deleting itinerary:', error);
+            alert('일정 삭제 중 오류가 발생했습니다.');
         }
+    }
 
-        // 일정 삭제
-        async function deleteItinerary(itineraryId) {
-            if (!confirm('이 일정을 삭제하시겠습니까?')) return;
+    // 체크리스트 항목 토글
+    async function toggleChecklistItem(itemId, element) {
+        if (!canEdit) return;
 
-            try {
-                const response = await fetch(`/api/planner/itinerary/${itineraryId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    const card = document.querySelector(`.itinerary-card[data-id="${itineraryId}"]`);
-                    if (card) card.remove();
-                    updateItineraryVisibility();
-                    // 예산 요약 갱신
-                    refreshBudgetSummary();
-                } else {
-                    alert('일정 삭제에 실패했습니다.');
+        try {
+            const response = await fetch(`/api/planner/checklist/${itemId}/toggle`, {
+                method: 'PUT',
+                headers: {
+                    [csrfHeader]: csrfToken
                 }
-            } catch (error) {
-                console.error('Error deleting itinerary:', error);
-                alert('일정 삭제 중 오류가 발생했습니다.');
-            }
-        }
+            });
 
-        // 체크리스트 항목 토글
-        async function toggleChecklistItem(itemId, element) {
-            if (!canEdit) return;
+            const result = await response.json();
 
-            try {
-                const response = await fetch(`/api/planner/checklist/${itemId}/toggle`, {
-                    method: 'PUT',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    const textEl = element.closest('.checklist-item').querySelector('.checklist-item-text');
-                    if (element.checked) {
-                        textEl.classList.add('completed');
-                    } else {
-                        textEl.classList.remove('completed');
-                    }
-                    updateChecklistProgress();
+            if (result.success) {
+                const textEl = element.closest('.checklist-item').querySelector('.checklist-item-text');
+                if (element.checked) {
+                    textEl.classList.add('completed');
                 } else {
-                    element.checked = !element.checked; // 원복
+                    textEl.classList.remove('completed');
                 }
-            } catch (error) {
-                console.error('Error toggling checklist:', error);
+                updateChecklistProgress();
+            } else {
                 element.checked = !element.checked; // 원복
             }
+        } catch (error) {
+            console.error('Error toggling checklist:', error);
+            element.checked = !element.checked; // 원복
         }
+    }
 
-        // 체크리스트 항목 추가
-        async function addChecklistItem() {
-            const input = document.getElementById('newChecklistItem');
-            const text = input.value.trim();
-            if (!text) return;
+    // 체크리스트 항목 추가
+    async function addChecklistItem() {
+        const input = document.getElementById('newChecklistItem');
+        const text = input.value.trim();
+        if (!text) return;
 
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/checklist`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify({
-                        category: '기타',
-                        text: text
-                    })
-                });
+        try {
+            const response = await fetch(`/api/planner/${plannerId}/checklist`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({
+                    category: '기타',
+                    text: text
+                })
+            });
 
-                const result = await response.json();
+            const result = await response.json();
 
-                if (result.success) {
-                    input.value = '';
-                    location.reload();
-                } else {
-                    alert('체크리스트 추가에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error adding checklist:', error);
-                alert('체크리스트 추가 중 오류가 발생했습니다.');
+            if (result.success) {
+                input.value = '';
+                location.reload();
+            } else {
+                alert('체크리스트 추가에 실패했습니다.');
             }
+        } catch (error) {
+            console.error('Error adding checklist:', error);
+            alert('체크리스트 추가 중 오류가 발생했습니다.');
         }
+    }
 
-        // 체크리스트 항목 삭제
-        async function deleteChecklistItem(itemId, event) {
-            event.preventDefault();
-            event.stopPropagation();
+    // 체크리스트 항목 삭제
+    async function deleteChecklistItem(itemId, event) {
+        event.preventDefault();
+        event.stopPropagation();
 
-            if (!confirm('이 항목을 삭제하시겠습니까?')) return;
+        if (!confirm('이 항목을 삭제하시겠습니까?')) return;
 
-            try {
-                const response = await fetch(`/api/planner/checklist/${itemId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    location.reload();
-                } else {
-                    alert('삭제에 실패했습니다.');
+        try {
+            const response = await fetch(`/api/planner/checklist/${itemId}`, {
+                method: 'DELETE',
+                headers: {
+                    [csrfHeader]: csrfToken
                 }
-            } catch (error) {
-                console.error('Error deleting checklist:', error);
-                alert('삭제 중 오류가 발생했습니다.');
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('삭제에 실패했습니다.');
             }
+        } catch (error) {
+            console.error('Error deleting checklist:', error);
+            alert('삭제 중 오류가 발생했습니다.');
         }
+    }
 
-        // 체크리스트 진행률 업데이트
-        function updateChecklistProgress() {
-            const checkboxes = document.querySelectorAll('#checklistItems input[type="checkbox"]');
-            const total = checkboxes.length;
-            const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
-            const percent = total > 0 ? (checked / total) * 100 : 0;
+    // 체크리스트 진행률 업데이트
+    function updateChecklistProgress() {
+        const checkboxes = document.querySelectorAll('#checklistItems input[type="checkbox"]');
+        const total = checkboxes.length;
+        const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+        const percent = total > 0 ? (checked / total) * 100 : 0;
 
-            document.getElementById('checklistCount').textContent = `${checked}/${total}`;
-            document.getElementById('checklistProgressBar').style.width = `${percent}%`;
-        }
+        document.getElementById('checklistCount').textContent = `${checked}/${total}`;
+        document.getElementById('checklistProgressBar').style.width = `${percent}%`;
+    }
 
-        // 총 예산 업데이트
-        async function updateTotalBudget(value) {
-            if (!canEdit) return;
+    // 총 예산 업데이트
+    async function updateTotalBudget(value) {
+        if (!canEdit) return;
 
-            const totalBudget = parseInt(value) || 0;
+        const totalBudget = parseInt(value) || 0;
 
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/total-budget`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify({
-                        totalBudget: totalBudget
-                    })
-                });
+        try {
+            const response = await fetch(`/api/planner/${plannerId}/total-budget`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({
+                    totalBudget: totalBudget
+                })
+            });
 
-                const result = await response.json();
+            const result = await response.json();
 
-                if (result.success) {
-                    // 남은 예산 계산 및 UI 업데이트
-                    updateBudgetSummary(totalBudget);
-                } else {
-                    alert('총 예산 업데이트에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error updating total budget:', error);
-                alert('총 예산 업데이트 중 오류가 발생했습니다.');
+            if (result.success) {
+                // 남은 예산 계산 및 UI 업데이트
+                updateBudgetSummary(totalBudget);
+            } else {
+                alert('총 예산 업데이트에 실패했습니다.');
             }
+        } catch (error) {
+            console.error('Error updating total budget:', error);
+            alert('총 예산 업데이트 중 오류가 발생했습니다.');
         }
+    }
 
-        // 예산 요약 UI 업데이트
-        function updateBudgetSummary(totalBudget) {
-            // 총 예산 변경 시 카테고리별 비율도 갱신
-            refreshBudgetSummary();
-        }
+    // 예산 요약 UI 업데이트
+    function updateBudgetSummary(totalBudget) {
+        // 총 예산 변경 시 카테고리별 비율도 갱신
+        refreshBudgetSummary();
+    }
 
-        // 공개 설정 토글
-        async function toggleVisibility() {
-            const visibilitySwitch = document.getElementById('visibilitySwitch');
-            const visibilityStatus = document.getElementById('visibilityStatus');
-            const isPublic = visibilitySwitch.checked;
+    // 공개 설정 토글
+    async function toggleVisibility() {
+        const visibilitySwitch = document.getElementById('visibilitySwitch');
+        const visibilityStatus = document.getElementById('visibilityStatus');
+        const isPublic = visibilitySwitch.checked;
 
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/visibility`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify({
-                        visibility: isPublic ? 'PUBLIC' : 'PRIVATE'
-                    })
-                });
+        try {
+            const response = await fetch(`/api/planner/${plannerId}/visibility`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({
+                    visibility: isPublic ? 'PUBLIC' : 'PRIVATE'
+                })
+            });
 
-                const result = await response.json();
+            const result = await response.json();
 
-                if (result.success) {
-                    visibilityStatus.textContent = isPublic ? '공개' : '비공개';
-                    if (isPublic) {
-                        visibilityStatus.classList.add('public');
-                    } else {
-                        visibilityStatus.classList.remove('public');
-                    }
+            if (result.success) {
+                visibilityStatus.textContent = isPublic ? '공개' : '비공개';
+                if (isPublic) {
+                    visibilityStatus.classList.add('public');
                 } else {
-                    visibilitySwitch.checked = !isPublic;
-                    alert('공개 설정 변경에 실패했습니다.');
+                    visibilityStatus.classList.remove('public');
                 }
-            } catch (error) {
-                console.error('Error toggling visibility:', error);
+            } else {
                 visibilitySwitch.checked = !isPublic;
-                alert('공개 설정 변경 중 오류가 발생했습니다.');
+                alert('공개 설정 변경에 실패했습니다.');
             }
+        } catch (error) {
+            console.error('Error toggling visibility:', error);
+            visibilitySwitch.checked = !isPublic;
+            alert('공개 설정 변경 중 오류가 발생했습니다.');
         }
+    }
 
-        // 공유 모달 열기
-        function openShareModal() {
-            document.getElementById('shareModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-            loadShares();
-        }
+    // 공유 모달 열기
+    function openShareModal() {
+        document.getElementById('shareModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        loadShares();
+    }
 
-        // 공유 모달 닫기
-        function closeShareModal() {
-            document.getElementById('shareModal').classList.remove('active');
-            document.body.style.overflow = '';
-        }
+    // 공유 모달 닫기
+    function closeShareModal() {
+        document.getElementById('shareModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
 
-        // 공유 목록 로드
-        async function loadShares() {
-            const shareList = document.getElementById('shareList');
+    // 공유 목록 로드
+    async function loadShares() {
+        const shareList = document.getElementById('shareList');
 
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/shares`);
-                const result = await response.json();
+        try {
+            const response = await fetch(`/api/planner/${plannerId}/shares`);
+            const result = await response.json();
 
-                if (result.success && result.data && result.data.length > 0) {
-                    shareList.innerHTML = result.data.map(share => `
+            if (result.success && result.data && result.data.length > 0) {
+                shareList.innerHTML = result.data.map(share => `
                         <div class="share-item">
                             <div class="share-user">
                                 <span class="share-username">${share.username}</span>
@@ -570,323 +570,388 @@
                             </button>
                         </div>
                     `).join('');
-                } else {
-                    shareList.innerHTML = '<div class="share-empty">공유된 사용자가 없습니다.</div>';
-                }
-            } catch (error) {
-                console.error('Error loading shares:', error);
-                shareList.innerHTML = '<div class="share-empty">공유 목록을 불러올 수 없습니다.</div>';
+            } else {
+                shareList.innerHTML = '<div class="share-empty">공유된 사용자가 없습니다.</div>';
             }
+        } catch (error) {
+            console.error('Error loading shares:', error);
+            shareList.innerHTML = '<div class="share-empty">공유 목록을 불러올 수 없습니다.</div>';
+        }
+    }
+
+    // 공유 추가
+    async function addShare() {
+        const username = document.getElementById('shareUsername').value.trim();
+        const permission = document.getElementById('sharePermission').value;
+
+        if (!username) {
+            alert('사용자 아이디를 입력해주세요.');
+            return;
         }
 
-        // 공유 추가
-        async function addShare() {
-            const username = document.getElementById('shareUsername').value.trim();
-            const permission = document.getElementById('sharePermission').value;
+        try {
+            const response = await fetch(`/api/planner/${plannerId}/share`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({
+                    username: username,
+                    permission: permission
+                })
+            });
 
-            if (!username) {
-                alert('사용자 아이디를 입력해주세요.');
+            const result = await response.json();
+
+            if (result.success) {
+                document.getElementById('shareUsername').value = '';
+                loadShares();
+                alert('공유가 추가되었습니다.');
+            } else {
+                alert('공유 추가에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
+            }
+        } catch (error) {
+            console.error('Error adding share:', error);
+            alert('공유 추가 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 공유 삭제
+    async function removeShare(userId) {
+        if (!confirm('이 사용자의 공유를 취소하시겠습니까?')) return;
+
+        try {
+            const response = await fetch(`/api/planner/${plannerId}/share/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                loadShares();
+            } else {
+                alert('공유 취소에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Error removing share:', error);
+            alert('공유 취소 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 플래너 저장 (기본 정보)
+    async function savePlanner() {
+        alert('플래너가 저장되었습니다!');
+    }
+    // ==================== 썸네일(커버 이미지) 수정 기능 ====================
+
+    // 1. 숨겨진 파일 입력창을 클릭하게 만드는 함수 (버튼에 연결)
+    function triggerCoverImageUpload() {
+        if (!canEdit) {
+            alert('수정 권한이 없습니다.');
+            return;
+        }
+        document.getElementById('coverImageInput').click();
+    }
+
+    // 2. 사용자가 이미지를 선택하면 자동으로 업로드하고 플래너 정보를 수정하는 함수
+    async function updatePlannerCoverImage(inputElement) {
+        const file = inputElement.files[0];
+        if (!file) return;
+
+        try {
+            // 1단계: 선택한 이미지를 서버에 업로드 (/api/planner/upload-cover 활용)
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const uploadRes = await fetch('/api/planner/upload-cover', {
+                method: 'POST',
+                headers: {
+                    [csrfHeader]: csrfToken
+                },
+                body: formData
+            });
+
+            const uploadResult = await uploadRes.json();
+
+            if (!uploadResult.success) {
+                alert('이미지 업로드에 실패했습니다: ' + (uploadResult.error || '알 수 없는 오류'));
+                inputElement.value = ''; // input 초기화
                 return;
             }
 
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/share`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify({
-                        username: username,
-                        permission: permission
-                    })
-                });
+            const newCoverImageUrl = uploadResult.url;
 
-                const result = await response.json();
+            // 2단계: 성공적으로 업로드된 이미지 URL을 플래너에 저장 (방금 만든 PATCH API 호출)
+            const updateRes = await fetch(`/api/planner/${plannerId}/cover-image`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({
+                    coverImage: newCoverImageUrl
+                })
+            });
 
-                if (result.success) {
-                    document.getElementById('shareUsername').value = '';
-                    loadShares();
-                    alert('공유가 추가되었습니다.');
-                } else {
-                    alert('공유 추가에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
-                }
-            } catch (error) {
-                console.error('Error adding share:', error);
-                alert('공유 추가 중 오류가 발생했습니다.');
-            }
-        }
+            const updateResult = await updateRes.json();
 
-        // 공유 삭제
-        async function removeShare(userId) {
-            if (!confirm('이 사용자의 공유를 취소하시겠습니까?')) return;
-
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/share/${userId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    loadShares();
-                } else {
-                    alert('공유 취소에 실패했습니다.');
-                }
-            } catch (error) {
-                console.error('Error removing share:', error);
-                alert('공유 취소 중 오류가 발생했습니다.');
-            }
-        }
-
-        // 플래너 저장 (기본 정보)
-        async function savePlanner() {
-            alert('플래너가 저장되었습니다!');
-        }
-
-        // ==================== 일정 수정 기능 ====================
-
-        // 일정 수정 모달 열기
-        async function openEditItineraryModal(itineraryId) {
-            // 일정 카드에서 데이터 가져오기
-            const card = document.querySelector(`.itinerary-card[data-id="${itineraryId}"]`);
-            if (!card) {
-                alert('일정을 찾을 수 없습니다.');
-                return;
-            }
-
-            // 폼에 데이터 채우기
-            document.getElementById('editItineraryId').value = itineraryId;
-
-            // 시간 추출
-            const timeEl = card.querySelector('.itinerary-time span');
-            document.getElementById('editItineraryTime').value = timeEl ? timeEl.textContent.trim() : '';
-
-            // 제목 추출
-            const titleEl = card.querySelector('.itinerary-title');
-            document.getElementById('editItineraryTitle').value = titleEl ? titleEl.textContent.trim() : '';
-
-            // 위치 추출
-            const locationEl = card.querySelector('.itinerary-location span');
-            document.getElementById('editItineraryLocation').value = locationEl ? locationEl.textContent.trim() : '';
-
-            // 카테고리 추출
-            const categoryEl = card.querySelector('.itinerary-category');
-            if (categoryEl) {
-                const categoryClass = Array.from(categoryEl.classList).find(c =>
-                    ['attraction', 'restaurant', 'accommodation', 'transport', 'shopping', 'other'].includes(c)
-                );
-                if (categoryClass) {
-                    document.getElementById('editItineraryCategory').value = categoryClass.toUpperCase();
-                }
-            }
-
-            // 메모 추출
-            const notesEl = card.querySelector('.itinerary-notes');
-            document.getElementById('editItineraryNotes').value = notesEl ? notesEl.textContent.trim() : '';
-
-            // 비용 추출
-            const costEl = card.querySelector('.cost-amount');
-            if (costEl) {
-                const krw = costEl.dataset.krw || costEl.textContent.replace(/[^\d]/g, '');
-                document.getElementById('editItineraryCost').value = krw || 0;
+            if (updateResult.success) {
+                // 새로고침하여 변경된 썸네일 화면에 반영
+                location.reload();
             } else {
-                document.getElementById('editItineraryCost').value = 0;
+                alert('썸네일 수정에 실패했습니다.');
             }
+        } catch (error) {
+            console.error('Error updating cover image:', error);
+            alert('썸네일 수정 중 오류가 발생했습니다.');
+        } finally {
+            inputElement.value = ''; // 다음 업로드를 위해 값 비우기
+        }
+    }
+    // ==================== 일정 수정 기능 ====================
 
-            // 이미지 추출 및 미리보기 설정
-            const imageEl = card.querySelector('.itinerary-image img');
-            const preview = document.getElementById('editImagePreview');
-            const removeBtn = document.getElementById('btnRemoveEditImage');
-            const urlInput = document.getElementById('editItineraryImageUrl');
-
-            if (imageEl && imageEl.src) {
-                preview.innerHTML = `<img src="${imageEl.src}" alt="일정 이미지">`;
-                preview.classList.add('has-image');
-                removeBtn.style.display = 'block';
-                urlInput.value = imageEl.getAttribute('src');
-            } else {
-                removeItineraryImage('edit');
-            }
-
-            document.getElementById('editItineraryModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
+    // 일정 수정 모달 열기
+    async function openEditItineraryModal(itineraryId) {
+        // 일정 카드에서 데이터 가져오기
+        const card = document.querySelector(`.itinerary-card[data-id="${itineraryId}"]`);
+        if (!card) {
+            alert('일정을 찾을 수 없습니다.');
+            return;
         }
 
-        // 일정 수정 모달 닫기
-        function closeEditItineraryModal() {
-            document.getElementById('editItineraryModal').classList.remove('active');
-            document.body.style.overflow = '';
+        // 폼에 데이터 채우기
+        document.getElementById('editItineraryId').value = itineraryId;
+
+        // 시간 추출
+        const timeEl = card.querySelector('.itinerary-time span');
+        document.getElementById('editItineraryTime').value = timeEl ? timeEl.textContent.trim() : '';
+
+        // 제목 추출
+        const titleEl = card.querySelector('.itinerary-title');
+        document.getElementById('editItineraryTitle').value = titleEl ? titleEl.textContent.trim() : '';
+
+        // 위치 추출
+        const locationEl = card.querySelector('.itinerary-location span');
+        document.getElementById('editItineraryLocation').value = locationEl ? locationEl.textContent.trim() : '';
+
+        // 카테고리 추출
+        const categoryEl = card.querySelector('.itinerary-category');
+        if (categoryEl) {
+            const categoryClass = Array.from(categoryEl.classList).find(c =>
+                ['attraction', 'restaurant', 'accommodation', 'transport', 'shopping', 'other'].includes(c)
+            );
+            if (categoryClass) {
+                document.getElementById('editItineraryCategory').value = categoryClass.toUpperCase();
+            }
+        }
+
+        // 메모 추출
+        const notesEl = card.querySelector('.itinerary-notes');
+        document.getElementById('editItineraryNotes').value = notesEl ? notesEl.textContent.trim() : '';
+
+        // 비용 추출
+        const costEl = card.querySelector('.cost-amount');
+        if (costEl) {
+            const krw = costEl.dataset.krw || costEl.textContent.replace(/[^\d]/g, '');
+            document.getElementById('editItineraryCost').value = krw || 0;
+        } else {
+            document.getElementById('editItineraryCost').value = 0;
+        }
+
+        // 이미지 추출 및 미리보기 설정
+        const imageEl = card.querySelector('.itinerary-image img');
+        const preview = document.getElementById('editImagePreview');
+        const removeBtn = document.getElementById('btnRemoveEditImage');
+        const urlInput = document.getElementById('editItineraryImageUrl');
+
+        if (imageEl && imageEl.src) {
+            preview.innerHTML = `<img src="${imageEl.src}" alt="일정 이미지">`;
+            preview.classList.add('has-image');
+            removeBtn.style.display = 'block';
+            urlInput.value = imageEl.getAttribute('src');
+        } else {
             removeItineraryImage('edit');
         }
 
-        // 일정 수정 제출
-        async function submitEditItinerary() {
-            const itineraryId = document.getElementById('editItineraryId').value;
-            const title = document.getElementById('editItineraryTitle').value.trim();
+        document.getElementById('editItineraryModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 
-            if (!title) {
-                alert('제목을 입력해주세요.');
-                return;
+    // 일정 수정 모달 닫기
+    function closeEditItineraryModal() {
+        document.getElementById('editItineraryModal').classList.remove('active');
+        document.body.style.overflow = '';
+        removeItineraryImage('edit');
+    }
+
+    // 일정 수정 제출
+    async function submitEditItinerary() {
+        const itineraryId = document.getElementById('editItineraryId').value;
+        const title = document.getElementById('editItineraryTitle').value.trim();
+
+        if (!title) {
+            alert('제목을 입력해주세요.');
+            return;
+        }
+
+        try {
+            // 이미지 처리
+            let imageUrl = document.getElementById('editItineraryImageUrl').value || null;
+            const fileInput = document.getElementById('editItineraryImage');
+
+            // 새 이미지가 선택된 경우 업로드
+            if (fileInput.files && fileInput.files[0]) {
+                imageUrl = await uploadItineraryImage('edit');
+            }
+            // 이미지가 삭제된 경우 (미리보기가 없고 hidden input도 비어있음)
+            const preview = document.getElementById('editImagePreview');
+            if (!preview.classList.contains('has-image')) {
+                imageUrl = '';  // 빈 문자열로 삭제 요청
             }
 
-            try {
-                // 이미지 처리
-                let imageUrl = document.getElementById('editItineraryImageUrl').value || null;
-                const fileInput = document.getElementById('editItineraryImage');
+            const data = {
+                time: document.getElementById('editItineraryTime').value || null,
+                title: title,
+                location: document.getElementById('editItineraryLocation').value || null,
+                category: document.getElementById('editItineraryCategory').value,
+                notes: document.getElementById('editItineraryNotes').value || null,
+                cost: parseInt(document.getElementById('editItineraryCost').value) || 0,
+                imageUrl: imageUrl
+            };
 
-                // 새 이미지가 선택된 경우 업로드
-                if (fileInput.files && fileInput.files[0]) {
-                    imageUrl = await uploadItineraryImage('edit');
-                }
-                // 이미지가 삭제된 경우 (미리보기가 없고 hidden input도 비어있음)
-                const preview = document.getElementById('editImagePreview');
-                if (!preview.classList.contains('has-image')) {
-                    imageUrl = '';  // 빈 문자열로 삭제 요청
-                }
+            const response = await fetch(`/api/planner/itinerary/${itineraryId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify(data)
+            });
 
-                const data = {
-                    time: document.getElementById('editItineraryTime').value || null,
-                    title: title,
-                    location: document.getElementById('editItineraryLocation').value || null,
-                    category: document.getElementById('editItineraryCategory').value,
-                    notes: document.getElementById('editItineraryNotes').value || null,
-                    cost: parseInt(document.getElementById('editItineraryCost').value) || 0,
-                    imageUrl: imageUrl
-                };
+            const result = await response.json();
 
-                const response = await fetch(`/api/planner/itinerary/${itineraryId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify(data)
-                });
+            if (result.success) {
+                closeEditItineraryModal();
+                // 예산 요약 갱신 후 페이지 새로고침
+                location.reload();
+            } else {
+                alert('일정 수정에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
+            }
+        } catch (error) {
+            console.error('Error updating itinerary:', error);
+            alert('일정 수정 중 오류가 발생했습니다: ' + error.message);
+        }
+    }
 
-                const result = await response.json();
+    // ==================== 예산 요약 업데이트 (일정비용 기반) ====================
 
-                if (result.success) {
-                    closeEditItineraryModal();
-                    // 예산 요약 갱신 후 페이지 새로고침
-                    location.reload();
-                } else {
-                    alert('일정 수정에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
-                }
-            } catch (error) {
-                console.error('Error updating itinerary:', error);
-                alert('일정 수정 중 오류가 발생했습니다: ' + error.message);
+    // 예산 요약 UI 업데이트 (일정 예상비용 기반)
+    function updateBudgetSummaryWithItinerary() {
+        const totalBudget = parseInt(document.getElementById('totalBudgetInput')?.value) || 0;
+        const remaining = totalBudget - itineraryCostTotal;
+
+        // 요약 업데이트 (data-krw 속성도 업데이트)
+        const summaryDetail = document.getElementById('budgetSummaryDetail');
+        if (summaryDetail) {
+            summaryDetail.dataset.usedKrw = itineraryCostTotal;
+            summaryDetail.dataset.remainingKrw = remaining;
+            const usedSpan = summaryDetail.querySelector('.currency-amount:first-of-type');
+            const remainingSpan = summaryDetail.querySelector('.currency-amount:last-of-type');
+            if (usedSpan) {
+                usedSpan.dataset.krw = itineraryCostTotal;
+                usedSpan.textContent = formatCurrency(itineraryCostTotal);
+            }
+            if (remainingSpan) {
+                remainingSpan.dataset.krw = remaining;
+                remainingSpan.textContent = formatCurrency(remaining);
             }
         }
 
-        // ==================== 예산 요약 업데이트 (일정비용 기반) ====================
-
-        // 예산 요약 UI 업데이트 (일정 예상비용 기반)
-        function updateBudgetSummaryWithItinerary() {
-            const totalBudget = parseInt(document.getElementById('totalBudgetInput')?.value) || 0;
-            const remaining = totalBudget - itineraryCostTotal;
-
-            // 요약 업데이트 (data-krw 속성도 업데이트)
-            const summaryDetail = document.getElementById('budgetSummaryDetail');
-            if (summaryDetail) {
-                summaryDetail.dataset.usedKrw = itineraryCostTotal;
-                summaryDetail.dataset.remainingKrw = remaining;
-                const usedSpan = summaryDetail.querySelector('.currency-amount:first-of-type');
-                const remainingSpan = summaryDetail.querySelector('.currency-amount:last-of-type');
-                if (usedSpan) {
-                    usedSpan.dataset.krw = itineraryCostTotal;
-                    usedSpan.textContent = formatCurrency(itineraryCostTotal);
-                }
-                if (remainingSpan) {
-                    remainingSpan.dataset.krw = remaining;
-                    remainingSpan.textContent = formatCurrency(remaining);
-                }
-            }
-
-            // 상세 내역 업데이트
-            const itineraryCostDisplay = document.getElementById('itineraryCostTotalDisplay');
-            if (itineraryCostDisplay) {
-                itineraryCostDisplay.dataset.krw = itineraryCostTotal;
-                itineraryCostDisplay.textContent = formatCurrency(itineraryCostTotal);
-            }
-
-            const remainingDisplay = document.getElementById('remainingBudgetDisplay');
-            if (remainingDisplay) {
-                remainingDisplay.dataset.krw = remaining;
-                remainingDisplay.textContent = formatCurrency(remaining);
-                remainingDisplay.classList.toggle('negative', remaining < 0);
-            }
+        // 상세 내역 업데이트
+        const itineraryCostDisplay = document.getElementById('itineraryCostTotalDisplay');
+        if (itineraryCostDisplay) {
+            itineraryCostDisplay.dataset.krw = itineraryCostTotal;
+            itineraryCostDisplay.textContent = formatCurrency(itineraryCostTotal);
         }
 
-        // 예산 요약 전체 갱신 (API 호출)
-        async function refreshBudgetSummary() {
-            try {
-                const response = await fetch(`/api/planner/${plannerId}/budget-summary`);
-                const result = await response.json();
-
-                if (result.success) {
-                    itineraryCostTotal = result.usedEstimated;
-                    const totalBudget = parseInt(document.getElementById('totalBudgetInput')?.value) || result.totalBudget;
-                    const remaining = totalBudget - result.usedEstimated;
-
-                    // 요약 업데이트
-                    const summaryDetail = document.getElementById('budgetSummaryDetail');
-                    if (summaryDetail) {
-                        summaryDetail.dataset.usedKrw = result.usedEstimated;
-                        summaryDetail.dataset.remainingKrw = remaining;
-                        const usedSpan = summaryDetail.querySelector('.currency-amount:first-of-type');
-                        const remainingSpan = summaryDetail.querySelector('.currency-amount:last-of-type');
-                        if (usedSpan) {
-                            usedSpan.dataset.krw = result.usedEstimated;
-                            usedSpan.textContent = formatCurrency(result.usedEstimated);
-                        }
-                        if (remainingSpan) {
-                            remainingSpan.dataset.krw = remaining;
-                            remainingSpan.textContent = formatCurrency(remaining);
-                        }
-                    }
-
-                    // 상세 내역 업데이트
-                    const itineraryCostDisplay = document.getElementById('itineraryCostTotalDisplay');
-                    if (itineraryCostDisplay) {
-                        itineraryCostDisplay.dataset.krw = result.usedEstimated;
-                        itineraryCostDisplay.textContent = formatCurrency(result.usedEstimated);
-                    }
-
-                    const remainingDisplay = document.getElementById('remainingBudgetDisplay');
-                    if (remainingDisplay) {
-                        remainingDisplay.dataset.krw = remaining;
-                        remainingDisplay.textContent = formatCurrency(remaining);
-                        remainingDisplay.classList.toggle('negative', remaining < 0);
-                    }
-
-                    // 카테고리별 사용 비율 업데이트
-                    updateCategoryBudgetList(result.categories, totalBudget);
-                }
-            } catch (error) {
-                console.error('Error refreshing budget summary:', error);
-            }
+        const remainingDisplay = document.getElementById('remainingBudgetDisplay');
+        if (remainingDisplay) {
+            remainingDisplay.dataset.krw = remaining;
+            remainingDisplay.textContent = formatCurrency(remaining);
+            remainingDisplay.classList.toggle('negative', remaining < 0);
         }
+    }
 
-        // 카테고리별 사용 비율 DOM 업데이트
-        function updateCategoryBudgetList(categories, totalBudget) {
-            const listEl = document.getElementById('categoryBudgetList');
-            if (!listEl) return;
+    // 예산 요약 전체 갱신 (API 호출)
+    async function refreshBudgetSummary() {
+        try {
+            const response = await fetch(`/api/planner/${plannerId}/budget-summary`);
+            const result = await response.json();
 
-            if (!categories || categories.length === 0) {
-                listEl.innerHTML = `
+            if (result.success) {
+                itineraryCostTotal = result.usedEstimated;
+                const totalBudget = parseInt(document.getElementById('totalBudgetInput')?.value) || result.totalBudget;
+                const remaining = totalBudget - result.usedEstimated;
+
+                // 요약 업데이트
+                const summaryDetail = document.getElementById('budgetSummaryDetail');
+                if (summaryDetail) {
+                    summaryDetail.dataset.usedKrw = result.usedEstimated;
+                    summaryDetail.dataset.remainingKrw = remaining;
+                    const usedSpan = summaryDetail.querySelector('.currency-amount:first-of-type');
+                    const remainingSpan = summaryDetail.querySelector('.currency-amount:last-of-type');
+                    if (usedSpan) {
+                        usedSpan.dataset.krw = result.usedEstimated;
+                        usedSpan.textContent = formatCurrency(result.usedEstimated);
+                    }
+                    if (remainingSpan) {
+                        remainingSpan.dataset.krw = remaining;
+                        remainingSpan.textContent = formatCurrency(remaining);
+                    }
+                }
+
+                // 상세 내역 업데이트
+                const itineraryCostDisplay = document.getElementById('itineraryCostTotalDisplay');
+                if (itineraryCostDisplay) {
+                    itineraryCostDisplay.dataset.krw = result.usedEstimated;
+                    itineraryCostDisplay.textContent = formatCurrency(result.usedEstimated);
+                }
+
+                const remainingDisplay = document.getElementById('remainingBudgetDisplay');
+                if (remainingDisplay) {
+                    remainingDisplay.dataset.krw = remaining;
+                    remainingDisplay.textContent = formatCurrency(remaining);
+                    remainingDisplay.classList.toggle('negative', remaining < 0);
+                }
+
+                // 카테고리별 사용 비율 업데이트
+                updateCategoryBudgetList(result.categories, totalBudget);
+            }
+        } catch (error) {
+            console.error('Error refreshing budget summary:', error);
+        }
+    }
+
+    // 카테고리별 사용 비율 DOM 업데이트
+    function updateCategoryBudgetList(categories, totalBudget) {
+        const listEl = document.getElementById('categoryBudgetList');
+        if (!listEl) return;
+
+        if (!categories || categories.length === 0) {
+            listEl.innerHTML = `
                     <div class="category-budget-empty">
                         <p>등록된 일정이 없습니다.</p>
                         <p>일정을 추가하면 카테고리별 예산이 자동 집계됩니다.</p>
                     </div>
                 `;
-                return;
-            }
+            return;
+        }
 
-            listEl.innerHTML = categories.map(cat => `
+        listEl.innerHTML = categories.map(cat => `
                 <div class="category-budget-item">
                     <div class="category-budget-item-header">
                         <span class="category-budget-name ${cat.categoryClassName}">${cat.categoryEmoji} ${cat.categoryName}</span>
@@ -898,55 +963,55 @@
                     <div class="category-budget-percent">${cat.percent}%</div>
                 </div>
             `).join('');
+    }
+
+    // 플래너 삭제
+    async function deletePlanner() {
+        if (!confirm('정말 이 플래너를 삭제하시겠습니까?\n삭제된 플래너는 복구할 수 없습니다.')) {
+            return;
         }
 
-        // 플래너 삭제
-        async function deletePlanner() {
-            if (!confirm('정말 이 플래너를 삭제하시겠습니까?\n삭제된 플래너는 복구할 수 없습니다.')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/planner/${plannerId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    }
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    alert('플래너가 삭제되었습니다.');
-                    window.location.href = listPath;
-                } else {
-                    alert('삭제에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
-                }
-            } catch (error) {
-                console.error('Error deleting planner:', error);
-                alert('삭제 중 오류가 발생했습니다.');
-            }
-        }
-
-        // 모달 외부 클릭 시 닫기
-        document.querySelectorAll('.modal-overlay').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.classList.remove('active');
-                    document.body.style.overflow = '';
+        try {
+            const response = await fetch(`/api/planner/${plannerId}`, {
+                method: 'DELETE',
+                headers: {
+                    [csrfHeader]: csrfToken
                 }
             });
-        });
 
-        // ESC 키로 모달 닫기
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay.active').forEach(modal => {
-                    modal.classList.remove('active');
-                });
+            const result = await response.json();
+
+            if (result.success) {
+                alert('플래너가 삭제되었습니다.');
+                window.location.href = listPath;
+            } else {
+                alert('삭제에 실패했습니다: ' + (result.error || '알 수 없는 오류'));
+            }
+        } catch (error) {
+            console.error('Error deleting planner:', error);
+            alert('삭제 중 오류가 발생했습니다.');
+        }
+    }
+
+    // 모달 외부 클릭 시 닫기
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
                 document.body.style.overflow = '';
             }
         });
-    </script>
+    });
+
+    // ESC 키로 모달 닫기
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay.active').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            document.body.style.overflow = '';
+        }
+    });
+</script>
 </body>
 </html>

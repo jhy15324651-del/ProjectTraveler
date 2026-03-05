@@ -232,6 +232,41 @@ public class AdminCourseController {
     }
 
     /**
+     * 레슨 수정 API
+     */
+    @PutMapping("/api/lessons/{lessonId}")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<Lesson>> updateLesson(
+            @PathVariable Long lessonId,
+            @RequestBody LessonRequest request) {
+        try {
+            Lesson lesson = courseService.updateLesson(
+                    lessonId,
+                    request.getTitle(),
+                    request.getSortOrder(),
+                    request.getDurationSec() != null ? request.getDurationSec() : 0
+            );
+            return ResponseEntity.ok(ApiResponse.success("레슨이 수정되었습니다.", lesson));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    /**
+     * 레슨 삭제 API
+     */
+    @DeleteMapping("/api/lessons/{lessonId}")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<Void>> deleteLesson(@PathVariable Long lessonId) {
+        try {
+            courseService.deleteLesson(lessonId);
+            return ResponseEntity.ok(ApiResponse.success("레슨이 삭제되었습니다.", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    /**
      * 레슨 영상 업로드 API
      */
     @PostMapping("/api/lessons/{lessonId}/video")

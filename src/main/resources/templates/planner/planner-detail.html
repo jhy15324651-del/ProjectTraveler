@@ -88,6 +88,17 @@
                           th:text="${planner.visibility.name() == 'PUBLIC' ? '공개' : '비공개'}"
                           th:class="'visibility-toggle-status' + (${planner.visibility.name() == 'PUBLIC'} ? ' public' : '')">비공개</span>
                 </div>
+                <!-- 썸네일 수정 -->
+                <button type="button" class="btn-planner-action secondary" onclick="triggerCoverImageUpload()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    썸네일 변경
+                </button>
+
+                <input type="file" id="coverImageInput" style="display: none;" accept="image/jpeg, image/png, image/webp, image/gif" onchange="updatePlannerCoverImage(this)">
 
                 <button type="button" class="btn-planner-action primary" onclick="savePlanner()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

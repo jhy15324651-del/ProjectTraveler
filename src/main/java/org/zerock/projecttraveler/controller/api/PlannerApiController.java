@@ -159,6 +159,27 @@ public class PlannerApiController {
 
         return ResponseEntity.ok(Map.of("success", true));
     }
+    /**
+     * [신규 추가] 플래너 커버 이미지(썸네일) 단독 수정
+     */
+    @PatchMapping("/{id}/cover-image")
+    public ResponseEntity<?> updateCoverImage(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        Long userId = SecurityUtils.getCurrentUserIdOrThrow();
+
+        if (!plannerService.canEdit(id, userId)) {
+            return ResponseEntity.status(403).body(Map.of("error", "편집 권한이 없습니다."));
+        }
+
+        String coverImage = request.get("coverImage");
+
+        if (coverImage == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "이미지 URL이 필요합니다."));
+        }
+
+        plannerService.updatePlannerCoverImage(id, coverImage);
+
+        return ResponseEntity.ok(Map.of("success", true));
+    }
 
     /**
      * 플래너 삭제
