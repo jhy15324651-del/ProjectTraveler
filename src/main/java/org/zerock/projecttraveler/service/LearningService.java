@@ -386,6 +386,7 @@ public class LearningService {
         return progressRepository.findByUserIdAndCourseIdWithLesson(userId, courseId);
     }
 
+
     private String formatTime(long seconds) {
         long hours = seconds / 3600;
         long minutes = (seconds % 3600) / 60;

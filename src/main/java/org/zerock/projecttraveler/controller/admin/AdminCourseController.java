@@ -232,6 +232,20 @@ public class AdminCourseController {
     }
 
     /**
+     * 레슨 삭제 API
+     */
+    @DeleteMapping("/api/lessons/{lessonId}")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<Void>> deleteLesson(@PathVariable Long lessonId) {
+        try {
+            courseService.deleteLesson(lessonId);
+            return ResponseEntity.ok(ApiResponse.success("레슨이 삭제되었습니다.", null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error(e.getMessage()));
+        }
+    }
+
+    /**
      * 레슨 영상 업로드 API
      */
     @PostMapping("/api/lessons/{lessonId}/video")

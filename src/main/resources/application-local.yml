@@ -15,9 +15,9 @@
 spring:
   # ===== 로컬 MariaDB 설정 (Docker Dev) =====
   datasource:
-    url: jdbc:mariadb://localhost:3306/lms_local?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
-    username: lms_dev
-    password: dev1234
+    url: jdbc:mariadb://192.168.0.32:3307/lms_local?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: lms_team
+    password: team1234
     driver-class-name: org.mariadb.jdbc.Driver
 
     # HikariCP 커넥션 풀

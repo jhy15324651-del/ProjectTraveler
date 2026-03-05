@@ -152,6 +152,19 @@ public class CourseService {
     }
 
     /**
+     * 레슨 삭제
+     */
+    @Transactional
+    public void deleteLesson(Long lessonId) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new IllegalArgumentException("레슨을 찾을 수 없습니다."));
+        Long courseId = lesson.getCourse().getId();
+        lessonRepository.delete(lesson);
+        updateCourseTotalDuration(courseId);
+        log.info("레슨 삭제: lessonId={}", lessonId);
+    }
+
+    /**
      * 강좌 총 시간 재계산
      */
     @Transactional

@@ -124,6 +124,10 @@
                         th:data-duration="${lesson.durationSec}"
                         th:data-sort-order="${lesson.sortOrder}"
                         onclick="openEditLessonFromButton(this)">수정</button>
+                <button class="btn-delete"
+                        th:data-id="${lesson.id}"
+                        th:data-title="${lesson.title}"
+                        onclick="deleteLesson(this)">삭제</button>
             </div>
         </div>
     </div>
@@ -208,6 +212,27 @@
     document.getElementById('lessonModal').addEventListener('click', function(e) {
         if (e.target === this) closeModal();
     });
+
+    async function deleteLesson(btn) {
+        const lessonId = btn.dataset.id;
+        const title = btn.dataset.title;
+        if (!confirm(`"${title}" 레슨을 삭제하시겠습니까?\n삭제 후 복구할 수 없습니다.`)) return;
+
+        try {
+            const response = await fetch(`/admin/courses/api/lessons/${lessonId}`, {
+                method: 'DELETE'
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('레슨이 삭제되었습니다.');
+                location.reload();
+            } else {
+                alert('삭제 실패: ' + result.message);
+            }
+        } catch (error) {
+            alert('서버 오류가 발생했습니다.');
+        }
+    }
 
     // 폼 제출
     document.getElementById('lessonForm').addEventListener('submit', async function(e) {
