@@ -36,10 +36,12 @@ out/
 ### VS Code ###
 .vscode/
 
-### Application Config (환경별 설정 - 비밀번호 포함) ###
-src/main/resources/application-local.yml
-src/main/resources/application-prod.yml
-# 예시 파일은 커밋 (application-local.yml.example)
+### 환경변수 파일 (실제 비밀번호 포함 - 절대 커밋 금지) ###
+.env
+# application-local.yml, application-prod.yml은 환경변수만 사용하므로 커밋 허용
+
+### SSL 인증서 (Let's Encrypt) ###
+nginx/ssl/
 
 ### Upload Files (업로드 파일) ###
 uploads/

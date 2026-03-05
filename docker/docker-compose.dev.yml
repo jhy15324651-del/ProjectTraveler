@@ -1,0 +1,37 @@
+# ================================================
+# ProjectTraveler - 노트북 로컬 개발용
+# ================================================
+# MariaDB만 Docker로 실행, Spring Boot는 IntelliJ에서 실행
+#
+# 사용법:
+#   cd docker/
+#   docker compose -f docker-compose.dev.yml up -d
+#
+# IntelliJ 실행 옵션:
+#   VM options: -Dspring.profiles.active=local
+# ================================================
+
+services:
+
+  # ── MariaDB (개발용) ─────────────────────────────
+  mariadb-dev:
+    image: mariadb:10.11
+    container_name: traveler-db-dev
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root1234}
+      MARIADB_DATABASE: lms_local
+      MARIADB_USER: ${DB_USER:-lms_dev}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-dev1234}
+      TZ: Asia/Seoul
+    ports:
+      # 로컬호스트에서 직접 접근 가능 (IntelliJ, DBeaver 등)
+      - "3306:3306"
+    volumes:
+      - mariadb_dev_data:/var/lib/mysql
+      # 초기 SQL 자동 실행
+      - ../sql:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  mariadb_dev_data:
+    driver: local

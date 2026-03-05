@@ -1,0 +1,60 @@
+# ================================================
+# ProjectTraveler - 운영/배포 환경 (prod profile)
+# ================================================
+# 대상: AWS EC2 Docker 환경
+# DB: Docker mariadb 컨테이너 (내부 네트워크)
+#
+# 환경변수는 .env 파일 또는 docker-compose에서 주입
+# ================================================
+
+spring:
+  # ===== 운영 MariaDB 설정 (Docker 내부 네트워크) =====
+  datasource:
+    url: jdbc:mariadb://${DB_HOST:mariadb}:${DB_PORT:3306}/${DB_NAME:lms_local}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
+
+    # HikariCP 커넥션 풀
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 3
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+
+  # ===== JPA 설정 =====
+  jpa:
+    hibernate:
+      ddl-auto: validate    # 운영: validate (스키마 변경 시 명시적 마이그레이션)
+    show-sql: false         # 운영: SQL 로그 끔
+    properties:
+      hibernate:
+        format_sql: false
+
+  # ===== Thymeleaf 캐싱 (운영에서 활성화) =====
+  thymeleaf:
+    cache: true
+
+# ===== 서버 설정 =====
+server:
+  port: 8080    # Nginx가 프록시 → Spring Boot는 8080
+  # HTTPS는 Nginx가 처리, Spring Boot에는 X-Forwarded-Proto 헤더로 전달
+  forward-headers-strategy: framework
+
+# ===== 파일 업로드 경로 (Docker 볼륨) =====
+app:
+  upload:
+    video-path: /app/uploads/videos
+    image-path: /app/uploads/images
+
+# ===== 로깅 (운영) =====
+logging:
+  level:
+    org.zerock.projecttraveler: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    com.zaxxer.hikari: WARN
+  file:
+    name: /app/logs/application.log

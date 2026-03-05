@@ -1,0 +1,63 @@
+# ================================================
+# ProjectTraveler - 로컬 개발 환경 (local profile)
+# ================================================
+# 대상: 노트북 개발 환경
+# DB: Docker MariaDB (localhost:3306) 또는 로컬 MariaDB
+#
+# IntelliJ 실행 방법:
+#   Run → Edit Configurations → VM options:
+#   -Dspring.profiles.active=local
+#
+# Docker DB 먼저 실행:
+#   cd docker && docker compose -f docker-compose.dev.yml up -d
+# ================================================
+
+spring:
+  # ===== 로컬 MariaDB 설정 (Docker Dev) =====
+  datasource:
+    url: jdbc:mariadb://localhost:3306/lms_local?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: lms_dev
+    password: dev1234
+    driver-class-name: org.mariadb.jdbc.Driver
+
+    # HikariCP 커넥션 풀
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # ===== JPA 설정 =====
+  jpa:
+    hibernate:
+      ddl-auto: update    # 개발 중: update (스키마 자동 반영)
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # ===== DevTools (핫 리로드) =====
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+
+# ===== 서버 설정 =====
+server:
+  port: 8080    # 로컬에서는 8080으로 직접 접근
+
+# ===== 파일 업로드 경로 (로컬) =====
+app:
+  upload:
+    video-path: ${USER_HOME:C:/Users}/${USERNAME:user}/lms-uploads/videos
+    image-path: ${USER_HOME:C:/Users}/${USERNAME:user}/lms-uploads/images
+
+# ===== 로깅 =====
+logging:
+  level:
+    org.zerock.projecttraveler: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    com.zaxxer.hikari: DEBUG

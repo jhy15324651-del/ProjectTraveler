@@ -1,0 +1,109 @@
+# ================================================
+# ProjectTraveler - 운영(EC2) 전체 스택
+# ================================================
+# 사용법:
+#   cd docker/
+#   cp ../.env.example ../.env   (처음 한 번)
+#   docker compose up -d
+# ================================================
+
+services:
+
+  # ── MariaDB ─────────────────────────────────────
+  mariadb:
+    image: mariadb:10.11
+    container_name: traveler-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: lms_local
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Seoul
+    volumes:
+      # 데이터 영속성 (컨테이너 삭제해도 데이터 유지)
+      - mariadb_data:/var/lib/mysql
+      # 초기 SQL 자동 실행 (최초 기동 시에만)
+      - ../sql:/docker-entrypoint-initdb.d:ro
+    networks:
+      - traveler-network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # DB는 외부에 포트 노출 안 함 (보안)
+    # 필요시 주석 해제: ports: ["3306:3306"]
+
+  # ── Spring Boot App ──────────────────────────────
+  spring-app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: traveler-app
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: mariadb
+      DB_PORT: 3306
+      DB_NAME: lms_local
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Seoul
+    volumes:
+      # 업로드 파일 영속성
+      - uploads_data:/app/uploads
+    networks:
+      - traveler-network
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    # Nginx가 80/443 처리 → App은 외부 포트 불필요
+    # 직접 접근 테스트 필요시 주석 해제: ports: ["8080:8080"]
+
+  # ── Nginx ────────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: traveler-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # Let's Encrypt 인증서 (certbot이 생성)
+      - certbot_certs:/etc/letsencrypt:ro
+      # ACME challenge (certbot webroot 방식)
+      - certbot_www:/var/www/certbot:ro
+    networks:
+      - traveler-network
+    depends_on:
+      - spring-app
+
+  # ── Certbot (SSL 인증서 갱신용) ───────────────────
+  # 최초 인증서 발급: docker compose run --rm certbot certonly ...
+  certbot:
+    image: certbot/certbot:latest
+    container_name: traveler-certbot
+    volumes:
+      - certbot_certs:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    # 자동 갱신 (90일마다 필요 → cron으로 주기적 실행)
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+# ── Volumes ───────────────────────────────────────
+volumes:
+  mariadb_data:
+    driver: local
+  uploads_data:
+    driver: local
+  certbot_certs:
+    driver: local
+  certbot_www:
+    driver: local
+
+# ── Networks ──────────────────────────────────────
+networks:
+  traveler-network:
+    driver: bridge
