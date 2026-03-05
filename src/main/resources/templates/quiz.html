@@ -1,5 +1,18 @@
-<!-- templates/fragments/quiz-content.html -->
+<!-- templates/quiz.html - quizContent 프래그먼트 -->
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
 <div th:fragment="quizContent" class="quiz-container">
+
+    <!-- CSRF 토큰 (JS에서 읽기 위함) -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <!-- isUnity (quiz.js getIsUnityFromDom 폴백용) -->
+    <input type="hidden" id="isUnity" th:value="${isUnity}">
 
     <!-- ✅ course-detail: 웹/유니티 분기 -->
     <a class="quiz-back"
@@ -79,6 +92,7 @@
     <!-- 오답 확인 화면 -->
     <div id="reviewView" style="display: none;"></div>
 
-    <!-- ✅ JS가 읽을 수 있도록 isUnity도 내려줌 -->
-    <input type="hidden" id="isUnity" th:value="${isUnity}">
+
 </div>
+</body>
+</html>

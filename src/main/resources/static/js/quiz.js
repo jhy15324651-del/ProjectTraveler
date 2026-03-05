@@ -533,22 +533,18 @@
     }
 
     // ============ 재수강 시작 ============
-    async function startRetake() {
-        try {
-            const res = await fetch(`/api/quiz/retake/${courseId}/start`, { method: 'POST' });
-            const data = await res.json();
-
-            if (data.success) {
-                alert(data.data.message || '재수강을 시작했습니다. 강의를 다시 수강해주세요.');
-                // ✅ course-detail 이동 분기 적용
-                window.location.href = courseDetailUrl(courseId);
-            } else {
-                alert(data.message || '재수강 시작에 실패했습니다.');
-            }
-        } catch (e) {
-            console.error('Retake error:', e);
-            alert('오류가 발생했습니다.');
-        }
+    function startRetake() {
+        const csrf = document.querySelector('meta[name="_csrf"]')?.content || '';
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/courses/' + courseId + '/retake';
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_csrf';
+        input.value = csrf;
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
     }
 
     // ============ 에러/유틸 ============
