@@ -168,4 +168,7 @@ public class TravelPlanner {
             case SHOPPING -> "쇼핑 여행";
         };
     }
+    public void updateCoverImage(String coverImage) {
+        this.coverImage = coverImage;
+    }
 }

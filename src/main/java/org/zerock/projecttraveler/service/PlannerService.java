@@ -134,6 +134,18 @@ public class PlannerService {
     }
 
     /**
+     * [신규 추가] 썸네일(커버 이미지) 수정 기능
+     */
+    @Transactional
+    public void updatePlannerCoverImage(Long plannerId, String coverImage) {
+        TravelPlanner planner = plannerRepository.findById(plannerId)
+                .orElseThrow(() -> new IllegalArgumentException("플래너를 찾을 수 없습니다."));
+
+        // 커버 이미지 경로(URL)만 단독으로 업데이트합니다.
+        planner.setCoverImage(coverImage);
+    }
+
+    /**
      * 플래너 삭제
      */
     @Transactional
