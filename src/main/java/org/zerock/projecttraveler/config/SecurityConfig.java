@@ -35,18 +35,17 @@ public class SecurityConfig {
 
                 // ✅ [추가] iframe/embed 허용 설정 (X-Frame-Options DENY 해결)
                 .headers(headers -> headers
-                        // X-Frame-Options 제거(또는 sameOrigin)
+                        // iframe 허용
                         .frameOptions(frame -> frame.disable())
 
-                        // ✅ 권장: CSP로 허용할 출처만 지정 (유니티 WebGL 주소를 여기에)
+                        // Content Security Policy
                         .contentSecurityPolicy(csp -> csp
                                 .policyDirectives(
                                         "frame-ancestors 'self' " +
-                                                "http://127.0.0.1:8080 " +
-                                                "https://localhost:8443 " +
-                                                "https://127.0.0.1:8443 " +
                                                 "https://192.168.0.32:8443 " +
-                                                "http://192.168.0.32:8080"
+                                                "https://localhost:8443 " +
+                                                "https://localhost:8080 " +
+                                                "https://127.0.0.1:8443"
                                 )
                         )
                 )
@@ -54,7 +53,7 @@ public class SecurityConfig {
             // CSRF 설정
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/api/**", "/admin/courses/api/**", "/admin/enrollments/api/**",
-                    "/admin/quiz/api/**", "/admin/course-resources/api/**", "/admin/course-qna/api/**") // API는 CSRF 비활성화
+                    "/admin/quiz/api/**", "/admin/course-resources/api/**", "/admin/course-qna/api/**", "/api/user/**", "/api/auth/**") // API는 CSRF 비활성화
             )
             // 인증/인가 규칙
             .authorizeHttpRequests(auth -> auth
@@ -67,7 +66,7 @@ public class SecurityConfig {
                 // 에러 페이지 허용 (인증 실패 시에도 에러 표시)
                 .requestMatchers("/error").permitAll()
                 // 후기 페이지 (Unity iframe에서 접근) - 조회는 공개, 작성은 인증 필요
-                .requestMatchers("/reviews", "/reviews/{id}").permitAll()
+                    .requestMatchers("/reviews", "/reviews/*").permitAll()
                 // 관리자 전용
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

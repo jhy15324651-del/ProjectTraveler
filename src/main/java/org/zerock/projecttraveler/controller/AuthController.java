@@ -12,6 +12,11 @@ import org.springframework.web.bind.annotation.*;
 import org.zerock.projecttraveler.dto.ApiResponse;
 import org.zerock.projecttraveler.entity.User;
 import org.zerock.projecttraveler.service.UserService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.zerock.projecttraveler.security.CustomUserDetails;
+
 
 @Controller
 @RequiredArgsConstructor
@@ -124,5 +129,28 @@ public class AuthController {
         private Long id;
         private String username;
         private String fullName;
+    }
+
+    /**
+     * 현재 로그인된 사용자의 정보를 반환하는 API
+     * 유니티 WebGL에서 fullName을 가져오기 위해 사용합니다.
+     */
+    @GetMapping("/api/user/info")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<UserResponseDTO>> getCurrentUserInfo(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401)
+                    .body(ApiResponse.error("로그인이 필요합니다."));
+        }
+
+        UserResponseDTO response = new UserResponseDTO(
+                userDetails.getId(),
+                userDetails.getUsername(),   // CustomUserDetails는 Spring Security User 상속이라 getUsername() 가능
+                userDetails.getFullName()
+        );
+
+        return ResponseEntity.ok(ApiResponse.success("사용자 정보 조회 성공", response));
     }
 }
