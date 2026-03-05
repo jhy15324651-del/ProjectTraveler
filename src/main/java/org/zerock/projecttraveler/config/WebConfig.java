@@ -54,6 +54,19 @@ public class WebConfig implements WebMvcConfigurer {
         // ✅html 폴더 내부의 모든 자원을 매핑
         registry.addResourceHandler("/html/**")
                 .addResourceLocations("classpath:/static/html/");
+
+        // =====================================================
+        // ✅ [추가] 기본 static 리소스 명시 매핑 (🔥 핵심)
+        // - /css/style.css, /js/login.js 등이 404 나는 문제 해결
+        // =====================================================
+        registry.addResourceHandler("/css/**")
+                .addResourceLocations("classpath:/static/css/");
+        registry.addResourceHandler("/js/**")
+                .addResourceLocations("classpath:/static/js/");
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations("classpath:/static/images/");
+        registry.addResourceHandler("/unity/**")
+                .addResourceLocations("classpath:/static/unity/");
     }
 
     private String ensureSlash(String path) {
