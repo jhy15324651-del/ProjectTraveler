@@ -6,11 +6,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.zerock.projecttraveler.dto.ApiResponse;
 import org.zerock.projecttraveler.entity.User;
+import org.zerock.projecttraveler.security.CustomUserDetails;
 import org.zerock.projecttraveler.service.UserService;
 
 @Controller
@@ -92,6 +94,30 @@ public class AuthController {
         );
 
         return ResponseEntity.ok(ApiResponse.success("회원가입이 완료되었습니다."));
+    }
+
+    /**
+     * 현재 로그인된 사용자의 정보를 반환하는 API
+     * 유니티 WebGL에서 fullName을 가져오기 위해 사용합니다.
+     */
+
+    @GetMapping("/api/user/info")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<UserResponseDTO>> getCurrentUserInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        // Spring Security가 인증된 사용자를 userDetails 파라미터로 주입해줍니다.
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("로그인이 필요합니다."));
+        }
+
+        // CustomUserDetails에서 필드 추출 (fullName 등)
+        UserResponseDTO response = new UserResponseDTO(
+                null, // ID가 필요 없다면 null 혹은 userDetails에서 가져오기
+                userDetails.getUsername(),
+                userDetails.getFullName() // ⭐ 유니티 채팅에서 사용할 이름
+        );
+
+        return ResponseEntity.ok(ApiResponse.success("사용자 정보 조회 성공", response));
     }
 
     // =========================

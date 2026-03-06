@@ -54,7 +54,7 @@ public class SecurityConfig {
             // CSRF 설정
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/api/**", "/admin/courses/api/**", "/admin/enrollments/api/**",
-                    "/admin/quiz/api/**", "/admin/course-resources/api/**", "/admin/course-qna/api/**") // API는 CSRF 비활성화
+                    "/admin/quiz/api/**", "/admin/course-resources/api/**", "/admin/course-qna/api/**", "/api/user/**", "/api/auth/**") // API는 CSRF 비활성화
             )
             // 인증/인가 규칙
             .authorizeHttpRequests(auth -> auth
@@ -63,7 +63,7 @@ public class SecurityConfig {
                 // Unity WebGL 정적 파일 허용
                 .requestMatchers("/unity/**").permitAll()
                 // 로그인/회원가입 페이지 허용
-                .requestMatchers("/", "/index", "/login", "/register", "/api/auth/**").permitAll()
+                .requestMatchers("/", "/index", "/login", "/register").permitAll()
                 // 에러 페이지 허용 (인증 실패 시에도 에러 표시)
                 .requestMatchers("/error").permitAll()
                 // 후기 페이지 (Unity iframe에서 접근) - 조회는 공개, 작성은 인증 필요
@@ -113,10 +113,11 @@ public class SecurityConfig {
                 .userDetailsService(userDetailsService)
             )
             // 세션 관리
-            .sessionManagement(session -> session
-                .maximumSessions(1)
-                .expiredUrl("/login?expired=true")
-            );
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED) // 필요시 세션 생성/유지
+                        .maximumSessions(1)
+                        .expiredUrl("/login?expired=true")
+                );
 
         return http.build();
     }
