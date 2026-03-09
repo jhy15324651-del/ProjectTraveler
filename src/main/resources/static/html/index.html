@@ -10,7 +10,7 @@
             margin: 0;
             padding: 0;
 
-            background: linear-gradient(180deg,#0f172a,#1e293b);
+            background: linear-gradient(180deg, #0f172a, #1e293b);
             /*
             background-image: url('/images/webgl-bg.jpg');
              background-size: cover;
@@ -42,8 +42,8 @@
 
         /* 평상시 캔버스 크기 */
         #unity-canvas {
-            width: 1440px;
-            height: 810px;
+            width: 1366px;
+            height: 768px;
             background: #231f20;
         }
 
@@ -237,6 +237,12 @@
             text-overflow: ellipsis;
         }
 
+        /* 전체화면일 때 상단 웹 UI 숨김 */
+        body.is-fullscreen #back-to-web-btn,
+        body.is-fullscreen #web-user-panel {
+            display: none !important;
+        }
+
     </style>
 </head>
 <body>
@@ -391,6 +397,16 @@
     }
 
     window.addEventListener("load", loadWebUserPanel);
+
+    // 추가: 전체화면 진입/해제 시 상단 웹 UI 숨김 처리
+    function syncFullscreenUI() {
+        const isFs = !!document.fullscreenElement;
+        document.body.classList.toggle("is-fullscreen", isFs);
+    }
+
+    document.addEventListener("fullscreenchange", syncFullscreenUI);
+    window.addEventListener("load", syncFullscreenUI);
+
 </script>
 </body>
 </html>
