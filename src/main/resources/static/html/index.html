@@ -1,132 +1,341 @@
 <!DOCTYPE html>
 <html lang="en-us">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Unity WebGL Player | Japan Trip</title>
     <style>
-      /* 기본 스타일 */
-      body { 
-        margin: 0; padding: 0; background-color: #ffffff; 
-        display: flex; justify-content: center; align-items: center; 
-        min-height: 100vh; overflow: hidden;
-      }
+        /* 기본 스타일 */
+        body {
+            margin: 0;
+            padding: 0;
 
-      #unity-container { 
-        display: flex; flex-direction: column; align-items: center;
-        position: relative; background: white;
-      }
+            background: linear-gradient(180deg,#0f172a,#1e293b);
+            /*
+            background-image: url('/images/webgl-bg.jpg');
+             background-size: cover;
+             background-position: center;
+             background-repeat: no-repeat;
+              */
 
-      /* [핵심 수정] 전체화면 시 컨테이너 설정 */
-      #unity-container:fullscreen {
-        width: 100vw !important;
-        height: 100vh !important;
-        background-color: #000 !important; /* 배경을 검은색으로 고정 */
-      }
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
 
-      /* 평상시 캔버스 크기 */
-      #unity-canvas { 
-        width: 1280px; height: 720px; 
-        background: #231f20; 
-      }
+        #unity-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            background: white;
+        }
 
-      /* [핵심 수정] 전체화면 시 캔버스를 화면에 꽉 채움 */
-      #unity-container:fullscreen #unity-canvas {
-        width: 100vw !important;
-        height: 100vh !important;
-        /* 비율을 유지하며 꽉 채우려면 contain, 여백 없이 꽉 채우려면 fill */
-        object-fit: contain; 
-      }
+        /* 전체화면 시 컨테이너 설정 */
+        #unity-container:fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            background-color: #000 !important;
+        }
 
-      /* 전체화면 시 하단바 숨기기 (여백 원인 제거) */
-      #unity-container:fullscreen #unity-footer {
-        display: none; 
-      }
+        /* 평상시 캔버스 크기 */
+        #unity-canvas {
+            width: 1440px;
+            height: 810px;
+            background: #231f20;
+        }
 
-      #unity-footer { 
-        width: 100%; height: 40px; background: #f8f8f8; 
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 0 15px; box-sizing: border-box;
-      }
+        /* 전체화면 시 캔버스를 화면에 꽉 채움 */
+        #unity-container:fullscreen #unity-canvas {
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: contain;
+        }
 
-      #unity-fullscreen-button {
-        width: 25px; height: 25px; cursor: pointer;
-        background-image: url('https://cdn-icons-png.flaticon.com/512/158/158420.png'); 
-        background-size: contain; background-repeat: no-repeat; background-position: center;
-      }
+        /* 전체화면 시 하단바 숨기기 */
+        #unity-container:fullscreen #unity-footer {
+            display: none;
+        }
 
-      /* 모달 스타일 (전체화면에서도 최상단 유지) */
-      #webModal {
-        display: none; position: absolute;
-        top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 80%; height: 85%; z-index: 99999; 
-        background: #1a1a1a; border-radius: 12px; overflow: hidden;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-      }
-      .modal-header { height: 50px; background: #000; display: flex; justify-content: center; align-items: center; position: relative; color: white; }
-      .close-btn { position: absolute; right: 15px; cursor: pointer; background: none; color: #888; border: none; font-size: 24px; }
-      #modalIframe { width: 100%; height: calc(100% - 50px); border: none; background: #ffffff; }
+        #unity-footer {
+            width: 100%;
+            height: 40px;
+            background: #f8f8f8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
 
-      #unity-loading-bar { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none; }
-      #unity-progress-bar-empty { width: 141px; height: 18px; background: rgba(0, 0, 0, 0.1); border-radius: 10px; }
-      #unity-progress-bar-full { width: 0%; height: 100%; background: #555; border-radius: 10px; }
+        #unity-fullscreen-button {
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            background-image: url('https://cdn-icons-png.flaticon.com/512/158/158420.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* 모달 스타일 */
+        #webModal {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 85%;
+            z-index: 99999;
+            background: #1a1a1a;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            height: 50px;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            color: white;
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 15px;
+            cursor: pointer;
+            background: none;
+            color: #888;
+            border: none;
+            font-size: 24px;
+        }
+
+        #modalIframe {
+            width: 100%;
+            height: calc(100% - 50px);
+            border: none;
+            background: #ffffff;
+        }
+
+        #unity-loading-bar {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            display: block;
+        }
+
+        #unity-progress-bar-empty {
+            width: 141px;
+            height: 18px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        #unity-progress-bar-full {
+            width: 0%;
+            height: 100%;
+            background: #555;
+            border-radius: 10px;
+        }
+
+        /* 추가: 좌상단 웹 복귀 버튼 */
+        #back-to-web-btn {
+            position: absolute;
+            top: -60px;
+            left: 20px;
+            z-index: 100000;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.92);
+            color: #222;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(6px);
+            transition: all 0.2s ease;
+        }
+
+        #back-to-web-btn:hover {
+            background: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        #back-to-web-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 전체화면일 때도 보이게 유지 */
+        #unity-container:fullscreen #back-to-web-btn {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+        }
+
+        /* 추가: 우상단 사용자 정보 패널 */
+        #web-user-panel {
+            position: absolute;
+            top: -70px; /* 뒤로가기 버튼과 높이 맞추기 */
+            right: 20px;
+            z-index: 100000;
+
+            display: flex;
+            align-items: center;
+            gap: 10px;
+
+            min-width: 190px;
+            max-width: 260px;
+            padding: 10px 14px;
+
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+            backdrop-filter: blur(6px);
+            box-sizing: border-box;
+        }
+
+        .web-user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #eef3f8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .web-user-meta {
+            min-width: 0;
+        }
+
+        .web-user-label {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.2;
+            margin-bottom: 3px;
+        }
+
+        .web-user-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #222;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
     </style>
-  </head>
-  <body>
-    <div id="unity-container">
-      <canvas id="unity-canvas" tabindex="-1"></canvas>
-      
-      <div id="unity-footer">
-        <div id="unity-build-title">Japan Trip</div>
-        <div id="unity-fullscreen-button"></div>
-      </div>
+</head>
+<body>
+<div id="unity-container">
 
-      <div id="unity-loading-bar">
-        <div id="unity-progress-bar-empty"><div id="unity-progress-bar-full"></div></div>
-      </div>
+    <!-- 추가: 웹으로 돌아가기 버튼 -->
+    <a href="/main" id="back-to-web-btn">← 웹으로 돌아가기</a>
 
-      <div id="webModal">
-        <div class="modal-header">
-          <span>Japan Trip</span>
-          <button class="close-btn" onclick="closeBrowser()">✕</button>
+    <!-- 추가: 우상단 사용자 정보 UI -->
+    <div id="web-user-panel">
+        <div class="web-user-avatar">👤</div>
+        <div class="web-user-meta">
+            <div class="web-user-label">현재 사용자</div>
+            <div class="web-user-name" id="web-user-name">불러오는 중...</div>
         </div>
-        <iframe id="modalIframe" src=""></iframe>
-      </div>
     </div>
 
-    <script>
-      var container = document.querySelector("#unity-container");
-      var canvas = document.querySelector("#unity-canvas");
-      var loadingBar = document.querySelector("#unity-loading-bar");
-      var progressBarFull = document.querySelector("#unity-progress-bar-full");
-      var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
 
-      window.unityWebView = {
-  openReviewWeb: function(url) {
-    var modal = document.getElementById('webModal');
-    var iframe = document.getElementById('modalIframe');
-    
-    // 유니티에서 넘어온 url(예: /learning-unity)이 있으면 그것을 사용하고, 
-    // 없으면 기본값으로 window.location.origin을 사용합니다.
-    var targetPath = url ? url : "";
-    
-    // 현재 접속 중인 도메인(origin) 뒤에 유니티가 보낸 경로를 붙입니다.
-    const targetUrl = window.location.origin + targetPath;
+    <div id="unity-footer">
+        <div id="unity-build-title">Japan Trip</div>
+        <div id="unity-fullscreen-button"></div>
+    </div>
 
-    iframe.src = targetUrl; 
-    
-    modal.style.display = 'block';
-    console.log("아이프레임 호출 주소 (동적 경로):", iframe.src);
-  }
-};
+    <div id="unity-loading-bar">
+        <div id="unity-progress-bar-empty">
+            <div id="unity-progress-bar-full"></div>
+        </div>
+    </div>
 
-      function closeBrowser() {
+    <div id="webModal">
+        <div class="modal-header">
+            <span>Japan Trip</span>
+            <button class="close-btn" onclick="closeBrowser()">✕</button>
+        </div>
+        <iframe id="modalIframe" src=""></iframe>
+    </div>
+</div>
+
+<script>
+    var container = document.querySelector("#unity-container");
+    var canvas = document.querySelector("#unity-canvas");
+    var loadingBar = document.querySelector("#unity-loading-bar");
+    var progressBarFull = document.querySelector("#unity-progress-bar-full");
+    var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+
+    // [추가] 유니티 인스턴스 전역 참조 변수
+    var unityInstanceRef = null;
+
+    // [추가] 유니티(C#)에서 DllImport("UnityReady") 호출 시 실행될 함수
+    window.UnityReady = function () {
+        console.log("✅ 유니티로부터 준비 완료 신호 수신");
+
+        // 유니티가 완전히 로드되었으므로 서버에서 사용자 정보 조회
+        function trySendData() {
+            if (unityInstanceRef) {
+                // 유니티가 준비되었을 때만 실행
+                fetch('/api/user/info')
+                    .then(response => response.json())
+                    .then(result => {
+                        const fullName = (result.data && result.data.fullName) || result.fullName;
+                        if (fullName) {
+                            console.log("➡️ 유니티로 사용자 이름 전달:", fullName);
+                            unityInstanceRef.SendMessage('ChatManager', 'SetWebUserInfo', fullName);
+                        }
+                    })
+                    .catch(err => console.error("❌ 사용자 정보 조회 오류:", err));
+            } else {
+                // 아직 unityInstanceRef가 null이면 0.5초 후 다시 시도
+                console.log("⏳ 유니티 인스턴스 대기 중...");
+                setTimeout(trySendData, 500);
+            }
+        }
+
+        trySendData();
+    };
+
+    // 리뷰 웹뷰 모달 제어
+    window.unityWebView = {
+        openReviewWeb: function (url) {
+            var modal = document.getElementById('webModal');
+            var iframe = document.getElementById('modalIframe');
+            var targetPath = url ? url : "";
+            const targetUrl = window.location.origin + targetPath;
+
+            iframe.src = targetUrl;
+            modal.style.display = 'block';
+            console.log("아이프레임 호출 주소:", iframe.src);
+        }
+    };
+
+    function closeBrowser() {
         document.getElementById('webModal').style.display = 'none';
-        document.getElementById('modalIframe').src = ""; 
-      }
+        document.getElementById('modalIframe').src = "";
+    }
 
-      var buildUrl = "Build"; 
-      var config = {
+    // 유니티 빌드 설정
+    var buildUrl = "Build";
+    var config = {
         dataUrl: buildUrl + "/html.data",
         frameworkUrl: buildUrl + "/html.framework.js",
         codeUrl: buildUrl + "/html.wasm",
@@ -134,54 +343,54 @@
         companyName: "DefaultCompany",
         productName: "Japan Trip",
         productVersion: "1.0",
-      };
+    };
 
-      var unityInstance = null;
-      var script = document.createElement("script");
-      script.src = buildUrl + "/html.loader.js";
+    var script = document.createElement("script");
+    script.src = buildUrl + "/html.loader.js";
 
-      script.onload = () => {
-          createUnityInstance(canvas, config, (progress) => {
-              progressBarFull.style.width = 100 * progress + "%";
-          }).then((instance) => {
-              unityInstance = instance; // 생성된 인스턴스 할당
-              loadingBar.style.display = "none";
+    script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+            progressBarFull.style.width = 100 * progress + "%";
+        }).then((unityInstance) => {
+            // [수정] 생성된 인스턴스를 전역 변수에 저장
+            unityInstanceRef = unityInstance;
+            loadingBar.style.display = "none";
 
-              // --- [추가] 서버에서 사용자 정보(fullName) 가져오기 ---
-              fetch('/api/user/info')
-                  .then(response => response.json())
-                  .then(result => {
-                      // Spring Boot의 ApiResponse 구조에 따라 데이터를 추출합니다.
-                      // result.data.fullName 또는 result.fullName 중 있는 값을 사용
-                      const fullName = (result.data && result.data.fullName) || result.fullName;
+            // 전체화면 버튼 클릭 이벤트
+            fullscreenButton.onclick = () => {
+                if (!document.fullscreenElement) {
+                    container.requestFullscreen().catch(err => {
+                        alert(`Error: ${err.message}`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            };
+        }).catch((message) => {
+            alert(message);
+        });
+    };
 
-                      if (fullName) {
-                          console.log("유니티로 사용자 이름 전달:", fullName);
-                          // 유니티 내 'ChatManager' 오브젝트의 'SetWebUserInfo' 함수 호출
-                          unityInstance.SendMessage('ChatManager', 'SetWebUserInfo', fullName);
-                      }
-                  })
-                  .catch(err => {
-                      console.error("사용자 정보를 가져오는 중 오류 발생:", err);
-                  });
-              // --------------------------------------------------
+    document.body.appendChild(script);
 
-              // 전체화면 버튼 로직 (기존 기능 유지)
-              fullscreenButton.onclick = () => {
-                  if (!document.fullscreenElement) {
-                      container.requestFullscreen().catch(err => {
-                          alert(`Error attempting to enable full-screen mode: ${err.message}`);
-                      });
-                  } else {
-                      document.exitFullscreen();
-                  }
-              };
-          }).catch((message) => {
-              alert(message);
-          });
-      };
+    // 추가: 우상단 사용자 정보 UI 표시
+    function loadWebUserPanel() {
+        const userNameEl = document.getElementById("web-user-name");
+        if (!userNameEl) return;
 
-      document.body.appendChild(script);
-    </script>
-  </body>
+        fetch('/api/user/info')
+            .then(response => response.json())
+            .then(result => {
+                const fullName = (result.data && result.data.fullName) || result.fullName || "로그인 사용자";
+                userNameEl.textContent = fullName;
+            })
+            .catch(err => {
+                console.error("❌ 사용자 정보 패널 조회 오류:", err);
+                userNameEl.textContent = "사용자 정보 없음";
+            });
+    }
+
+    window.addEventListener("load", loadWebUserPanel);
+</script>
+</body>
 </html>
